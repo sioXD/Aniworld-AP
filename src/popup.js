@@ -5,6 +5,7 @@ const settingIds = [
   'autoSkipEd', 
   'autoSkipRecap', 
   'showButtons', 
+  'alwaysShowButton',
   'skipOffset',
   'playAfterSkip',
   'persistentVolume',
@@ -173,6 +174,20 @@ function applyColor() {
   closeColorPicker();
 }
 
+// Update conditional settings UI states
+function updateDependentSettings() {
+  const showButtonsChecked = document.getElementById('showButtons').checked;
+  const alwaysShowButton = document.getElementById('alwaysShowButton');
+  if (alwaysShowButton) {
+    const alwaysShowButtonRow = alwaysShowButton.closest('.setting-row');
+    if (alwaysShowButtonRow) {
+      alwaysShowButton.disabled = !showButtonsChecked;
+      alwaysShowButtonRow.style.opacity = showButtonsChecked ? '1' : '0.5';
+      alwaysShowButtonRow.style.pointerEvents = showButtonsChecked ? 'auto' : 'none';
+    }
+  }
+}
+
 // Load settings on popup open
 async function loadSettings() {
   try {
@@ -182,6 +197,7 @@ async function loadSettings() {
     document.getElementById('autoSkipEd').checked = settings.autoSkipEd || false;
     document.getElementById('autoSkipRecap').checked = settings.autoSkipRecap || false;
     document.getElementById('showButtons').checked = settings.showButtons !== false;
+    document.getElementById('alwaysShowButton').checked = settings.alwaysShowButton || false;
     document.getElementById('skipOffset').value = settings.skipOffset || 0;
     document.getElementById('playAfterSkip').checked = settings.playAfterSkip !== false;
     document.getElementById('persistentVolume').checked = settings.persistentVolume !== false;
@@ -198,6 +214,7 @@ async function loadSettings() {
     applyTheme(theme);
     
     updateColorPreviews();
+    updateDependentSettings();
   } catch (error) {
     console.error('Failed to load settings:', error);
   }
@@ -215,6 +232,7 @@ async function saveSettings() {
     autoSkipEd: document.getElementById('autoSkipEd').checked,
     autoSkipRecap: document.getElementById('autoSkipRecap').checked,
     showButtons: document.getElementById('showButtons').checked,
+    alwaysShowButton: document.getElementById('alwaysShowButton').checked,
     skipOffset: parseFloat(document.getElementById('skipOffset').value) || 0,
     playAfterSkip: document.getElementById('playAfterSkip').checked,
     persistentVolume: document.getElementById('persistentVolume').checked,
@@ -252,6 +270,12 @@ async function saveSettings() {
 document.addEventListener('DOMContentLoaded', () => {
   loadSettings();
   initColorPicker();
+  
+  // Setup dependency listeners
+  const showButtonsEl = document.getElementById('showButtons');
+  if (showButtonsEl) {
+    showButtonsEl.addEventListener('change', updateDependentSettings);
+  }
   
   // Add change listeners to all settings
   settingIds.forEach(id => {

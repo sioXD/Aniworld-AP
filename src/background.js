@@ -230,6 +230,7 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
           autoSkipEd: false,
           autoSkipRecap: false,
           showButtons: true,
+          alwaysShowButton: false,
           skipOffset: 0,
           playAfterSkip: true,
           persistentVolume: true,

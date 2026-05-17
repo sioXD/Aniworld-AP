@@ -64,6 +64,7 @@
       autoSkipEd: false,
       autoSkipRecap: false,
       showButtons: true,
+      alwaysShowButton: false,
       skipOffset: 0,
       playAfterSkip: true,
       persistentVolume: true,
@@ -663,62 +664,81 @@
   }
 
   function checkSkipSegments() {
-    if (!state.player || state.skipTimes.length === 0) return;
+    if (!state.player) return;
     
     const currentTime = state.player.getPosition();
     
-    for (const segment of state.skipTimes) {
-      const { startTime, endTime } = segment.interval;
-      const segmentId = segment.skipId;
+    if (state.skipTimes && state.skipTimes.length > 0) {
+      for (const segment of state.skipTimes) {
+        const { startTime, endTime } = segment.interval;
+        const segmentId = segment.skipId;
       
-      if (currentTime >= startTime && currentTime < endTime - 1) {
-        const shouldAutoSkip = (
-          (segment.skipType === 'op' || segment.skipType === 'mixed-op') && state.settings.autoSkipOp ||
-          (segment.skipType === 'ed' || segment.skipType === 'mixed-ed') && state.settings.autoSkipEd ||
-          segment.skipType === 'recap' && state.settings.autoSkipRecap
-        );
-        
-        if (shouldAutoSkip && !state.skippedSegments.has(segmentId)) {
-          state.skippedSegments.add(segmentId);
+        if (currentTime >= startTime && currentTime < endTime - 1) {
+          const shouldAutoSkip = (
+            (segment.skipType === 'op' || segment.skipType === 'mixed-op') && state.settings.autoSkipOp ||
+            (segment.skipType === 'ed' || segment.skipType === 'mixed-ed') && state.settings.autoSkipEd ||
+            segment.skipType === 'recap' && state.settings.autoSkipRecap
+          );
           
-          // Skip to end of segment
-          state.player.seek(endTime + state.settings.skipOffset);
-          
-          // If it's an ending, mark episode as seen
-          if (segment.skipType === 'ed' || segment.skipType === 'mixed-ed') {
-            console.log('VOE AniSkip: Auto-skipped ending, marking as seen');
-            clearPlaybackPosition();
-            markCurrentEpisodeAsSeen();
-          }
-          
-          // AUTO-PRESS PLAY AFTER SKIP
-          if (state.settings.playAfterSkip) {
-            setTimeout(() => {
-              try {
-                const video = document.querySelector('video');
-                if (video) {
-                  video.play().catch(() => {});
-                } else if (state.player && state.player.play) {
-                  state.player.play();
+          if (shouldAutoSkip && !state.skippedSegments.has(segmentId)) {
+            state.skippedSegments.add(segmentId);
+            
+            // Skip to end of segment
+            state.player.seek(endTime + state.settings.skipOffset);
+            
+            // If it's an ending, mark episode as seen
+            if (segment.skipType === 'ed' || segment.skipType === 'mixed-ed') {
+              console.log('VOE AniSkip: Auto-skipped ending, marking as seen');
+              clearPlaybackPosition();
+              markCurrentEpisodeAsSeen();
+            }
+            
+            // AUTO-PRESS PLAY AFTER SKIP
+            if (state.settings.playAfterSkip) {
+              setTimeout(() => {
+                try {
+                  const video = document.querySelector('video');
+                  if (video) {
+                    video.play().catch(() => {});
+                  } else if (state.player && state.player.play) {
+                    state.player.play();
+                  }
+                } catch (e) {
+                  console.log('VOE AniSkip: Could not auto-play after skip');
                 }
-              } catch (e) {
-                console.log('VOE AniSkip: Could not auto-play after skip');
-              }
-            }, 150);
+              }, 150);
+            }
+            
+            state.ui.skipButton.classList.add('aniskip-hidden');
+            return;
           }
-          
-          state.ui.skipButton.classList.add('aniskip-hidden');
-          return;
-        }
         
-        if (state.settings.showButtons && !state.skippedSegments.has(segmentId)) {
-          showSkipButton(segment);
-          return;
+          if (state.settings.showButtons && !state.skippedSegments.has(segmentId)) {
+            showSkipButton(segment);
+            return;
+          }
         }
       }
     }
     
-    state.ui.skipButton.classList.add('aniskip-hidden');
+    if (state.settings.showButtons && state.settings.alwaysShowButton) {
+      const skipButton = state.ui.skipButton;
+      if (skipButton) {
+        const skipAmount = 90 + (state.settings.skipOffset || 0);
+        const skipLabel = `${skipAmount}s`;
+        
+        if (skipButton.querySelector('.aniskip-skip-type').textContent !== skipLabel) {
+          skipButton.querySelector('.aniskip-skip-type').textContent = skipLabel;
+        }
+        const duration = state.player.getDuration() || Infinity;
+        skipButton.dataset.endTime = Math.min(currentTime + 90, duration);
+        skipButton.dataset.skipId = 'skip-90';
+        skipButton.dataset.skipType = 'manual-90';
+        skipButton.classList.remove('aniskip-hidden');
+      }
+    } else if (state.ui.skipButton) {
+      state.ui.skipButton.classList.add('aniskip-hidden');
+    }
   }
 
   function showSkipButton(segment) {
@@ -732,9 +752,15 @@
 
   function skipCurrent() {
     const skipButton = state.ui.skipButton;
-    const endTime = parseFloat(skipButton.dataset.endTime);
+    let endTime = parseFloat(skipButton.dataset.endTime);
     const skipId = skipButton.dataset.skipId;
     const skipType = skipButton.dataset.skipType;
+    
+    if (skipType === 'manual-90' && state.player) {
+      const currentTime = state.player.getPosition();
+      const duration = state.player.getDuration() || Infinity;
+      endTime = Math.min(currentTime + 90, duration);
+    }
     
     if (endTime && state.player) {
       state.skippedSegments.add(skipId);
