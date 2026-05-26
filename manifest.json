@@ -47,7 +47,7 @@
   },
   "browser_specific_settings": {
     "gecko": {
-      "id": "voe-aniskip@extension",
+      "id": "voe-aniskip-fork@extension",
       "strict_min_version": "58.0",
       "data_collection_permissions": {
         "required": [
