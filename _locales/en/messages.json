@@ -1,0 +1,406 @@
+{
+  "extensionName": {
+    "message": "AniWorld AP",
+    "description": "Name of the extension"
+  },
+  "labelLanguage": {
+    "message": "Language",
+    "description": "Language setting label"
+  },
+  "descLanguage": {
+    "message": "Choose your preferred language",
+    "description": "Language setting description"
+  },
+  "langEnglish": {
+    "message": "English",
+    "description": "English language option"
+  },
+  "langGerman": {
+    "message": "German",
+    "description": "German language option"
+  },
+  "extensionDescription": {
+    "message": "Skip anime openings and endings on AniWorld using AniSkip - With persistent volume, playback position, and auto-play",
+    "description": "Description of the extension"
+  },
+  "settingsTitle": {
+    "message": "AniWorld AP Settings",
+    "description": "Title of the settings page"
+  },
+  "tagline": {
+    "message": "Skip Intros & Outros",
+    "description": "Tagline in header"
+  },
+  "sectionAppearance": {
+    "message": "Appearance",
+    "description": "Appearance section header"
+  },
+  "labelUiTheme": {
+    "message": "UI Theme",
+    "description": "UI Theme setting label"
+  },
+  "descUiTheme": {
+    "message": "Choose your preferred style",
+    "description": "UI Theme setting description"
+  },
+  "themeAniworld": {
+    "message": "AniWorld",
+    "description": "AniWorld theme option"
+  },
+  "themeClassic": {
+    "message": "Classic",
+    "description": "Classic theme option"
+  },
+  "sectionAutoSkip": {
+    "message": "Auto Skip",
+    "description": "Auto Skip section header"
+  },
+  "labelSkipOpening": {
+    "message": "Skip Opening",
+    "description": "Skip Opening setting label"
+  },
+  "descSkipOpening": {
+    "message": "Auto-skip anime intros",
+    "description": "Skip Opening setting description"
+  },
+  "labelSkipEnding": {
+    "message": "Skip Ending",
+    "description": "Skip Ending setting label"
+  },
+  "descSkipEnding": {
+    "message": "Auto-skip anime outros",
+    "description": "Skip Ending setting description"
+  },
+  "labelSkipRecap": {
+    "message": "Skip Recap",
+    "description": "Skip Recap setting label"
+  },
+  "descSkipRecap": {
+    "message": "Auto-skip recap segments",
+    "description": "Skip Recap setting description"
+  },
+  "sectionDisplay": {
+    "message": "Display",
+    "description": "Display section header"
+  },
+  "labelShowButtons": {
+    "message": "Show Skip Buttons",
+    "description": "Show Skip Buttons setting label"
+  },
+  "descShowButtons": {
+    "message": "Display manual skip buttons",
+    "description": "Show Skip Buttons setting description"
+  },
+  "labelAlwaysShowButton": {
+    "message": "Always Show Skip Button",
+    "description": "Always Show Skip Button setting label"
+  },
+  "descAlwaysShowButton": {
+    "message": "Skip 90s if no OP/ED is playing",
+    "description": "Always Show Skip Button setting description"
+  },
+  "labelSkipOffset": {
+    "message": "Skip Offset",
+    "description": "Skip Offset setting label"
+  },
+  "descSkipOffset": {
+    "message": "Seconds to add after skip",
+    "description": "Skip Offset setting description"
+  },
+  "sectionPlayback": {
+    "message": "Playback",
+    "description": "Playback section header"
+  },
+  "labelPlayAfterSkip": {
+    "message": "Play After Skip",
+    "description": "Play After Skip setting label"
+  },
+  "descPlayAfterSkip": {
+    "message": "Resume playback after skipping",
+    "description": "Play After Skip setting description"
+  },
+  "labelRememberVolume": {
+    "message": "Remember Volume",
+    "description": "Remember Volume setting label"
+  },
+  "descRememberVolume": {
+    "message": "Persist volume across episodes",
+    "description": "Remember Volume setting description"
+  },
+  "labelRememberPosition": {
+    "message": "Remember Position",
+    "description": "Remember Position setting label"
+  },
+  "descRememberPosition": {
+    "message": "Resume where you left off",
+    "description": "Remember Position setting description"
+  },
+  "labelPositionExpiry": {
+    "message": "Position Expiry",
+    "description": "Position Expiry setting label"
+  },
+  "descPositionExpiry": {
+    "message": "Days until position resets",
+    "description": "Position Expiry setting description"
+  },
+  "sectionColors": {
+    "message": "Progress Bar Colors",
+    "description": "Colors section header"
+  },
+  "labelOpeningMarker": {
+    "message": "Opening Marker",
+    "description": "Opening Marker setting label"
+  },
+  "descOpeningMarker": {
+    "message": "Intro segment color",
+    "description": "Opening Marker setting description"
+  },
+  "labelEndingMarker": {
+    "message": "Ending Marker",
+    "description": "Ending Marker setting label"
+  },
+  "descEndingMarker": {
+    "message": "Outro segment color",
+    "description": "Ending Marker setting description"
+  },
+  "labelRecapMarker": {
+    "message": "Recap Marker",
+    "description": "Recap Marker setting label"
+  },
+  "descRecapMarker": {
+    "message": "Recap segment color",
+    "description": "Recap Marker setting description"
+  },
+  "labelMarkerOpacity": {
+    "message": "Marker Opacity",
+    "description": "Marker Opacity setting label"
+  },
+  "descMarkerOpacity": {
+    "message": "Transparency (0.1 - 1.0)",
+    "description": "Marker Opacity setting description"
+  },
+  "footerSaved": {
+    "message": "Saved",
+    "description": "Save indicator text"
+  },
+  "colorPickerTitle": {
+    "message": "Choose Color",
+    "description": "Color picker modal title"
+  },
+  "colorPickerCancel": {
+    "message": "Cancel",
+    "description": "Color picker cancel button"
+  },
+  "colorPickerApply": {
+    "message": "Apply",
+    "description": "Color picker apply button"
+  },
+  "skipButtonText": {
+    "message": "Skip",
+    "description": "Skip button text"
+  },
+  "typeOpening": {
+    "message": "Opening",
+    "description": "Opening skip type"
+  },
+  "typeEnding": {
+    "message": "Ending",
+    "description": "Ending skip type"
+  },
+  "typeMixedOpening": {
+    "message": "Mixed Opening",
+    "description": "Mixed Opening skip type"
+  },
+  "typeMixedEnding": {
+    "message": "Mixed Ending",
+    "description": "Mixed Ending skip type"
+  },
+  "typeRecap": {
+    "message": "Recap",
+    "description": "Recap skip type"
+  },
+  "panelInitializing": {
+    "message": "Initializing...",
+    "description": "Initial status message"
+  },
+  "panelAnime": {
+    "message": "Anime:",
+    "description": "Anime label in panel"
+  },
+  "panelSeason": {
+    "message": "Season:",
+    "description": "Season label in panel"
+  },
+  "panelEpisode": {
+    "message": "Episode:",
+    "description": "Episode label in panel"
+  },
+  "panelMalId": {
+    "message": "MAL ID:",
+    "description": "MAL ID label in panel"
+  },
+  "panelChange": {
+    "message": "Change",
+    "description": "Change button text"
+  },
+  "panelSkipSegments": {
+    "message": "Skip Segments:",
+    "description": "Skip Segments label"
+  },
+  "panelSearchPlaceholder": {
+    "message": "Search anime...",
+    "description": "Search input placeholder"
+  },
+  "panelSearchButton": {
+    "message": "Search",
+    "description": "Search button text"
+  },
+  "panelSubmitSkipTime": {
+    "message": "Submit Skip Time:",
+    "description": "Submit section label"
+  },
+  "panelType": {
+    "message": "Type:",
+    "description": "Type label in submit form"
+  },
+  "panelStart": {
+    "message": "Start:",
+    "description": "Start label in submit form"
+  },
+  "panelEnd": {
+    "message": "End:",
+    "description": "End label in submit form"
+  },
+  "panelSet": {
+    "message": "Set",
+    "description": "Set button text"
+  },
+  "panelSubmit": {
+    "message": "Submit",
+    "description": "Submit button text"
+  },
+  "panelRefresh": {
+    "message": "Refresh",
+    "description": "Refresh button text"
+  },
+  "panelCancel": {
+    "message": "Cancel",
+    "description": "Cancel button text"
+  },
+  "statusWaitingForPlayer": {
+    "message": "Waiting for video player...",
+    "description": "Status: waiting for player"
+  },
+  "statusPlayerFound": {
+    "message": "Player found, parsing anime info...",
+    "description": "Status: player found"
+  },
+  "statusUsingCached": {
+    "message": "Using cached anime info",
+    "description": "Status: using cached info"
+  },
+  "statusSearching": {
+    "message": "Searching for anime: $ANIME$",
+    "description": "Status: searching for anime",
+    "placeholders": {
+      "anime": {
+        "content": "$1",
+        "example": "Naruto"
+      }
+    }
+  },
+  "statusNotFound": {
+    "message": "Anime not found. Click \"Change\" to search manually.",
+    "description": "Status: anime not found"
+  },
+  "statusCouldNotParse": {
+    "message": "Could not parse anime info from title",
+    "description": "Status: could not parse"
+  },
+  "statusFetching": {
+    "message": "Fetching skip times...",
+    "description": "Status: fetching skip times"
+  },
+  "statusNoSkipTimes": {
+    "message": "No skip times found for this episode",
+    "description": "Status: no skip times"
+  },
+  "statusFoundSegments": {
+    "message": "Found $COUNT$ skip segment(s)",
+    "description": "Status: found segments",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "statusMissingInfo": {
+    "message": "Missing anime info",
+    "description": "Status: missing info"
+  },
+  "statusSubmitting": {
+    "message": "Submitting skip time...",
+    "description": "Status: submitting"
+  },
+  "statusSubmitSuccess": {
+    "message": "Skip time submitted successfully!",
+    "description": "Status: submit success"
+  },
+  "statusSubmitFailed": {
+    "message": "Submit failed: $ERROR$",
+    "description": "Status: submit failed",
+    "placeholders": {
+      "error": {
+        "content": "$1",
+        "example": "Network error"
+      }
+    }
+  },
+  "statusCannotSubmit": {
+    "message": "Cannot submit: missing anime info",
+    "description": "Status: cannot submit"
+  },
+  "statusInvalidTime": {
+    "message": "Invalid time format",
+    "description": "Status: invalid time"
+  },
+  "statusStartBeforeEnd": {
+    "message": "Start time must be before end time",
+    "description": "Status: start before end"
+  },
+  "statusFailedToFetch": {
+    "message": "Failed to fetch skip times",
+    "description": "Status: failed to fetch"
+  },
+  "statusFailedToFind": {
+    "message": "Failed to find video player: $ERROR$",
+    "description": "Status: failed to find player",
+    "placeholders": {
+      "error": {
+        "content": "$1",
+        "example": "Timeout"
+      }
+    }
+  },
+  "searchLoading": {
+    "message": "Searching...",
+    "description": "Search loading text"
+  },
+  "searchNoResults": {
+    "message": "No results found",
+    "description": "Search no results text"
+  },
+  "searchFailed": {
+    "message": "Search failed",
+    "description": "Search failed text"
+  },
+  "voteUpvote": {
+    "message": "Upvote",
+    "description": "Upvote button title"
+  },
+  "voteDownvote": {
+    "message": "Downvote",
+    "description": "Downvote button title"
+  }
+}

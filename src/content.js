@@ -60,6 +60,7 @@
     currentSeason: null,
     currentVideoId: null,
     settings: {
+      language: 'en',
       autoSkipOp: false,
       autoSkipEd: false,
       autoSkipRecap: false,
@@ -80,6 +81,129 @@
     initialized: false,
     playbackPositionRestored: false
   };
+
+  // Translations object for content script
+  const translations = {
+    en: {
+      typeOpening: 'Opening',
+      typeEnding: 'Ending',
+      typeMixedOpening: 'Mixed Opening',
+      typeMixedEnding: 'Mixed Ending',
+      typeRecap: 'Recap',
+      skipButtonText: 'Skip',
+      panelInitializing: 'Initializing...',
+      panelAnime: 'Anime:',
+      panelSeason: 'Season:',
+      panelEpisode: 'Episode:',
+      panelMalId: 'MAL ID:',
+      panelChange: 'Change',
+      panelSkipSegments: 'Skip Segments:',
+      panelSearchPlaceholder: 'Search anime...',
+      panelSearchButton: 'Search',
+      panelSubmitSkipTime: 'Submit Skip Time:',
+      panelType: 'Type:',
+      panelStart: 'Start:',
+      panelEnd: 'End:',
+      panelSet: 'Set',
+      panelSubmit: 'Submit',
+      panelRefresh: 'Refresh',
+      panelCancel: 'Cancel',
+      voteUpvote: 'Upvote',
+      voteDownvote: 'Downvote',
+      statusWaitingForPlayer: 'Waiting for video player...',
+      statusPlayerFound: 'Player found, parsing anime info...',
+      statusUsingCached: 'Using cached anime info',
+      statusSearching: 'Searching for anime: $1',
+      statusNotFound: 'Anime not found. Click "Change" to search manually.',
+      statusCouldNotParse: 'Could not parse anime info from title',
+      statusFetching: 'Fetching skip times...',
+      statusNoSkipTimes: 'No skip times found for this episode',
+      statusFoundSegments: 'Found $1 skip segment(s)',
+      statusMissingInfo: 'Missing anime info',
+      statusSubmitting: 'Submitting skip time...',
+      statusSubmitSuccess: 'Skip time submitted successfully!',
+      statusSubmitFailed: 'Submit failed: $1',
+      statusCannotSubmit: 'Cannot submit: missing anime info',
+      statusInvalidTime: 'Invalid time format',
+      statusStartBeforeEnd: 'Start time must be before end time',
+      statusFailedToFetch: 'Failed to fetch skip times',
+      statusFailedToFind: 'Failed to find video player: $1',
+      searchLoading: 'Searching...',
+      searchNoResults: 'No results found',
+      searchFailed: 'Search failed'
+    },
+    de: {
+      typeOpening: 'Intro',
+      typeEnding: 'Outro',
+      typeMixedOpening: 'Gemischtes Intro',
+      typeMixedEnding: 'Gemischtes Outro',
+      typeRecap: 'Zusammenfassung',
+      skipButtonText: 'Überspringen',
+      panelInitializing: 'Initialisierung...',
+      panelAnime: 'Anime:',
+      panelSeason: 'Staffel:',
+      panelEpisode: 'Episode:',
+      panelMalId: 'MAL ID:',
+      panelChange: 'Ändern',
+      panelSkipSegments: 'Skip-Segmente:',
+      panelSearchPlaceholder: 'Anime suchen...',
+      panelSearchButton: 'Suchen',
+      panelSubmitSkipTime: 'Überspringzeiten einreichen:',
+      panelType: 'Typ:',
+      panelStart: 'Start:',
+      panelEnd: 'Ende:',
+      panelSet: 'Setzen',
+      panelSubmit: 'Hinzufügen',
+      panelRefresh: 'Aktualisieren',
+      panelCancel: 'Abbrechen',
+      voteUpvote: 'Positiv bewerten',
+      voteDownvote: 'Negativ bewerten',
+      statusWaitingForPlayer: 'Warte auf Video-Player...',
+      statusPlayerFound: 'Player gefunden, analysiere Anime-Info...',
+      statusUsingCached: 'Verwende zwischengespeicherte Anime-Info',
+      statusSearching: 'Suche nach Anime: $1',
+      statusNotFound: 'Anime nicht gefunden. Klicke "Ändern" um manuell zu suchen.',
+      statusCouldNotParse: 'Konnte Anime-Info nicht aus Titel ermitteln',
+      statusFetching: 'Lade Skip-Zeiten...',
+      statusNoSkipTimes: 'Keine Skip-Zeiten für diese Episode gefunden',
+      statusFoundSegments: '$1 Skip-Segment(e) gefunden',
+      statusMissingInfo: 'Fehlende Anime-Info',
+      statusSubmitting: 'Reiche Skip-Zeit ein...',
+      statusSubmitSuccess: 'Skip-Zeit erfolgreich eingereicht!',
+      statusSubmitFailed: 'Einreichen fehlgeschlagen: $1',
+      statusCannotSubmit: 'Kann nicht einreichen: Fehlende Anime-Info',
+      statusInvalidTime: 'Ungültiges Zeitformat',
+      statusStartBeforeEnd: 'Startzeit muss vor Endzeit liegen',
+      statusFailedToFetch: 'Skip-Zeiten konnten nicht abgerufen werden',
+      statusFailedToFind: 'Video-Player nicht gefunden: $1',
+      searchLoading: 'Suche...',
+      searchNoResults: 'Keine Ergebnisse gefunden',
+      searchFailed: 'Suche fehlgeschlagen'
+    }
+  };
+
+  // Get current language from settings
+  function getCurrentLanguage() {
+    return state.settings?.language || 'en';
+  }
+
+  // i18n helper function - uses stored language setting
+  function getMessage(key, fallback) {
+    const lang = getCurrentLanguage();
+    const t = translations[lang] || translations.en;
+    return t[key] || fallback;
+  }
+
+  // Get SKIP_TYPE_LABELS dynamically based on current language
+  function getSkipTypeLabels() {
+    return {
+      'op': getMessage('typeOpening', 'Opening'),
+      'ed': getMessage('typeEnding', 'Ending'),
+      'mixed-op': getMessage('typeMixedOpening', 'Mixed Opening'),
+      'mixed-ed': getMessage('typeMixedEnding', 'Mixed Ending'),
+      'recap': getMessage('typeRecap', 'Recap')
+    };
+  }
 
   const SKIP_TYPE_LABELS = {
     'op': 'Opening',
@@ -435,14 +559,16 @@
       submitPanel.classList.toggle('aniskip-hidden');
       
       // Update button text and style
+      const cancelText = getMessage('panelCancel', 'Cancel');
+      const submitText = getMessage('panelSubmit', 'Submit');
       if (isHidden) {
-        toggleBtn.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg> Cancel';
+        toggleBtn.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg> ' + cancelText;
         toggleBtn.classList.add('aniskip-toggle-active');
         setTimeout(() => {
           submitPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }, 50);
       } else {
-        toggleBtn.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Submit';
+        toggleBtn.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> ' + submitText;
         toggleBtn.classList.remove('aniskip-toggle-active');
       }
     });
@@ -469,12 +595,12 @@
     if (!query) return;
     
     const resultsEl = document.querySelector('#aniskip-search-results');
-    resultsEl.innerHTML = '<div class="aniskip-loading">Searching...</div>';
+    resultsEl.innerHTML = '<div class="aniskip-loading">' + getMessage('searchLoading', 'Searching...') + '</div>';
     
     try {
       const results = await browser.runtime.sendMessage({ action: 'searchAnime', query });
       if (!results || results.length === 0) {
-        resultsEl.innerHTML = '<div class="aniskip-no-results">No results found</div>';
+        resultsEl.innerHTML = '<div class="aniskip-no-results">' + getMessage('searchNoResults', 'No results found') + '</div>';
         return;
       }
       
@@ -492,7 +618,7 @@
         el.addEventListener('click', () => selectAnime(parseInt(el.dataset.malId), el.dataset.title));
       });
     } catch (error) {
-      resultsEl.innerHTML = '<div class="aniskip-error">Search failed</div>';
+      resultsEl.innerHTML = '<div class="aniskip-error">' + getMessage('searchFailed', 'Search failed') + '</div>';
     }
   }
 
@@ -521,11 +647,11 @@
 
   async function fetchSkipTimes() {
     if (!state.currentMalId || !state.currentEpisode) {
-      updateStatus('Missing anime info');
+      updateStatus(getMessage('statusMissingInfo', 'Missing anime info'));
       return;
     }
     
-    updateStatus('Fetching skip times...');
+    updateStatus(getMessage('statusFetching', 'Fetching skip times...'));
     
     try {
       const response = await browser.runtime.sendMessage({
@@ -541,16 +667,16 @@
       }
       
       if (!response.found || !response.results || response.results.length === 0) {
-        updateStatus('No skip times found for this episode');
+        updateStatus(getMessage('statusNoSkipTimes', 'No skip times found for this episode'));
         state.skipTimes = [];
       } else {
         state.skipTimes = response.results;
-        updateStatus(`Found ${state.skipTimes.length} skip segment(s)`);
+        updateStatus(getMessage('statusFoundSegments', 'Found $1 skip segment(s)').replace('$1', state.skipTimes.length));
         renderSegments();
         addProgressBarMarkers();
       }
     } catch (error) {
-      updateStatus('Failed to fetch skip times', true);
+      updateStatus(getMessage('statusFailedToFetch', 'Failed to fetch skip times'), true);
     }
   }
 
@@ -564,15 +690,18 @@
     }
     
     segmentsEl.classList.remove('aniskip-hidden');
+    const upvoteTitle = getMessage('voteUpvote', 'Upvote');
+    const downvoteTitle = getMessage('voteDownvote', 'Downvote');
+    const skipTypeLabels = getSkipTypeLabels();
     listEl.innerHTML = state.skipTimes.map(segment => {
-      const label = SKIP_TYPE_LABELS[segment.skipType] || segment.skipType;
+      const label = skipTypeLabels[segment.skipType] || segment.skipType;
       return `
         <div class="aniskip-segment" data-skip-id="${segment.skipId}">
           <span class="aniskip-segment-type">${label}</span>
           <span class="aniskip-segment-time">${formatTime(segment.interval.startTime)} - ${formatTime(segment.interval.endTime)}</span>
           <div class="aniskip-vote-btns">
-            <button class="aniskip-vote-btn aniskip-upvote" data-vote="upvote" title="Upvote">👍</button>
-            <button class="aniskip-vote-btn aniskip-downvote" data-vote="downvote" title="Downvote">👎</button>
+            <button class="aniskip-vote-btn aniskip-upvote" data-vote="upvote" title="${upvoteTitle}">👍</button>
+            <button class="aniskip-vote-btn aniskip-downvote" data-vote="downvote" title="${downvoteTitle}">👎</button>
           </div>
         </div>
       `;
@@ -658,7 +787,8 @@
         border-radius: 2px;
         background-color: ${bgColor};
       `;
-      marker.title = `${SKIP_TYPE_LABELS[segment.skipType]}: ${formatTime(segment.interval.startTime)} - ${formatTime(segment.interval.endTime)}`;
+      const skipTypeLabels = getSkipTypeLabels();
+      marker.title = `${skipTypeLabels[segment.skipType] || segment.skipType}: ${formatTime(segment.interval.startTime)} - ${formatTime(segment.interval.endTime)}`;
       progressBar.appendChild(marker);
     });
   }
@@ -725,10 +855,11 @@
       const skipButton = state.ui.skipButton;
       if (skipButton) {
         const skipAmount = 90 + (state.settings.skipOffset || 0);
-        const skipLabel = `${skipAmount}s`;
+        const skipUnit = `<span class="aniskip-skip-unit">s</span>`;
+        const skipLabel = `${skipAmount}${skipUnit}`;
         
-        if (skipButton.querySelector('.aniskip-skip-type').textContent !== skipLabel) {
-          skipButton.querySelector('.aniskip-skip-type').textContent = skipLabel;
+        if (skipButton.querySelector('.aniskip-skip-type').innerHTML !== skipLabel) {
+          skipButton.querySelector('.aniskip-skip-type').innerHTML = skipLabel;
         }
         const duration = state.player.getDuration() || Infinity;
         skipButton.dataset.endTime = Math.min(currentTime + 90, duration);
@@ -936,7 +1067,7 @@
 
   async function submitSkipTime() {
     if (!state.currentMalId || !state.currentEpisode || !state.player) {
-      updateStatus('Cannot submit: missing anime info', true);
+      updateStatus(getMessage('statusCannotSubmit', 'Cannot submit: missing anime info'), true);
       return;
     }
     
@@ -944,10 +1075,10 @@
     const startTime = parseTime(document.querySelector('#aniskip-submit-start').value);
     const endTime = parseTime(document.querySelector('#aniskip-submit-end').value);
     
-    if (startTime === null || endTime === null) { updateStatus('Invalid time format', true); return; }
-    if (startTime >= endTime) { updateStatus('Start time must be before end time', true); return; }
+    if (startTime === null || endTime === null) { updateStatus(getMessage('statusInvalidTime', 'Invalid time format'), true); return; }
+    if (startTime >= endTime) { updateStatus(getMessage('statusStartBeforeEnd', 'Start time must be before end time'), true); return; }
     
-    updateStatus('Submitting skip time...');
+    updateStatus(getMessage('statusSubmitting', 'Submitting skip time...'));
     
     try {
       const response = await browser.runtime.sendMessage({
@@ -957,13 +1088,13 @@
         data: { skipType: type, startTime: Math.round(startTime * 1000) / 1000, endTime: Math.round(endTime * 1000) / 1000, episodeLength: Math.round(state.player.getDuration() * 1000) / 1000 }
       });
       
-      if (response.error) updateStatus(`Submit failed: ${response.error}`, true);
+      if (response.error) updateStatus(getMessage('statusSubmitFailed', 'Submit failed: $1').replace('$1', response.error), true);
       else {
-        updateStatus('Skip time submitted successfully!');
+        updateStatus(getMessage('statusSubmitSuccess', 'Skip time submitted successfully!'));
         document.querySelector('#aniskip-submit-panel').classList.add('aniskip-hidden');
         await fetchSkipTimes();
       }
-    } catch (error) { updateStatus('Failed to submit skip time', true); }
+    } catch (error) { updateStatus(getMessage('statusFailedToFetch', 'Failed to submit skip time'), true); }
   }
 
   async function refreshSkipTimes() {
@@ -1006,12 +1137,12 @@
     }
     
     createUI();
-    updateStatus('Waiting for video player...');
+    updateStatus(getMessage('statusWaitingForPlayer', 'Waiting for video player...'));
     
     try {
       state.player = await waitForPlayer();
       console.log('VOE AniSkip: Player ready');
-      updateStatus('Player found, parsing anime info...');
+      updateStatus(getMessage('statusPlayerFound', 'Player found, parsing anime info...'));
       
       let animeInfo = null;
       if (isInIframe()) animeInfo = await getAniWorldInfo();
@@ -1033,12 +1164,12 @@
           state.currentMalId = cached.malId;
           document.querySelector('#aniskip-anime-name').textContent = cached.title;
           document.querySelector('#aniskip-mal-id').textContent = cached.malId;
-          updateStatus('Using cached anime info');
+          updateStatus(getMessage('statusUsingCached', 'Using cached anime info'));
           await fetchSkipTimes();
         } else {
           document.querySelector('#aniskip-anime-name').textContent = animeInfo.animeName;
           document.querySelector('#aniskip-search-input').value = animeInfo.animeName;
-          updateStatus('Searching for anime: ' + animeInfo.animeName);
+          updateStatus(getMessage('statusSearching', 'Searching for anime: $1').replace('$1', animeInfo.animeName));
           
           let searchQuery = animeInfo.animeName;
           if (animeInfo.season && animeInfo.season > 1) searchQuery += ' season ' + animeInfo.season;
@@ -1048,12 +1179,12 @@
           if (results && results.length > 0) {
             await selectAnime(results[0].mal_id, results[0].title);
           } else {
-            updateStatus('Anime not found. Click "Change" to search manually.');
+            updateStatus(getMessage('statusNotFound', 'Anime not found. Click "Change" to search manually.'));
             document.querySelector('#aniskip-search-panel').classList.remove('aniskip-hidden');
           }
         }
       } else {
-        updateStatus('Could not parse anime info from title');
+        updateStatus(getMessage('statusCouldNotParse', 'Could not parse anime info from title'));
         document.querySelector('#aniskip-search-panel').classList.remove('aniskip-hidden');
       }
       
@@ -1098,7 +1229,7 @@
       
     } catch (error) {
       console.error('VOE AniSkip: Failed to initialize:', error);
-      updateStatus('Failed to find video player: ' + error.message, true);
+      updateStatus(getMessage('statusFailedToFind', 'Failed to find video player: $1').replace('$1', error.message), true);
     }
   }
 

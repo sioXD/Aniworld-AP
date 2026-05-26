@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AniWorld AP Settings</title>
+  <title data-i18n="settingsTitle">AniWorld AP Settings</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -976,7 +976,7 @@
     </div>
     <div class="header-text">
       <h1>Ani<span class="brand-world">World</span><span class="brand-ap">AP</span></h1>
-      <div class="tagline">Skip intros & outros automatically</div>
+      <div class="tagline" data-i18n="tagline">Skip Intros & Outros</div>
     </div>
   </div>
 
@@ -986,17 +986,27 @@
       <div class="section-header">
         <i class="fas fa-paint-brush"></i>
         <div class="section-icon"><i class="fas fa-paint-brush"></i></div>
-        <div class="section-title">Appearance</div>
+        <div class="section-title" data-i18n="sectionAppearance">Appearance</div>
       </div>
       <div class="settings-card">
         <div class="setting-row">
           <div class="setting-info">
-            <div class="setting-label">UI Theme</div>
-            <div class="setting-description">Choose your preferred style</div>
+            <div class="setting-label" data-i18n="labelLanguage">Language</div>
+            <div class="setting-description" data-i18n="descLanguage">Choose your preferred language</div>
+          </div>
+          <select id="language" class="select-input">
+            <option value="en" data-i18n="langEnglish">English</option>
+            <option value="de" data-i18n="langGerman">German</option>
+          </select>
+        </div>
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label" data-i18n="labelUiTheme">UI Theme</div>
+            <div class="setting-description" data-i18n="descUiTheme">Choose your preferred style</div>
           </div>
           <select id="uiTheme" class="select-input">
-            <option value="aniworld">AniWorld</option>
-            <option value="classic">Classic</option>
+            <option value="aniworld" data-i18n="themeAniworld">AniWorld</option>
+            <option value="classic" data-i18n="themeClassic">Classic</option>
           </select>
         </div>
       </div>
@@ -1007,13 +1017,13 @@
       <div class="section-header">
         <i class="fas fa-forward"></i>
         <div class="section-icon"><i class="fas fa-play"></i></div>
-        <div class="section-title">Auto Skip</div>
+        <div class="section-title" data-i18n="sectionAutoSkip">Auto Skip</div>
       </div>
       <div class="settings-card">
         <div class="setting-row">
           <div class="setting-info">
-            <div class="setting-label">Skip Opening</div>
-            <div class="setting-description">Auto-skip anime intros</div>
+            <div class="setting-label" data-i18n="labelSkipOpening">Skip Opening</div>
+            <div class="setting-description" data-i18n="descSkipOpening">Auto-skip anime intros</div>
           </div>
           <label class="toggle">
             <input type="checkbox" id="autoSkipOp">
@@ -1022,8 +1032,8 @@
         </div>
         <div class="setting-row">
           <div class="setting-info">
-            <div class="setting-label">Skip Ending</div>
-            <div class="setting-description">Auto-skip anime outros</div>
+            <div class="setting-label" data-i18n="labelSkipEnding">Skip Ending</div>
+            <div class="setting-description" data-i18n="descSkipEnding">Auto-skip anime outros</div>
           </div>
           <label class="toggle">
             <input type="checkbox" id="autoSkipEd">
@@ -1032,8 +1042,8 @@
         </div>
         <div class="setting-row">
           <div class="setting-info">
-            <div class="setting-label">Skip Recap</div>
-            <div class="setting-description">Auto-skip recap segments</div>
+            <div class="setting-label" data-i18n="labelSkipRecap">Skip Recap</div>
+            <div class="setting-description" data-i18n="descSkipRecap">Auto-skip recap segments</div>
           </div>
           <label class="toggle">
             <input type="checkbox" id="autoSkipRecap">
@@ -1048,13 +1058,13 @@
       <div class="section-header">
         <i class="fas fa-tv"></i>
         <div class="section-icon"><i class="fas fa-tv"></i></div>
-        <div class="section-title">Display</div>
+        <div class="section-title" data-i18n="sectionDisplay">Display</div>
       </div>
       <div class="settings-card">
         <div class="setting-row">
           <div class="setting-info">
-            <div class="setting-label">Show Skip Buttons</div>
-            <div class="setting-description">Display manual skip buttons</div>
+            <div class="setting-label" data-i18n="labelShowButtons">Show Skip Buttons</div>
+            <div class="setting-description" data-i18n="descShowButtons">Display manual skip buttons</div>
           </div>
           <label class="toggle">
             <input type="checkbox" id="showButtons" checked>
@@ -1063,8 +1073,8 @@
         </div>
         <div class="setting-row">
           <div class="setting-info">
-            <div class="setting-label">Always Show Skip Button</div>
-            <div class="setting-description">Skip 90s if no OP/ED is playing</div>
+            <div class="setting-label" data-i18n="labelAlwaysShowButton">Always Show Skip Button</div>
+            <div class="setting-description" data-i18n="descAlwaysShowButton">Skip 90s if no OP/ED is playing</div>
           </div>
           <label class="toggle">
             <input type="checkbox" id="alwaysShowButton">
@@ -1073,8 +1083,8 @@
         </div>
         <div class="setting-row">
           <div class="setting-info">
-            <div class="setting-label">Skip Offset</div>
-            <div class="setting-description">Seconds to add after skip</div>
+            <div class="setting-label" data-i18n="labelSkipOffset">Skip Offset</div>
+            <div class="setting-description" data-i18n="descSkipOffset">Seconds to add after skip</div>
           </div>
           <input type="number" id="skipOffset" class="number-input" value="0" min="-5" max="5" step="0.5">
         </div>
@@ -1086,13 +1096,13 @@
       <div class="section-header">
         <i class="fas fa-clock"></i>
         <div class="section-icon"><i class="fas fa-clock"></i></div>
-        <div class="section-title">Playback</div>
+        <div class="section-title" data-i18n="sectionPlayback">Playback</div>
       </div>
       <div class="settings-card">
         <div class="setting-row">
           <div class="setting-info">
-            <div class="setting-label">Play After Skip</div>
-            <div class="setting-description">Resume playback after skipping</div>
+            <div class="setting-label" data-i18n="labelPlayAfterSkip">Play After Skip</div>
+            <div class="setting-description" data-i18n="descPlayAfterSkip">Resume playback after skipping</div>
           </div>
           <label class="toggle">
             <input type="checkbox" id="playAfterSkip" checked>
@@ -1101,8 +1111,8 @@
         </div>
         <div class="setting-row">
           <div class="setting-info">
-            <div class="setting-label">Remember Volume</div>
-            <div class="setting-description">Persist volume across episodes</div>
+            <div class="setting-label" data-i18n="labelRememberVolume">Remember Volume</div>
+            <div class="setting-description" data-i18n="descRememberVolume">Persist volume across episodes</div>
           </div>
           <label class="toggle">
             <input type="checkbox" id="persistentVolume" checked>
@@ -1111,8 +1121,8 @@
         </div>
         <div class="setting-row">
           <div class="setting-info">
-            <div class="setting-label">Remember Position</div>
-            <div class="setting-description">Resume where you left off</div>
+            <div class="setting-label" data-i18n="labelRememberPosition">Remember Position</div>
+            <div class="setting-description" data-i18n="descRememberPosition">Resume where you left off</div>
           </div>
           <label class="toggle">
             <input type="checkbox" id="persistentPlaybackPosition" checked>
@@ -1121,8 +1131,8 @@
         </div>
         <div class="setting-row">
           <div class="setting-info">
-            <div class="setting-label">Position Expiry</div>
-            <div class="setting-description">Days until position resets</div>
+            <div class="setting-label" data-i18n="labelPositionExpiry">Position Expiry</div>
+            <div class="setting-description" data-i18n="descPositionExpiry">Days until position resets</div>
           </div>
           <input type="number" id="playbackPositionExpirationDays" class="number-input" value="7" min="1" max="30" step="1">
         </div>
@@ -1134,13 +1144,13 @@
       <div class="section-header">
         <i class="fas fa-palette"></i>
         <div class="section-icon"><i class="fas fa-palette"></i></div>
-        <div class="section-title">Progress Bar Colors</div>
+        <div class="section-title" data-i18n="sectionColors">Progress Bar Colors</div>
       </div>
       <div class="settings-card">
         <div class="setting-row">
           <div class="setting-info">
-            <div class="setting-label">Opening Marker</div>
-            <div class="setting-description">Intro segment color</div>
+            <div class="setting-label" data-i18n="labelOpeningMarker">Opening Marker</div>
+            <div class="setting-description" data-i18n="descOpeningMarker">Intro segment color</div>
           </div>
           <div class="color-picker-wrapper">
             <button type="button" class="color-button" id="markerColorOpBtn" data-target="markerColorOp">
@@ -1151,8 +1161,8 @@
         </div>
         <div class="setting-row">
           <div class="setting-info">
-            <div class="setting-label">Ending Marker</div>
-            <div class="setting-description">Outro segment color</div>
+            <div class="setting-label" data-i18n="labelEndingMarker">Ending Marker</div>
+            <div class="setting-description" data-i18n="descEndingMarker">Outro segment color</div>
           </div>
           <div class="color-picker-wrapper">
             <button type="button" class="color-button" id="markerColorEdBtn" data-target="markerColorEd">
@@ -1163,8 +1173,8 @@
         </div>
         <div class="setting-row">
           <div class="setting-info">
-            <div class="setting-label">Recap Marker</div>
-            <div class="setting-description">Recap segment color</div>
+            <div class="setting-label" data-i18n="labelRecapMarker">Recap Marker</div>
+            <div class="setting-description" data-i18n="descRecapMarker">Recap segment color</div>
           </div>
           <div class="color-picker-wrapper">
             <button type="button" class="color-button" id="markerColorRecapBtn" data-target="markerColorRecap">
@@ -1175,8 +1185,8 @@
         </div>
         <div class="setting-row">
           <div class="setting-info">
-            <div class="setting-label">Marker Opacity</div>
-            <div class="setting-description">Transparency (0.1 - 1.0)</div>
+            <div class="setting-label" data-i18n="labelMarkerOpacity">Marker Opacity</div>
+            <div class="setting-description" data-i18n="descMarkerOpacity">Transparency (0.1 - 1.0)</div>
           </div>
           <input type="number" id="markerOpacity" class="number-input" value="0.5" min="0.1" max="1" step="0.1">
         </div>
@@ -1192,9 +1202,9 @@
     <div class="footer-right">
       <span class="save-indicator" id="saveIndicator">
         <i class="fas fa-check"></i>
-        Saved
+        <span data-i18n="footerSaved">Saved</span>
       </span>
-      <span id="version" class="version">v1.4.4 - 26.05.26</span>
+      <span id="version" class="version">v1.4.6 - 26.05.26</span>
     </div>
   </div>
 
@@ -1202,7 +1212,7 @@
   <div class="color-picker-modal" id="colorPickerModal">
     <div class="color-picker-content">
       <div class="color-picker-header">
-        <span class="color-picker-title">Choose Color</span>
+        <span class="color-picker-title" data-i18n="colorPickerTitle">Choose Color</span>
         <button type="button" class="color-picker-close" id="colorPickerClose">
           <i class="fas fa-times"></i>
         </button>
@@ -1213,8 +1223,8 @@
         <div class="color-picker-custom-preview" id="colorPickerCustomPreview"></div>
       </div>
       <div class="color-picker-actions">
-        <button type="button" class="color-picker-btn color-picker-btn-cancel" id="colorPickerCancel">Cancel</button>
-        <button type="button" class="color-picker-btn color-picker-btn-apply" id="colorPickerApply">Apply</button>
+        <button type="button" class="color-picker-btn color-picker-btn-cancel" id="colorPickerCancel" data-i18n="colorPickerCancel">Cancel</button>
+        <button type="button" class="color-picker-btn color-picker-btn-apply" id="colorPickerApply" data-i18n="colorPickerApply">Apply</button>
       </div>
     </div>
   </div>

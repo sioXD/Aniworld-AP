@@ -1,6 +1,10 @@
-# Remove any existing zip file
-if (Test-Path aniworld-ap.zip) {
-    Remove-Item aniworld-ap.zip
+# Remove any existing package artifacts
+if (Test-Path aniworld-ap.xpi) {
+    Remove-Item aniworld-ap.xpi
+}
+
+if (Test-Path web-ext-artifacts) {
+    Remove-Item web-ext-artifacts -Recurse -Force
 }
 
 try {
@@ -15,11 +19,23 @@ try {
     $popupContent = $popupContent -replace '(<span id="version"[^>]*>).*?(</span>)', "`$1v$version - $currentDate`$2"
     Set-Content -Path $popupPath -Value $popupContent -NoNewline
 
-    # Create new zip archive
-    Compress-Archive -Path manifest.json, src, icons -DestinationPath aniworld-ap.zip -Force
-    
-    # Rename-Item -Path aniworld-ap.zip -NewName aniworld-ap.xpi -Force
-    Write-Host "Archive created successfully with Version $version ($currentDate)" -ForegroundColor Green
+    # Build the extension with web-ext so Firefox-compatible packaging is handled automatically
+    try {
+        web-ext build --ignore-files docs META-INF .\CHANGELOG.md .\CONTRIBUTING.md .\LICENSE .\original_README.md .\pack.ps1 .\README.md .\SECURITY.md
+    }
+    catch {
+        Write-Host "web-ext not found" -ForegroundColor Red
+        Write-Host "pls run: " -NoNewline -ForegroundColor Red
+        Write-Host "npm install --global web-ext" -ForegroundColor Blue
+        throw "canceled"
+    }
+
+    $builtArchive = Get-ChildItem -Path web-ext-artifacts -Filter *.zip | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+    if (-not $builtArchive) {
+        throw "web-ext did not produce a build artifact"
+    }
+
+    Write-Host "Package created successfully with Version $version ($currentDate)" -ForegroundColor Green
     
 }
 catch {

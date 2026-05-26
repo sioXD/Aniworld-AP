@@ -1,8 +1,9 @@
 {
   "manifest_version": 2,
-  "name": "AniWorld AP",
-  "version": "1.4.4",
-  "description": "Skip anime openings and endings on AniWorld using AniSkip - With persistent volume, playback position, and auto-play",
+  "name": "__MSG_extensionName__",
+  "version": "1.4.6",
+  "description": "__MSG_extensionDescription__",
+  "default_locale": "en",
   "author": "AniWorld AP",
   "homepage_url": "https://ziegel8171.github.io/Aniworld-AP",
   "icons": {
@@ -22,7 +23,7 @@
       "48": "icons/icon-48.png",
       "96": "icons/icon-96.png"
     },
-    "default_title": "AniWorld AP",
+    "default_title": "__MSG_extensionName__",
     "default_popup": "src/popup.html"
   },
   "content_scripts": [

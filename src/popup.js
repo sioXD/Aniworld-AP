@@ -1,6 +1,121 @@
 // Popup script for AniWorld AP settings
 
+// Translations object
+const translations = {
+  en: {
+    settingsTitle: "AniWorld AP Settings",
+    tagline: "Skip Intros & Outros",
+    sectionAppearance: "Appearance",
+    labelLanguage: "Language",
+    descLanguage: "Choose your preferred language",
+    langEnglish: "English",
+    langGerman: "German",
+    labelUiTheme: "UI Theme",
+    descUiTheme: "Choose your preferred style",
+    themeAniworld: "AniWorld",
+    themeClassic: "Classic",
+    sectionAutoSkip: "Auto Skip",
+    labelSkipOpening: "Skip Opening",
+    descSkipOpening: "Auto-skip anime intros",
+    labelSkipEnding: "Skip Ending",
+    descSkipEnding: "Auto-skip anime outros",
+    labelSkipRecap: "Skip Recap",
+    descSkipRecap: "Auto-skip recap segments",
+    sectionDisplay: "Display",
+    labelShowButtons: "Show Skip Buttons",
+    descShowButtons: "Display manual skip buttons",
+    labelAlwaysShowButton: "Always Show Skip Button",
+    descAlwaysShowButton: "Skip 90s if no OP/ED is playing",
+    labelSkipOffset: "Skip Offset",
+    descSkipOffset: "Seconds to add after skip",
+    sectionPlayback: "Playback",
+    labelPlayAfterSkip: "Play After Skip",
+    descPlayAfterSkip: "Resume playback after skipping",
+    labelRememberVolume: "Remember Volume",
+    descRememberVolume: "Persist volume across episodes",
+    labelRememberPosition: "Remember Position",
+    descRememberPosition: "Resume where you left off",
+    labelPositionExpiry: "Position Expiry",
+    descPositionExpiry: "Days until position resets",
+    sectionColors: "Progress Bar Colors",
+    labelOpeningMarker: "Opening Marker",
+    descOpeningMarker: "Intro segment color",
+    labelEndingMarker: "Ending Marker",
+    descEndingMarker: "Outro segment color",
+    labelRecapMarker: "Recap Marker",
+    descRecapMarker: "Recap segment color",
+    labelMarkerOpacity: "Marker Opacity",
+    descMarkerOpacity: "Transparency (0.1 - 1.0)",
+    footerSaved: "Saved",
+    colorPickerTitle: "Choose Color",
+    colorPickerCancel: "Cancel",
+    colorPickerApply: "Apply"
+  },
+  de: {
+    settingsTitle: "AniWorld AP Einstellungen",
+    tagline: "Intros & Outros überspringen",
+    sectionAppearance: "Darstellung",
+    labelLanguage: "Sprache",
+    descLanguage: "Wähle deine bevorzugte Sprache",
+    langEnglish: "Englisch",
+    langGerman: "Deutsch",
+    labelUiTheme: "UI-Design",
+    descUiTheme: "Wähle deinen bevorzugten Stil",
+    themeAniworld: "AniWorld",
+    themeClassic: "Klassisch",
+    sectionAutoSkip: "Auto-Skip",
+    labelSkipOpening: "Intro überspringen",
+    descSkipOpening: "Anime-Intros automatisch überspringen",
+    labelSkipEnding: "Outro überspringen",
+    descSkipEnding: "Anime-Outros automatisch überspringen",
+    labelSkipRecap: "Recap überspringen",
+    descSkipRecap: "Zusammenfassungen automatisch überspringen",
+    sectionDisplay: "Anzeige",
+    labelShowButtons: "Skip-Buttons anzeigen",
+    descShowButtons: "Manuelle Skip-Buttons anzeigen",
+    labelAlwaysShowButton: "Skip-Button immer anzeigen",
+    descAlwaysShowButton: "90s überspringen wenn kein OP/ED läuft",
+    labelSkipOffset: "Skip-Versatz",
+    descSkipOffset: "Sekunden nach dem Skip hinzufügen",
+    sectionPlayback: "Wiedergabe",
+    labelPlayAfterSkip: "Nach Skip abspielen",
+    descPlayAfterSkip: "Wiedergabe nach dem Überspringen fortsetzen",
+    labelRememberVolume: "Lautstärke merken",
+    descRememberVolume: "Lautstärke über Episoden beibehalten",
+    labelRememberPosition: "Position merken",
+    descRememberPosition: "Dort fortsetzen, wo du aufgehört hast",
+    labelPositionExpiry: "Position-Ablauf",
+    descPositionExpiry: "Tage bis Position zurückgesetzt wird",
+    sectionColors: "Fortschrittsbalken-Farben",
+    labelOpeningMarker: "Intro-Markierung",
+    descOpeningMarker: "Intro-Segment Farbe",
+    labelEndingMarker: "Outro-Markierung",
+    descEndingMarker: "Outro-Segment Farbe",
+    labelRecapMarker: "Recap-Markierung",
+    descRecapMarker: "Zusammenfassungs-Segment Farbe",
+    labelMarkerOpacity: "Markierungs-Deckkraft",
+    descMarkerOpacity: "Transparenz (0.1 - 1.0)",
+    footerSaved: "Gespeichert",
+    colorPickerTitle: "Farbe wählen",
+    colorPickerCancel: "Abbrechen",
+    colorPickerApply: "Anwenden"
+  }
+};
+
+// Apply translations based on selected language
+function applyTranslations(lang) {
+  const t = translations[lang] || translations.en;
+  document.querySelectorAll('[data-i18n]').forEach(element => {
+    const key = element.getAttribute('data-i18n');
+    if (t[key]) {
+      element.textContent = t[key];
+    }
+  });
+  document.title = t.settingsTitle || 'AniWorld AP Settings';
+}
+
 const settingIds = [
+  'language',
   'autoSkipOp', 
   'autoSkipEd', 
   'autoSkipRecap', 
@@ -193,6 +308,7 @@ async function loadSettings() {
   try {
     const settings = await browser.runtime.sendMessage({ action: 'getSettings' });
     
+    document.getElementById('language').value = settings.language || 'en';
     document.getElementById('autoSkipOp').checked = settings.autoSkipOp || false;
     document.getElementById('autoSkipEd').checked = settings.autoSkipEd || false;
     document.getElementById('autoSkipRecap').checked = settings.autoSkipRecap || false;
@@ -213,6 +329,10 @@ async function loadSettings() {
     document.getElementById('uiTheme').value = theme;
     applyTheme(theme);
     
+    // Apply language
+    const language = settings.language || 'en';
+    applyTranslations(language);
+    
     updateColorPreviews();
     updateDependentSettings();
   } catch (error) {
@@ -228,6 +348,7 @@ function applyTheme(theme) {
 // Save settings
 async function saveSettings() {
   const settings = {
+    language: document.getElementById('language').value,
     autoSkipOp: document.getElementById('autoSkipOp').checked,
     autoSkipEd: document.getElementById('autoSkipEd').checked,
     autoSkipRecap: document.getElementById('autoSkipRecap').checked,
@@ -247,6 +368,9 @@ async function saveSettings() {
 
   // Apply theme immediately
   applyTheme(settings.uiTheme);
+  
+  // Apply language immediately
+  applyTranslations(settings.language);
 
   try {
     await browser.runtime.sendMessage({ action: 'saveSettings', settings });

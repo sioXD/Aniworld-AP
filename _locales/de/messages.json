@@ -1,0 +1,406 @@
+{
+  "extensionName": {
+    "message": "AniWorld AP",
+    "description": "Name of the extension"
+  },
+  "labelLanguage": {
+    "message": "Sprache",
+    "description": "Language setting label"
+  },
+  "descLanguage": {
+    "message": "Wähle deine bevorzugte Sprache",
+    "description": "Language setting description"
+  },
+  "langEnglish": {
+    "message": "Englisch",
+    "description": "English language option"
+  },
+  "langGerman": {
+    "message": "Deutsch",
+    "description": "German language option"
+  },
+  "extensionDescription": {
+    "message": "Überspringe Anime-Intros und -Outros auf AniWorld mit AniSkip - Mit persistenter Lautstärke, Wiedergabeposition und Auto-Play",
+    "description": "Description of the extension"
+  },
+  "settingsTitle": {
+    "message": "AniWorld AP Einstellungen",
+    "description": "Title of the settings page"
+  },
+  "tagline": {
+    "message": "Intros & Outros überspringen",
+    "description": "Tagline in header"
+  },
+  "sectionAppearance": {
+    "message": "Darstellung",
+    "description": "Appearance section header"
+  },
+  "labelUiTheme": {
+    "message": "UI-Design",
+    "description": "UI Theme setting label"
+  },
+  "descUiTheme": {
+    "message": "Wähle deinen bevorzugten Stil",
+    "description": "UI Theme setting description"
+  },
+  "themeAniworld": {
+    "message": "AniWorld",
+    "description": "AniWorld theme option"
+  },
+  "themeClassic": {
+    "message": "Klassisch",
+    "description": "Classic theme option"
+  },
+  "sectionAutoSkip": {
+    "message": "Auto-Skip",
+    "description": "Auto Skip section header"
+  },
+  "labelSkipOpening": {
+    "message": "Opening überspringen",
+    "description": "Skip Opening setting label"
+  },
+  "descSkipOpening": {
+    "message": "Anime-Intros automatisch überspringen",
+    "description": "Skip Opening setting description"
+  },
+  "labelSkipEnding": {
+    "message": "Ending überspringen",
+    "description": "Skip Ending setting label"
+  },
+  "descSkipEnding": {
+    "message": "Anime-Outros automatisch überspringen",
+    "description": "Skip Ending setting description"
+  },
+  "labelSkipRecap": {
+    "message": "Recap überspringen",
+    "description": "Skip Recap setting label"
+  },
+  "descSkipRecap": {
+    "message": "Zusammenfassungen automatisch überspringen",
+    "description": "Skip Recap setting description"
+  },
+  "sectionDisplay": {
+    "message": "Anzeige",
+    "description": "Display section header"
+  },
+  "labelShowButtons": {
+    "message": "Skip-Buttons anzeigen",
+    "description": "Show Skip Buttons setting label"
+  },
+  "descShowButtons": {
+    "message": "Manuelle Skip-Buttons anzeigen",
+    "description": "Show Skip Buttons setting description"
+  },
+  "labelAlwaysShowButton": {
+    "message": "Skip-Button immer anzeigen",
+    "description": "Always Show Skip Button setting label"
+  },
+  "descAlwaysShowButton": {
+    "message": "90s überspringen wenn kein OP/ED läuft",
+    "description": "Always Show Skip Button setting description"
+  },
+  "labelSkipOffset": {
+    "message": "Skip-Versatz",
+    "description": "Skip Offset setting label"
+  },
+  "descSkipOffset": {
+    "message": "Sekunden nach dem Skip hinzufügen",
+    "description": "Skip Offset setting description"
+  },
+  "sectionPlayback": {
+    "message": "Wiedergabe",
+    "description": "Playback section header"
+  },
+  "labelPlayAfterSkip": {
+    "message": "Nach Skip abspielen",
+    "description": "Play After Skip setting label"
+  },
+  "descPlayAfterSkip": {
+    "message": "Wiedergabe nach dem Überspringen fortsetzen",
+    "description": "Play After Skip setting description"
+  },
+  "labelRememberVolume": {
+    "message": "Lautstärke merken",
+    "description": "Remember Volume setting label"
+  },
+  "descRememberVolume": {
+    "message": "Lautstärke über Episoden beibehalten",
+    "description": "Remember Volume setting description"
+  },
+  "labelRememberPosition": {
+    "message": "Position merken",
+    "description": "Remember Position setting label"
+  },
+  "descRememberPosition": {
+    "message": "Dort fortsetzen, wo du aufgehört hast",
+    "description": "Remember Position setting description"
+  },
+  "labelPositionExpiry": {
+    "message": "Position-Ablauf",
+    "description": "Position Expiry setting label"
+  },
+  "descPositionExpiry": {
+    "message": "Tage bis Position zurückgesetzt wird",
+    "description": "Position Expiry setting description"
+  },
+  "sectionColors": {
+    "message": "Fortschrittsbalken-Farben",
+    "description": "Colors section header"
+  },
+  "labelOpeningMarker": {
+    "message": "Opening-Markierung",
+    "description": "Opening Marker setting label"
+  },
+  "descOpeningMarker": {
+    "message": "Intro-Segment Farbe",
+    "description": "Opening Marker setting description"
+  },
+  "labelEndingMarker": {
+    "message": "Ending-Markierung",
+    "description": "Ending Marker setting label"
+  },
+  "descEndingMarker": {
+    "message": "Outro-Segment Farbe",
+    "description": "Ending Marker setting description"
+  },
+  "labelRecapMarker": {
+    "message": "Recap-Markierung",
+    "description": "Recap Marker setting label"
+  },
+  "descRecapMarker": {
+    "message": "Zusammenfassungs-Segment Farbe",
+    "description": "Recap Marker setting description"
+  },
+  "labelMarkerOpacity": {
+    "message": "Markierungs-Deckkraft",
+    "description": "Marker Opacity setting label"
+  },
+  "descMarkerOpacity": {
+    "message": "Transparenz (0.1 - 1.0)",
+    "description": "Marker Opacity setting description"
+  },
+  "footerSaved": {
+    "message": "Gespeichert",
+    "description": "Save indicator text"
+  },
+  "colorPickerTitle": {
+    "message": "Farbe wählen",
+    "description": "Color picker modal title"
+  },
+  "colorPickerCancel": {
+    "message": "Abbrechen",
+    "description": "Color picker cancel button"
+  },
+  "colorPickerApply": {
+    "message": "Anwenden",
+    "description": "Color picker apply button"
+  },
+  "skipButtonText": {
+    "message": "Überspringen",
+    "description": "Skip button text"
+  },
+  "typeOpening": {
+    "message": "Opening",
+    "description": "Opening skip type"
+  },
+  "typeEnding": {
+    "message": "Ending",
+    "description": "Ending skip type"
+  },
+  "typeMixedOpening": {
+    "message": "Gemischtes Opening",
+    "description": "Mixed Opening skip type"
+  },
+  "typeMixedEnding": {
+    "message": "Gemischtes Ending",
+    "description": "Mixed Ending skip type"
+  },
+  "typeRecap": {
+    "message": "Zusammenfassung",
+    "description": "Recap skip type"
+  },
+  "panelInitializing": {
+    "message": "Initialisierung...",
+    "description": "Initial status message"
+  },
+  "panelAnime": {
+    "message": "Anime:",
+    "description": "Anime label in panel"
+  },
+  "panelSeason": {
+    "message": "Staffel:",
+    "description": "Season label in panel"
+  },
+  "panelEpisode": {
+    "message": "Episode:",
+    "description": "Episode label in panel"
+  },
+  "panelMalId": {
+    "message": "MAL ID:",
+    "description": "MAL ID label in panel"
+  },
+  "panelChange": {
+    "message": "Ändern",
+    "description": "Change button text"
+  },
+  "panelSkipSegments": {
+    "message": "Skip-Segmente:",
+    "description": "Skip Segments label"
+  },
+  "panelSearchPlaceholder": {
+    "message": "Anime suchen...",
+    "description": "Search input placeholder"
+  },
+  "panelSearchButton": {
+    "message": "Suchen",
+    "description": "Search button text"
+  },
+  "panelSubmitSkipTime": {
+    "message": "Skip-Zeit einreichen:",
+    "description": "Submit section label"
+  },
+  "panelType": {
+    "message": "Typ:",
+    "description": "Type label in submit form"
+  },
+  "panelStart": {
+    "message": "Start:",
+    "description": "Start label in submit form"
+  },
+  "panelEnd": {
+    "message": "Ende:",
+    "description": "End label in submit form"
+  },
+  "panelSet": {
+    "message": "Setzen",
+    "description": "Set button text"
+  },
+  "panelSubmit": {
+    "message": "Einreichen",
+    "description": "Submit button text"
+  },
+  "panelRefresh": {
+    "message": "Aktualisieren",
+    "description": "Refresh button text"
+  },
+  "panelCancel": {
+    "message": "Abbrechen",
+    "description": "Cancel button text"
+  },
+  "statusWaitingForPlayer": {
+    "message": "Warte auf Video-Player...",
+    "description": "Status: waiting for player"
+  },
+  "statusPlayerFound": {
+    "message": "Player gefunden, analysiere Anime-Info...",
+    "description": "Status: player found"
+  },
+  "statusUsingCached": {
+    "message": "Verwende zwischengespeicherte Anime-Info",
+    "description": "Status: using cached info"
+  },
+  "statusSearching": {
+    "message": "Suche nach Anime: $ANIME$",
+    "description": "Status: searching for anime",
+    "placeholders": {
+      "anime": {
+        "content": "$1",
+        "example": "Naruto"
+      }
+    }
+  },
+  "statusNotFound": {
+    "message": "Anime nicht gefunden. Klicke \"Ändern\" um manuell zu suchen.",
+    "description": "Status: anime not found"
+  },
+  "statusCouldNotParse": {
+    "message": "Konnte Anime-Info nicht aus Titel ermitteln",
+    "description": "Status: could not parse"
+  },
+  "statusFetching": {
+    "message": "Lade Skip-Zeiten...",
+    "description": "Status: fetching skip times"
+  },
+  "statusNoSkipTimes": {
+    "message": "Keine Skip-Zeiten für diese Episode gefunden",
+    "description": "Status: no skip times"
+  },
+  "statusFoundSegments": {
+    "message": "$COUNT$ Skip-Segment(e) gefunden",
+    "description": "Status: found segments",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "statusMissingInfo": {
+    "message": "Fehlende Anime-Info",
+    "description": "Status: missing info"
+  },
+  "statusSubmitting": {
+    "message": "Reiche Skip-Zeit ein...",
+    "description": "Status: submitting"
+  },
+  "statusSubmitSuccess": {
+    "message": "Skip-Zeit erfolgreich eingereicht!",
+    "description": "Status: submit success"
+  },
+  "statusSubmitFailed": {
+    "message": "Einreichen fehlgeschlagen: $ERROR$",
+    "description": "Status: submit failed",
+    "placeholders": {
+      "error": {
+        "content": "$1",
+        "example": "Network error"
+      }
+    }
+  },
+  "statusCannotSubmit": {
+    "message": "Kann nicht einreichen: Fehlende Anime-Info",
+    "description": "Status: cannot submit"
+  },
+  "statusInvalidTime": {
+    "message": "Ungültiges Zeitformat",
+    "description": "Status: invalid time"
+  },
+  "statusStartBeforeEnd": {
+    "message": "Startzeit muss vor Endzeit liegen",
+    "description": "Status: start before end"
+  },
+  "statusFailedToFetch": {
+    "message": "Skip-Zeiten konnten nicht abgerufen werden",
+    "description": "Status: failed to fetch"
+  },
+  "statusFailedToFind": {
+    "message": "Video-Player nicht gefunden: $ERROR$",
+    "description": "Status: failed to find player",
+    "placeholders": {
+      "error": {
+        "content": "$1",
+        "example": "Timeout"
+      }
+    }
+  },
+  "searchLoading": {
+    "message": "Suche...",
+    "description": "Search loading text"
+  },
+  "searchNoResults": {
+    "message": "Keine Ergebnisse gefunden",
+    "description": "Search no results text"
+  },
+  "searchFailed": {
+    "message": "Suche fehlgeschlagen",
+    "description": "Search failed text"
+  },
+  "voteUpvote": {
+    "message": "Positiv bewerten",
+    "description": "Upvote button title"
+  },
+  "voteDownvote": {
+    "message": "Negativ bewerten",
+    "description": "Downvote button title"
+  }
+}

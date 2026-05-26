@@ -226,6 +226,7 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
       
       case 'getSettings':
         const settings = await browser.storage.local.get({
+          language: 'en',
           autoSkipOp: false,
           autoSkipEd: false,
           autoSkipRecap: false,
