@@ -9,7 +9,7 @@ const injectedFrames = new Set();
 
 // Update toolbar icon based on theme
 async function updateToolbarIcon(theme) {
-  const iconPath = theme === 'aniworld' ? 'icons/icon-aniworld.svg' : 'icons/icon-classic.svg';
+  const iconPath = theme === 'aniworld' ? 'icons/icon-aniworld.png' : 'icons/icon-classic.png';
   try {
     await browser.browserAction.setIcon({
       path: {
