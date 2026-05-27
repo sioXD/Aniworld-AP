@@ -5,6 +5,40 @@ All notable changes to AniWorld AP will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.7]
+
+### Added
+- New extension icon with improved visual clarity
+- Enhanced icon design for better recognition
+
+### Changed
+- Updated icon appearance across all UI elements
+- Improved icon visibility and scalability
+
+## [1.4.6]
+
+### Added
+- Enhanced manual skip button functionality
+- Improved button styling and responsiveness
+- Better visual indicators for skip button states
+
+### Changed
+- Refined button placement and sizing
+- Improved accessibility for manual skip controls
+
+## [1.4.5]
+
+### Added
+- language selection support (German and English)
+- Language preference persistence across sessions
+- Localized UI elements for both languages
+
+### Changed
+- Improved settings UI for language selection
+
+### Fixed
+- UI text consistency across languages
+
 ## [1.4.4]
 
 ### Added
@@ -137,7 +171,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version History
 
-- **v1.4.4** - Current version with dual themes and auto-play
+- **v1.4.7** - Current version improved icon design
+- **v1.4.6** - always show Manual skip button
+- **v1.4.5** - Language selection with German and English
+- **v1.4.4** - Dual themes and auto-play
 - **v1.4.2** - Improved episode detection
 - **v1.4.0** - Playback position memory and language preference
 - **v1.3.0** - Progress bar markers and custom colors
