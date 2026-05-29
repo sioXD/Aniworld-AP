@@ -3,7 +3,7 @@
 // Translations object
 const translations = {
   en: {
-    settingsTitle: "AniWorld AP Settings",
+    settingsTitle: "AniWorld AP [fork] Settings",
     tagline: "Skip Intros & Outros",
     sectionAppearance: "Appearance",
     labelLanguage: "Language",
@@ -52,7 +52,7 @@ const translations = {
     colorPickerApply: "Apply"
   },
   de: {
-    settingsTitle: "AniWorld AP Einstellungen",
+    settingsTitle: "AniWorld AP [fork] Einstellungen",
     tagline: "Intros & Outros überspringen",
     sectionAppearance: "Darstellung",
     labelLanguage: "Sprache",
@@ -111,7 +111,7 @@ function applyTranslations(lang) {
       element.textContent = t[key];
     }
   });
-  document.title = t.settingsTitle || 'AniWorld AP Settings';
+  document.title = t.settingsTitle || 'AniWorld AP [fork] Settings';
 }
 
 const settingIds = [
