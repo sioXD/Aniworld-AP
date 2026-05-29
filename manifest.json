@@ -55,6 +55,16 @@
           "websiteContent"
         ]
       }
+    },
+    "gecko_android": {
+      "id": "voe-aniskip-fork@extension",
+      "strict_min_version": "58.0",
+      "data_collection_permissions": {
+        "required": [
+          "personallyIdentifyingInfo",
+          "websiteContent"
+        ]
+      }
     }
   },
   "web_accessible_resources": [
