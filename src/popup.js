@@ -391,7 +391,15 @@ async function saveSettings() {
 }
 
 // Add event listeners
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+  // Load theme immediately to prevent flash
+  try {
+    const result = await browser.storage.local.get({ uiTheme: 'classic' });
+    document.body.setAttribute('data-theme', result.uiTheme);
+  } catch (e) {
+    document.body.setAttribute('data-theme', 'classic');
+  }
+
   loadSettings();
   initColorPicker();
   

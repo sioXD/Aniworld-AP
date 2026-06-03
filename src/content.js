@@ -562,13 +562,17 @@
       const cancelText = getMessage('panelCancel', 'Cancel');
       const submitText = getMessage('panelSubmit', 'Submit');
       if (isHidden) {
-        toggleBtn.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg> ' + cancelText;
+        toggleBtn.textContent = '';
+        toggleBtn.insertAdjacentHTML('beforeend', '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>');
+        toggleBtn.appendChild(document.createTextNode(' ' + cancelText));
         toggleBtn.classList.add('aniskip-toggle-active');
         setTimeout(() => {
           submitPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }, 50);
       } else {
-        toggleBtn.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> ' + submitText;
+        toggleBtn.textContent = '';
+        toggleBtn.insertAdjacentHTML('beforeend', '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>');
+        toggleBtn.appendChild(document.createTextNode(' ' + submitText));
         toggleBtn.classList.remove('aniskip-toggle-active');
       }
     });
@@ -595,30 +599,63 @@
     if (!query) return;
     
     const resultsEl = document.querySelector('#aniskip-search-results');
-    resultsEl.innerHTML = '<div class="aniskip-loading">' + getMessage('searchLoading', 'Searching...') + '</div>';
+    resultsEl.textContent = '';
+    const loadingDiv = document.createElement('div');
+    loadingDiv.className = 'aniskip-loading';
+    loadingDiv.textContent = getMessage('searchLoading', 'Searching...');
+    resultsEl.appendChild(loadingDiv);
     
     try {
       const results = await browser.runtime.sendMessage({ action: 'searchAnime', query });
       if (!results || results.length === 0) {
-        resultsEl.innerHTML = '<div class="aniskip-no-results">' + getMessage('searchNoResults', 'No results found') + '</div>';
+        resultsEl.textContent = '';
+        const noResultsDiv = document.createElement('div');
+        noResultsDiv.className = 'aniskip-no-results';
+        noResultsDiv.textContent = getMessage('searchNoResults', 'No results found');
+        resultsEl.appendChild(noResultsDiv);
         return;
       }
       
-      resultsEl.innerHTML = results.slice(0, 5).map(anime => `
-        <div class="aniskip-search-result" data-mal-id="${anime.mal_id}" data-title="${escapeHtml(anime.title)}">
-          <img src="${anime.images?.jpg?.small_image_url || ''}" alt="">
-          <div class="aniskip-result-info">
-            <div class="aniskip-result-title">${escapeHtml(anime.title)}</div>
-            <div class="aniskip-result-meta">${anime.type || ''} • ${anime.episodes || '?'} eps</div>
-          </div>
-        </div>
-      `).join('');
+      resultsEl.textContent = '';
+      const fragment = document.createDocumentFragment();
+      results.slice(0, 5).forEach(anime => {
+        const resultDiv = document.createElement('div');
+        resultDiv.className = 'aniskip-search-result';
+        resultDiv.dataset.malId = String(anime.mal_id);
+        resultDiv.dataset.title = anime.title;
+        
+        const img = document.createElement('img');
+        img.src = anime.images?.jpg?.small_image_url || '';
+        img.alt = '';
+        resultDiv.appendChild(img);
+        
+        const infoDiv = document.createElement('div');
+        infoDiv.className = 'aniskip-result-info';
+        
+        const titleDiv = document.createElement('div');
+        titleDiv.className = 'aniskip-result-title';
+        titleDiv.textContent = anime.title;
+        infoDiv.appendChild(titleDiv);
+        
+        const metaDiv = document.createElement('div');
+        metaDiv.className = 'aniskip-result-meta';
+        metaDiv.textContent = (anime.type || '') + ' • ' + (anime.episodes || '?') + ' eps';
+        infoDiv.appendChild(metaDiv);
+        
+        resultDiv.appendChild(infoDiv);
+        fragment.appendChild(resultDiv);
+      });
+      resultsEl.appendChild(fragment);
       
       resultsEl.querySelectorAll('.aniskip-search-result').forEach(el => {
         el.addEventListener('click', () => selectAnime(parseInt(el.dataset.malId), el.dataset.title));
       });
     } catch (error) {
-      resultsEl.innerHTML = '<div class="aniskip-error">' + getMessage('searchFailed', 'Search failed') + '</div>';
+      resultsEl.textContent = '';
+      const errorDiv = document.createElement('div');
+      errorDiv.className = 'aniskip-error';
+      errorDiv.textContent = getMessage('searchFailed', 'Search failed');
+      resultsEl.appendChild(errorDiv);
     }
   }
 
@@ -693,19 +730,46 @@
     const upvoteTitle = getMessage('voteUpvote', 'Upvote');
     const downvoteTitle = getMessage('voteDownvote', 'Downvote');
     const skipTypeLabels = getSkipTypeLabels();
-    listEl.innerHTML = state.skipTimes.map(segment => {
+    listEl.textContent = '';
+    const fragment = document.createDocumentFragment();
+    state.skipTimes.forEach(segment => {
       const label = skipTypeLabels[segment.skipType] || segment.skipType;
-      return `
-        <div class="aniskip-segment" data-skip-id="${segment.skipId}">
-          <span class="aniskip-segment-type">${label}</span>
-          <span class="aniskip-segment-time">${formatTime(segment.interval.startTime)} - ${formatTime(segment.interval.endTime)}</span>
-          <div class="aniskip-vote-btns">
-            <button class="aniskip-vote-btn aniskip-upvote" data-vote="upvote" title="${upvoteTitle}">👍</button>
-            <button class="aniskip-vote-btn aniskip-downvote" data-vote="downvote" title="${downvoteTitle}">👎</button>
-          </div>
-        </div>
-      `;
-    }).join('');
+      
+      const segmentDiv = document.createElement('div');
+      segmentDiv.className = 'aniskip-segment';
+      segmentDiv.dataset.skipId = segment.skipId;
+      
+      const typeSpan = document.createElement('span');
+      typeSpan.className = 'aniskip-segment-type';
+      typeSpan.textContent = label;
+      segmentDiv.appendChild(typeSpan);
+      
+      const timeSpan = document.createElement('span');
+      timeSpan.className = 'aniskip-segment-time';
+      timeSpan.textContent = formatTime(segment.interval.startTime) + ' - ' + formatTime(segment.interval.endTime);
+      segmentDiv.appendChild(timeSpan);
+      
+      const voteDiv = document.createElement('div');
+      voteDiv.className = 'aniskip-vote-btns';
+      
+      const upBtn = document.createElement('button');
+      upBtn.className = 'aniskip-vote-btn aniskip-upvote';
+      upBtn.dataset.vote = 'upvote';
+      upBtn.title = upvoteTitle;
+      upBtn.textContent = '👍';
+      voteDiv.appendChild(upBtn);
+      
+      const downBtn = document.createElement('button');
+      downBtn.className = 'aniskip-vote-btn aniskip-downvote';
+      downBtn.dataset.vote = 'downvote';
+      downBtn.title = downvoteTitle;
+      downBtn.textContent = '👎';
+      voteDiv.appendChild(downBtn);
+      
+      segmentDiv.appendChild(voteDiv);
+      fragment.appendChild(segmentDiv);
+    });
+    listEl.appendChild(fragment);
     
     listEl.querySelectorAll('.aniskip-vote-btn').forEach(btn => {
       btn.addEventListener('click', async (e) => {
@@ -855,11 +919,15 @@
       const skipButton = state.ui.skipButton;
       if (skipButton) {
         const skipAmount = 90 + (state.settings.skipOffset || 0);
-        const skipUnit = `<span class="aniskip-skip-unit">s</span>`;
-        const skipLabel = `${skipAmount}${skipUnit}`;
-        
-        if (skipButton.querySelector('.aniskip-skip-type').innerHTML !== skipLabel) {
-          skipButton.querySelector('.aniskip-skip-type').innerHTML = skipLabel;
+        const typeEl = skipButton.querySelector('.aniskip-skip-type');
+        const expectedText = skipAmount + 's';
+        if (typeEl.textContent !== expectedText) {
+          typeEl.textContent = '';
+          typeEl.textContent = String(skipAmount);
+          const unitSpan = document.createElement('span');
+          unitSpan.className = 'aniskip-skip-unit';
+          unitSpan.textContent = 's';
+          typeEl.appendChild(unitSpan);
         }
         const duration = state.player.getDuration() || Infinity;
         skipButton.dataset.endTime = Math.min(currentTime + 90, duration);
