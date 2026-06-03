@@ -315,9 +315,9 @@ async function loadSettings() {
     document.getElementById('showButtons').checked = settings.showButtons !== false;
     document.getElementById('alwaysShowButton').checked = settings.alwaysShowButton || false;
     document.getElementById('skipOffset').value = settings.skipOffset || 0;
-    document.getElementById('playAfterSkip').checked = settings.playAfterSkip !== false;
-    document.getElementById('persistentVolume').checked = settings.persistentVolume !== false;
-    document.getElementById('persistentPlaybackPosition').checked = settings.persistentPlaybackPosition !== false;
+    document.getElementById('playAfterSkip').checked = settings.playAfterSkip === true;
+    document.getElementById('persistentVolume').checked = settings.persistentVolume === true;
+    document.getElementById('persistentPlaybackPosition').checked = settings.persistentPlaybackPosition === true;
     document.getElementById('playbackPositionExpirationDays').value = settings.playbackPositionExpirationDays || 7;
     document.getElementById('markerColorOp').value = (settings.markerColorOp || '#ff00fb').toUpperCase();
     document.getElementById('markerColorEd').value = (settings.markerColorEd || '#22C55E').toUpperCase();
