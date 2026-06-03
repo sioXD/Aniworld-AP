@@ -29,6 +29,8 @@ const translations = {
     labelSkipOffset: "Skip Offset",
     descSkipOffset: "Seconds to add after skip",
     sectionPlayback: "Playback",
+    labelAutoPlayNext: "Autoplay Next",
+    descAutoPlayNext: "Automatically play the next episode",
     labelPlayAfterSkip: "Play After Skip",
     descPlayAfterSkip: "Resume playback after skipping",
     labelRememberVolume: "Remember Volume",
@@ -78,6 +80,8 @@ const translations = {
     labelSkipOffset: "Skip-Versatz",
     descSkipOffset: "Sekunden nach dem Skip hinzufügen",
     sectionPlayback: "Wiedergabe",
+    labelAutoPlayNext: "Automatisch nächste Folge",
+    descAutoPlayNext: "Nächste Folge automatisch abspielen",
     labelPlayAfterSkip: "Nach Skip abspielen",
     descPlayAfterSkip: "Wiedergabe nach dem Überspringen fortsetzen",
     labelRememberVolume: "Lautstärke merken",
@@ -122,6 +126,7 @@ const settingIds = [
   'showButtons', 
   'alwaysShowButton',
   'skipOffset',
+  'autoPlayNext',
   'playAfterSkip',
   'persistentVolume',
   'persistentPlaybackPosition',
@@ -315,6 +320,7 @@ async function loadSettings() {
     document.getElementById('showButtons').checked = settings.showButtons !== false;
     document.getElementById('alwaysShowButton').checked = settings.alwaysShowButton || false;
     document.getElementById('skipOffset').value = settings.skipOffset || 0;
+    document.getElementById('autoPlayNext').checked = settings.autoPlayNext !== false;
     document.getElementById('playAfterSkip').checked = settings.playAfterSkip === true;
     document.getElementById('persistentVolume').checked = settings.persistentVolume === true;
     document.getElementById('persistentPlaybackPosition').checked = settings.persistentPlaybackPosition === true;
@@ -356,6 +362,7 @@ async function saveSettings() {
     alwaysShowButton: document.getElementById('alwaysShowButton').checked,
     skipOffset: parseFloat(document.getElementById('skipOffset').value) || 0,
     playAfterSkip: document.getElementById('playAfterSkip').checked,
+    autoPlayNext: document.getElementById('autoPlayNext').checked,
     persistentVolume: document.getElementById('persistentVolume').checked,
     persistentPlaybackPosition: document.getElementById('persistentPlaybackPosition').checked,
     playbackPositionExpirationDays: parseInt(document.getElementById('playbackPositionExpirationDays').value) || 7,

@@ -160,6 +160,13 @@
 
   // Navigate to next episode
   async function goToNextEpisode() {
+    // Check if auto-play next is enabled
+    const { autoPlayNext } = await browser.storage.local.get('autoPlayNext');
+    if (autoPlayNext === false) {
+      console.log('VOE AniSkip: Auto-play next disabled, not navigating');
+      return;
+    }
+    
     const nextInfo = getNextEpisodeUrl();
     if (!nextInfo) {
       console.log('VOE AniSkip: No next episode or season found');
@@ -197,9 +204,8 @@
     
     console.log('VOE AniSkip: Navigating to next episode:', nextUrl);
     
-    // Store flag that we want to auto-play
     await browser.storage.local.set({ 
-      autoPlayNext: true,
+      autoPlayNextFlag: true,
       timestamp: Date.now()
     });
     
@@ -263,12 +269,12 @@
   // Check if we should auto-play (came from previous episode)
   async function checkAutoPlay() {
     try {
-      const result = await browser.storage.local.get(['autoPlayNext', 'timestamp']);
-      if (result.autoPlayNext && (Date.now() - result.timestamp < 30000)) {
+      const result = await browser.storage.local.get(['autoPlayNextFlag', 'timestamp']);
+      if (result.autoPlayNextFlag && (Date.now() - result.timestamp < 30000)) {
         console.log('VOE AniSkip: Auto-play enabled from previous episode');
         
         // Clear the flags
-        await browser.storage.local.remove(['autoPlayNext', 'timestamp']);
+        await browser.storage.local.remove(['autoPlayNextFlag', 'timestamp']);
         
         // Store flag for the iframe to know it should auto-play
         await browser.storage.local.set({ 

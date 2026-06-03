@@ -234,6 +234,7 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
           alwaysShowButton: false,
           skipOffset: 0,
           playAfterSkip: false,
+          autoPlayNext: true,
           persistentVolume: false,
           persistentPlaybackPosition: false,
           playbackPositionExpirationDays: 7,
