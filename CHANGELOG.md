@@ -5,6 +5,15 @@ All notable changes to AniWorld AP will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0]
+
+### Added
+- Next Episode setting to navigate to the next episode (replaces the non-functional autoplay)
+
+### Changed
+- Play After Skip, Remember Volume, and Remember Position now default to disabled (VOE handles these automatically)
+- Fixed web-ext lint warnings for cleaner code
+
 ## [1.4.7]
 
 ### Added
@@ -171,7 +180,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version History
 
-- **v1.4.7** - Current version improved icon design
+- **v1.5.0** - Next Episode setting, default-disabled redundant features, lint fixes
+- **v1.4.7** - Improved icon design
 - **v1.4.6** - always show Manual skip button
 - **v1.4.5** - Language selection with German and English
 - **v1.4.4** - Dual themes and auto-play

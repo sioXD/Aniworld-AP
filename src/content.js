@@ -68,7 +68,7 @@
       alwaysShowButton: false,
       skipOffset: 0,
       playAfterSkip: false,
-      autoPlayNext: true,
+      nextEpisode: true,
       persistentVolume: false,
       persistentPlaybackPosition: false,
       playbackPositionExpirationDays: 7,
@@ -1026,6 +1026,7 @@
     let attempts = 0;
     const maxAttempts = 40;
     
+    // browser policies always block autoplay :(
     const findAndClickPlay = () => {
       attempts++;
       console.log('VOE AniSkip: Auto-play attempt', attempts);

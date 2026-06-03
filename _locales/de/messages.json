@@ -111,13 +111,13 @@
     "message": "Wiedergabe",
     "description": "Playback section header"
   },
-  "labelAutoPlayNext": {
-    "message": "Automatisch nächste Folge",
-    "description": "Autoplay Next setting label"
+  "labelNextEpisode": {
+    "message": "Nächste Folge",
+    "description": "Next Episode setting label"
   },
-  "descAutoPlayNext": {
-    "message": "Wiedergabe automatisch starten, wenn zur nächsten Folge gewechselt wird",
-    "description": "Autoplay Next setting description"
+  "descNextEpisode": {
+    "message": "Zur nächsten Folge navigieren wenn die aktuelle endet",
+    "description": "Next Episode setting description"
   },
   "labelPlayAfterSkip": {
     "message": "Nach Skip abspielen",

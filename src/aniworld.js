@@ -161,9 +161,9 @@
   // Navigate to next episode
   async function goToNextEpisode() {
     // Check if auto-play next is enabled
-    const { autoPlayNext } = await browser.storage.local.get('autoPlayNext');
-    if (autoPlayNext === false) {
-      console.log('VOE AniSkip: Auto-play next disabled, not navigating');
+    const { nextEpisode } = await browser.storage.local.get('nextEpisode');
+    if (nextEpisode === false) {
+      console.log('VOE AniSkip: Next episode disabled, not navigating');
       return;
     }
     
