@@ -232,6 +232,8 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
           autoSkipRecap: false,
           showButtons: true,
           alwaysShowButton: false,
+          showSpeedControl: false,
+          persistentSpeed: false,
           skipOffset: 0,
           playAfterSkip: false,
           nextEpisode: true,
@@ -242,7 +244,7 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
           markerColorEd: '#22C55E',
           markerColorRecap: '#ffdd00',
           markerOpacity: 0.5,
-          uiTheme: 'classic'
+          uiTheme: 'aniworld'
         });
         return settings;
       

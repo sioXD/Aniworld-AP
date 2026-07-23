@@ -66,6 +66,8 @@
       autoSkipRecap: false,
       showButtons: true,
       alwaysShowButton: false,
+      showSpeedControl: false,
+      persistentSpeed: false,
       skipOffset: 0,
       playAfterSkip: false,
       nextEpisode: true,
@@ -417,6 +419,55 @@
     if (key) await browser.storage.local.remove(key).catch(() => {});
   }
 
+  // Speed Control
+  function changeSpeed(delta) {
+    const video = document.querySelector('video');
+    if (!video) return;
+    let newSpeed = video.playbackRate + delta;
+    newSpeed = Math.round(newSpeed / 0.25) * 0.25;
+    newSpeed = Math.max(0.25, Math.min(5.0, newSpeed));
+    video.playbackRate = newSpeed;
+    updateSpeedDisplay();
+    savePersistentSpeed(newSpeed);
+  }
+
+  function resetSpeed() {
+    const video = document.querySelector('video');
+    if (!video) return;
+    video.playbackRate = 1.0;
+    updateSpeedDisplay();
+    savePersistentSpeed(1.0);
+  }
+
+  function updateSpeedDisplay() {
+    const video = document.querySelector('video');
+    const display = document.querySelector('#aniskip-speed-display');
+    if (!display) return;
+    const speed = video ? video.playbackRate : 1.0;
+    display.textContent = speed.toFixed(2).replace(/\.?0+$/, '') + 'x';
+  }
+
+  async function loadPersistentSpeed() {
+    if (!state.settings.persistentSpeed) return;
+    try {
+      const result = await browser.storage.local.get('preferredSpeed');
+      if (result.preferredSpeed) {
+        const video = document.querySelector('video');
+        if (video) {
+          video.playbackRate = result.preferredSpeed;
+          updateSpeedDisplay();
+        }
+      }
+    } catch (e) {}
+  }
+
+  async function savePersistentSpeed(speed) {
+    if (!state.settings.persistentSpeed) return;
+    try {
+      await browser.storage.local.set({ preferredSpeed: speed });
+    } catch (e) {}
+  }
+
   // Create UI
   function createUI() {
     const existing = document.getElementById('aniskip-container');
@@ -472,6 +523,11 @@
       <button id="aniskip-toggle-btn" class="aniskip-toggle-btn" title="AniSkip">
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 5V19L11 12L4 5ZM13 5V19L20 12L13 5Z"/></svg>
       </button>
+      <div id="aniskip-speed-control" class="aniskip-speed-control aniskip-hidden">
+        <button id="aniskip-speed-minus" class="aniskip-speed-btn">−</button>
+        <button id="aniskip-speed-display" class="aniskip-speed-display">1.0x</button>
+        <button id="aniskip-speed-plus" class="aniskip-speed-btn">+</button>
+      </div>
     `;
     
     // Try to append to JWPlayer container first (for fullscreen support), fallback to body
@@ -511,6 +567,7 @@
     function syncWithPlayerControls() {
       const toggleBtn = container.querySelector('#aniskip-toggle-btn');
       const skipBtn = state.ui.skipButton;
+      const speedControl = container.querySelector('#aniskip-speed-control');
       const playerContainer = document.querySelector('.jw-wrapper, .jwplayer');
       const controlsHidden = playerContainer && playerContainer.classList.contains('jw-flag-user-inactive');
       const controlbar = document.querySelector('.jw-controlbar');
@@ -520,15 +577,18 @@
       if (!state.ui.panel.classList.contains('aniskip-hidden')) {
         toggleBtn.classList.remove('aniskip-controls-hidden');
         skipBtn.classList.remove('aniskip-controls-hidden');
+        if (speedControl) speedControl.classList.remove('aniskip-controls-hidden');
         return;
       }
       
       if (shouldHide) {
         toggleBtn.classList.add('aniskip-controls-hidden');
         skipBtn.classList.add('aniskip-controls-hidden');
+        if (speedControl) speedControl.classList.add('aniskip-controls-hidden');
       } else {
         toggleBtn.classList.remove('aniskip-controls-hidden');
         skipBtn.classList.remove('aniskip-controls-hidden');
+        if (speedControl) speedControl.classList.remove('aniskip-controls-hidden');
       }
     }
     
@@ -581,6 +641,13 @@
     container.querySelector('#aniskip-set-end').addEventListener('click', () => setTimeFromPlayer('end'));
     container.querySelector('#aniskip-submit-btn').addEventListener('click', submitSkipTime);
     container.querySelector('#aniskip-refresh').addEventListener('click', refreshSkipTimes);
+    container.querySelector('#aniskip-speed-minus').addEventListener('click', () => changeSpeed(-0.25));
+    container.querySelector('#aniskip-speed-plus').addEventListener('click', () => changeSpeed(0.25));
+    container.querySelector('#aniskip-speed-display').addEventListener('click', resetSpeed);
+    
+    if (state.settings.showSpeedControl) {
+      container.querySelector('#aniskip-speed-control').classList.remove('aniskip-hidden');
+    }
     
     return container;
   }
@@ -1295,6 +1362,7 @@
       // Set up persistent features
       setupPersistentVolume();
       setupPlaybackPositionMemory();
+      loadPersistentSpeed();
       checkShouldAutoPlay();
       
     } catch (error) {
@@ -1312,6 +1380,16 @@
       const container = document.getElementById('aniskip-container');
       if (container && message.settings.uiTheme) {
         container.className = `theme-${message.settings.uiTheme}`;
+      }
+      
+      // Update speed control visibility
+      const speedControl = document.getElementById('aniskip-speed-control');
+      if (speedControl) {
+        if (message.settings.showSpeedControl) {
+          speedControl.classList.remove('aniskip-hidden');
+        } else {
+          speedControl.classList.add('aniskip-hidden');
+        }
       }
     }
   });

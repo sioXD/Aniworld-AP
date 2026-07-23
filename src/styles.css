@@ -66,6 +66,90 @@
 }
 
 /* ===================== */
+/* Speed Control         */
+/* ===================== */
+#aniskip-speed-control {
+  position: fixed;
+  bottom: 155px;
+  right: 10px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  z-index: 2147483647;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  opacity: 1;
+  visibility: visible;
+}
+
+#aniskip-speed-control.aniskip-controls-hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+:fullscreen #aniskip-speed-control,
+:-webkit-full-screen #aniskip-speed-control,
+:-moz-full-screen #aniskip-speed-control {
+  bottom: 185px;
+}
+
+.aniskip-speed-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--aniskip-bg-glass);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--aniskip-border-subtle);
+  color: var(--aniskip-text-primary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.aniskip-speed-btn:hover {
+  background: var(--aniskip-bg-elevated);
+  border-color: var(--aniskip-border-glow);
+  color: var(--aniskip-accent-primary);
+}
+
+.aniskip-speed-btn:active {
+  transform: scale(0.92);
+}
+
+.aniskip-speed-display {
+  min-width: 52px;
+  height: 32px;
+  padding: 0 10px;
+  border-radius: 8px;
+  background: var(--aniskip-bg-glass);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--aniskip-border-subtle);
+  color: var(--aniskip-accent-primary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: 'Consolas', 'Monaco', monospace;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.aniskip-speed-display:hover {
+  background: var(--aniskip-bg-elevated);
+  border-color: var(--aniskip-border-glow);
+  transform: scale(1.05);
+}
+
+/* ===================== */
 /* Toggle Button         */
 /* ===================== */
 .aniskip-toggle-btn {

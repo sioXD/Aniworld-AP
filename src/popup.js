@@ -26,6 +26,10 @@ const translations = {
     descShowButtons: "Display manual skip buttons",
     labelAlwaysShowButton: "Always Show Skip Button",
     descAlwaysShowButton: "Skip 90s if no OP/ED is playing",
+    labelShowSpeedControl: "Show Speed Control",
+    descShowSpeedControl: "Show speed adjustment buttons",
+    labelPersistentSpeed: "Persistent Speed",
+    descPersistentSpeed: "Remember speed across episodes",
     labelSkipOffset: "Skip Offset",
     descSkipOffset: "Seconds to add after skip",
     sectionPlayback: "Playback",
@@ -77,6 +81,10 @@ const translations = {
     descShowButtons: "Manuelle Skip-Buttons anzeigen",
     labelAlwaysShowButton: "Skip-Button immer anzeigen",
     descAlwaysShowButton: "90s überspringen wenn kein OP/ED läuft",
+    labelShowSpeedControl: "Geschwindigkeit anzeigen",
+    descShowSpeedControl: "Geschwindigkeitsregler anzeigen",
+    labelPersistentSpeed: "Geschwindigkeit merken",
+    descPersistentSpeed: "Geschwindigkeit über Episoden merken",
     labelSkipOffset: "Skip-Versatz",
     descSkipOffset: "Sekunden nach dem Skip hinzufügen",
     sectionPlayback: "Wiedergabe",
@@ -123,8 +131,10 @@ const settingIds = [
   'autoSkipOp', 
   'autoSkipEd', 
   'autoSkipRecap', 
-  'showButtons', 
+  'showButtons',
   'alwaysShowButton',
+  'showSpeedControl',
+  'persistentSpeed',
   'skipOffset',
   'nextEpisode',
   'playAfterSkip',
@@ -306,6 +316,17 @@ function updateDependentSettings() {
       alwaysShowButtonRow.style.pointerEvents = showButtonsChecked ? 'auto' : 'none';
     }
   }
+
+  const showSpeedControlChecked = document.getElementById('showSpeedControl').checked;
+  const persistentSpeed = document.getElementById('persistentSpeed');
+  if (persistentSpeed) {
+    const persistentSpeedRow = persistentSpeed.closest('.setting-row');
+    if (persistentSpeedRow) {
+      persistentSpeed.disabled = !showSpeedControlChecked;
+      persistentSpeedRow.style.opacity = showSpeedControlChecked ? '1' : '0.5';
+      persistentSpeedRow.style.pointerEvents = showSpeedControlChecked ? 'auto' : 'none';
+    }
+  }
 }
 
 // Load settings on popup open
@@ -319,6 +340,8 @@ async function loadSettings() {
     document.getElementById('autoSkipRecap').checked = settings.autoSkipRecap || false;
     document.getElementById('showButtons').checked = settings.showButtons !== false;
     document.getElementById('alwaysShowButton').checked = settings.alwaysShowButton || false;
+    document.getElementById('showSpeedControl').checked = settings.showSpeedControl || false;
+    document.getElementById('persistentSpeed').checked = settings.persistentSpeed || false;
     document.getElementById('skipOffset').value = settings.skipOffset || 0;
     document.getElementById('nextEpisode').checked = settings.nextEpisode !== false;
     document.getElementById('playAfterSkip').checked = settings.playAfterSkip === true;
@@ -360,6 +383,8 @@ async function saveSettings() {
     autoSkipRecap: document.getElementById('autoSkipRecap').checked,
     showButtons: document.getElementById('showButtons').checked,
     alwaysShowButton: document.getElementById('alwaysShowButton').checked,
+    showSpeedControl: document.getElementById('showSpeedControl').checked,
+    persistentSpeed: document.getElementById('persistentSpeed').checked,
     skipOffset: parseFloat(document.getElementById('skipOffset').value) || 0,
     playAfterSkip: document.getElementById('playAfterSkip').checked,
     nextEpisode: document.getElementById('nextEpisode').checked,
@@ -414,6 +439,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   const showButtonsEl = document.getElementById('showButtons');
   if (showButtonsEl) {
     showButtonsEl.addEventListener('change', updateDependentSettings);
+  }
+
+  const showSpeedControlEl = document.getElementById('showSpeedControl');
+  if (showSpeedControlEl) {
+    showSpeedControlEl.addEventListener('change', updateDependentSettings);
   }
   
   // Add change listeners to all settings
