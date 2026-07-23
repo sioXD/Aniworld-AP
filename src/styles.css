@@ -46,7 +46,7 @@
   font-size: 14px;
   line-height: 1.5;
   color: var(--aniskip-text-primary);
-  z-index: 2147483647;
+  z-index: 100;
   position: fixed;
   top: 0;
   left: 0;
@@ -70,32 +70,22 @@
 /* ===================== */
 #aniskip-speed-control {
   position: fixed;
-  bottom: 155px;
+  bottom: 115px;
   right: 10px;
+  width: 128px;
   display: flex;
   align-items: center;
   gap: 4px;
-  z-index: 2147483647;
+  z-index: 101;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   opacity: 1;
   visibility: visible;
 }
 
-#aniskip-speed-control.aniskip-controls-hidden {
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-}
-
-:fullscreen #aniskip-speed-control,
-:-webkit-full-screen #aniskip-speed-control,
-:-moz-full-screen #aniskip-speed-control {
-  bottom: 185px;
-}
-
 .aniskip-speed-btn {
   width: 32px;
   height: 32px;
+  flex-shrink: 0;
   border-radius: 8px;
   background: var(--aniskip-bg-glass);
   backdrop-filter: blur(12px);
@@ -112,20 +102,11 @@
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
 }
 
-.aniskip-speed-btn:hover {
-  background: var(--aniskip-bg-elevated);
-  border-color: var(--aniskip-border-glow);
-  color: var(--aniskip-accent-primary);
-}
-
-.aniskip-speed-btn:active {
-  transform: scale(0.92);
-}
-
 .aniskip-speed-display {
-  min-width: 52px;
+  flex: 1;
   height: 32px;
   padding: 0 10px;
+  overflow: hidden;
   border-radius: 8px;
   background: var(--aniskip-bg-glass);
   backdrop-filter: blur(12px);
@@ -143,21 +124,29 @@
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
 }
 
-.aniskip-speed-display:hover {
-  background: var(--aniskip-bg-elevated);
-  border-color: var(--aniskip-border-glow);
-  transform: scale(1.05);
+#aniskip-speed-control.aniskip-controls-hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
 }
+
+:fullscreen #aniskip-speed-control,
+:-webkit-full-screen #aniskip-speed-control,
+:-moz-full-screen #aniskip-speed-control {
+  bottom: 145px;
+}
+
+
 
 /* ===================== */
 /* Toggle Button         */
 /* ===================== */
 .aniskip-toggle-btn {
   position: fixed;
-  bottom: 60px;
+  top: 10px;
   right: 10px;
-  width: 44px;
-  height: 44px;
+  width: 36px;
+  height: 36px;
   border-radius: 12px;
   background: var(--aniskip-bg-glass);
   backdrop-filter: blur(12px);
@@ -168,7 +157,7 @@
   align-items: center;
   justify-content: center;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  z-index: 2147483647;
+  z-index: 101;
   opacity: 1;
   visibility: visible;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
@@ -193,8 +182,8 @@
 
 .aniskip-toggle-btn svg {
   color: var(--aniskip-text-primary);
-  width: 22px;
-  height: 22px;
+  width: 18px;
+  height: 18px;
   transition: color 0.2s ease;
 }
 
@@ -206,19 +195,19 @@
 :fullscreen .aniskip-toggle-btn,
 :-webkit-full-screen .aniskip-toggle-btn,
 :-moz-full-screen .aniskip-toggle-btn {
-  bottom: 80px;
+  top: 16px;
 }
 
 :fullscreen #aniskip-skip-button,
 :-webkit-full-screen #aniskip-skip-button,
 :-moz-full-screen #aniskip-skip-button {
-  bottom: 130px;
+  bottom: 90px;
 }
 
 :fullscreen #aniskip-panel,
 :-webkit-full-screen #aniskip-panel,
 :-moz-full-screen #aniskip-panel {
-  bottom: 134px;
+  top: 62px;
 }
 
 /* ===================== */
@@ -226,26 +215,31 @@
 /* ===================== */
 #aniskip-skip-button {
   position: fixed;
-  bottom: 100px;
+  bottom: 60px;
   right: 10px;
-  background: linear-gradient(135deg, var(--aniskip-accent-primary), var(--aniskip-accent-secondary));
+  width: 128px;
+  background: var(--aniskip-bg-glass);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   color: white;
-  padding: 12px 20px;
-  border-radius: 14px;
-  border: none;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--aniskip-border-subtle);
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 10px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  z-index: 2147483647;
-  box-shadow: 0 4px 24px var(--aniskip-accent-glow);
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 101;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
   font-family: inherit;
 }
 
 #aniskip-skip-button:hover {
+  border-color: var(--aniskip-border-glow);
   transform: scale(1.03) translateY(-2px);
-  box-shadow: 0 8px 32px var(--aniskip-accent-glow);
+  box-shadow: 0 4px 24px var(--aniskip-accent-glow);
 }
 
 #aniskip-skip-button:active {
@@ -259,20 +253,24 @@
 }
 
 .aniskip-skip-text {
-  font-weight: 600;
-  font-size: 15px;
+  font-weight: 700;
+  font-size: 14px;
   letter-spacing: 0.3px;
+  background: linear-gradient(135deg, var(--aniskip-accent-primary), var(--aniskip-accent-secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .aniskip-skip-type {
   font-size: 11px;
-  font-weight: 500;
-  opacity: 0.95;
-  background: rgba(255, 255, 255, 0.2);
+  font-weight: 600;
+  background: linear-gradient(135deg, var(--aniskip-accent-primary), var(--aniskip-accent-secondary));
   padding: 4px 10px;
-  border-radius: 8px;
+  border-radius: 6px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  color: white;
 }
 
 .aniskip-skip-unit {
@@ -284,7 +282,7 @@
 /* ===================== */
 #aniskip-panel {
   position: fixed;
-  bottom: 114px;
+  top: 56px;
   right: 10px;
   width: 340px;
   max-height: calc(85vh - 60px);
@@ -295,7 +293,7 @@
   border: 1px solid var(--aniskip-border-subtle);
   box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
   overflow: hidden;
-  z-index: 2147483646;
+  z-index: 102;
   animation: panelSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   flex-direction: column;

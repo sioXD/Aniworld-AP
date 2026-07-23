@@ -521,7 +521,7 @@
         </div>
       </div>
       <button id="aniskip-toggle-btn" class="aniskip-toggle-btn" title="AniSkip">
-        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 5V19L11 12L4 5ZM13 5V19L20 12L13 5Z"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
       </button>
       <div id="aniskip-speed-control" class="aniskip-speed-control aniskip-hidden">
         <button id="aniskip-speed-minus" class="aniskip-speed-btn">−</button>
@@ -1389,6 +1389,18 @@
           speedControl.classList.remove('aniskip-hidden');
         } else {
           speedControl.classList.add('aniskip-hidden');
+        }
+      }
+
+      // Update skip button visibility
+      const skipButton = document.getElementById('aniskip-skip-button');
+      if (skipButton) {
+        if (!message.settings.showButtons) {
+          skipButton.classList.add('aniskip-hidden');
+        } else if (!message.settings.alwaysShowButton && skipButton.dataset.skipType === 'manual-90') {
+          skipButton.classList.add('aniskip-hidden');
+        } else {
+          checkSkipSegments();
         }
       }
     }
