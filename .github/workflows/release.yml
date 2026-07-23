@@ -1,0 +1,42 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install web-ext
+        run: npm install --global web-ext
+      - name: Build extension
+        run: echo "" | pwsh -File pack.ps1
+        shell: bash
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: web-ext-artifacts/*.zip
+          generate_release_notes: true
+
+  publish-amo:
+    needs: build
+    if: vars.AMO_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install web-ext
+        run: npm install --global web-ext
+      - name: Sign & publish to AMO
+        run: web-ext sign --api-key ${{ secrets.AMO_JWT_ISSUER }} --api-secret ${{ secrets.AMO_JWT_SECRET }} --channel listed

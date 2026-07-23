@@ -9,7 +9,8 @@ Firefox WebExtension (Manifest V2) that auto-skips anime openings/endings on ani
 - **Zero toolchain.** Vanilla JS, no package.json, no npm, no bundler, no TypeScript, no tests.
 - **Firefox-only.** Uses `browser.*` API. Not compatible with Chrome/Chromium.
 - **No dev server.** Load via `about:debugging` → This Firefox → Load Temporary Add-on → `manifest.json`.
-- **Packaging:** `powershell -File pack.ps1` (requires `npm install --global web-ext`). Produces `.xpi` via `web-ext build`.
+- **Packaging:** `powershell -File pack.ps1` (requires `npm install --global web-ext`). Produces `.zip` via `web-ext build`.
+- **Release:** Push a tag `v*` (e.g. `git tag v1.6.0 && git push origin v1.6.0`) → GitHub Actions in `.github/workflows/release.yml` runs `pack.ps1` and creates a GitHub Release with the artifact. Optionally publishes to AMO if `AMO_ENABLED` variable and `AMO_JWT_ISSUER`/`AMO_JWT_SECRET` secrets are set.
 - **Entrypoints:** `src/background.js` (persistent background), `src/aniworld.js` (aniworld.to content script), `src/content.js` (injected into VOE iframe), `src/popup.js` (settings popup).
 
 ## Architecture

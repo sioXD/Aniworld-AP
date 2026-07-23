@@ -24,3 +24,12 @@ This fork adds the following features to enhance the viewing experience on AniWo
 
 ## Original README
 - The original README can be found here: [original_README.md](original_README.md)
+
+## CI/CD Release
+
+
+```properties
+git commit -m "..."
+git tag v0.1.0
+git push origin main --tags
+```
