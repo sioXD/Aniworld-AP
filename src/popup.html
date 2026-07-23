@@ -353,6 +353,15 @@
       min-width: 0;
     }
 
+    .setting-icon {
+      width: 16px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-muted);
+      flex-shrink: 0;
+      margin-right: 12px;
+    }
+
     .setting-label {
       font-size: 13px;
       font-weight: 500;
@@ -990,6 +999,7 @@
       </div>
       <div class="settings-card">
         <div class="setting-row">
+          <i class="setting-icon fas fa-globe"></i>
           <div class="setting-info">
             <div class="setting-label" data-i18n="labelLanguage">Language</div>
             <div class="setting-description" data-i18n="descLanguage">Choose your preferred language</div>
@@ -1000,6 +1010,7 @@
           </select>
         </div>
         <div class="setting-row">
+          <i class="setting-icon fas fa-brush"></i>
           <div class="setting-info">
             <div class="setting-label" data-i18n="labelUiTheme">UI Theme</div>
             <div class="setting-description" data-i18n="descUiTheme">Choose your preferred style</div>
@@ -1021,6 +1032,7 @@
       </div>
       <div class="settings-card">
         <div class="setting-row">
+          <i class="setting-icon fas fa-forward"></i>
           <div class="setting-info">
             <div class="setting-label" data-i18n="labelSkipOpening">Skip Opening</div>
             <div class="setting-description" data-i18n="descSkipOpening">Auto-skip anime intros</div>
@@ -1031,6 +1043,7 @@
           </label>
         </div>
         <div class="setting-row">
+          <i class="setting-icon fas fa-backward"></i>
           <div class="setting-info">
             <div class="setting-label" data-i18n="labelSkipEnding">Skip Ending</div>
             <div class="setting-description" data-i18n="descSkipEnding">Auto-skip anime outros</div>
@@ -1041,6 +1054,7 @@
           </label>
         </div>
         <div class="setting-row">
+          <i class="setting-icon fas fa-rotate-left"></i>
           <div class="setting-info">
             <div class="setting-label" data-i18n="labelSkipRecap">Skip Recap</div>
             <div class="setting-description" data-i18n="descSkipRecap">Auto-skip recap segments</div>
@@ -1062,6 +1076,7 @@
       </div>
       <div class="settings-card">
         <div class="setting-row">
+          <i class="setting-icon fas fa-eye"></i>
           <div class="setting-info">
             <div class="setting-label" data-i18n="labelShowButtons">Show Skip Buttons</div>
             <div class="setting-description" data-i18n="descShowButtons">Display manual skip buttons</div>
@@ -1072,6 +1087,7 @@
           </label>
         </div>
         <div class="setting-row">
+          <i class="setting-icon fas fa-clock"></i>
           <div class="setting-info">
             <div class="setting-label" data-i18n="labelAlwaysShowButton">Always Show Skip Button</div>
             <div class="setting-description" data-i18n="descAlwaysShowButton">Skip 90s if no OP/ED is playing</div>
@@ -1082,6 +1098,7 @@
           </label>
         </div>
         <div class="setting-row">
+          <i class="setting-icon fas fa-gauge-high"></i>
           <div class="setting-info">
             <div class="setting-label" data-i18n="labelShowSpeedControl">Show Speed Control</div>
             <div class="setting-description" data-i18n="descShowSpeedControl">Show speed adjustment buttons</div>
@@ -1092,6 +1109,7 @@
           </label>
         </div>
         <div class="setting-row">
+          <i class="setting-icon fas fa-floppy-disk"></i>
           <div class="setting-info">
             <div class="setting-label" data-i18n="labelPersistentSpeed">Persistent Speed</div>
             <div class="setting-description" data-i18n="descPersistentSpeed">Remember speed across episodes</div>
@@ -1102,6 +1120,7 @@
           </label>
         </div>
         <div class="setting-row">
+          <i class="setting-icon fas fa-arrow-left-arrow-right"></i>
           <div class="setting-info">
             <div class="setting-label" data-i18n="labelSkipOffset">Skip Offset</div>
             <div class="setting-description" data-i18n="descSkipOffset">Seconds to add after skip</div>
@@ -1120,6 +1139,7 @@
       </div>
       <div class="settings-card">
         <div class="setting-row">
+          <i class="setting-icon fas fa-forward"></i>
           <div class="setting-info">
             <div class="setting-label" data-i18n="labelNextEpisode">Next Episode</div>
             <div class="setting-description" data-i18n="descNextEpisode">Auto navigate to the next episode</div>
@@ -1130,6 +1150,7 @@
           </label>
         </div>
         <div class="setting-row">
+          <i class="setting-icon fas fa-play"></i>
           <div class="setting-info">
             <div class="setting-label" data-i18n="labelPlayAfterSkip">Play After Skip</div>
             <div class="setting-description" data-i18n="descPlayAfterSkip">Resume playback after skipping</div>
@@ -1140,6 +1161,7 @@
           </label>
         </div>
         <div class="setting-row">
+          <i class="setting-icon fas fa-volume-high"></i>
           <div class="setting-info">
             <div class="setting-label" data-i18n="labelRememberVolume">Remember Volume</div>
             <div class="setting-description" data-i18n="descRememberVolume">Persist volume across episodes</div>
@@ -1150,6 +1172,7 @@
           </label>
         </div>
         <div class="setting-row">
+          <i class="setting-icon fas fa-location-dot"></i>
           <div class="setting-info">
             <div class="setting-label" data-i18n="labelRememberPosition">Remember Position</div>
             <div class="setting-description" data-i18n="descRememberPosition">Resume where you left off</div>
@@ -1160,6 +1183,7 @@
           </label>
         </div>
         <div class="setting-row">
+          <i class="setting-icon fas fa-calendar-days"></i>
           <div class="setting-info">
             <div class="setting-label" data-i18n="labelPositionExpiry">Position Expiry</div>
             <div class="setting-description" data-i18n="descPositionExpiry">Days until position resets</div>
@@ -1178,6 +1202,7 @@
       </div>
       <div class="settings-card">
         <div class="setting-row">
+          <i class="setting-icon fas fa-pen"></i>
           <div class="setting-info">
             <div class="setting-label" data-i18n="labelOpeningMarker">Opening Marker</div>
             <div class="setting-description" data-i18n="descOpeningMarker">Intro segment color</div>
@@ -1190,6 +1215,7 @@
           </div>
         </div>
         <div class="setting-row">
+          <i class="setting-icon fas fa-pen"></i>
           <div class="setting-info">
             <div class="setting-label" data-i18n="labelEndingMarker">Ending Marker</div>
             <div class="setting-description" data-i18n="descEndingMarker">Outro segment color</div>
@@ -1202,6 +1228,7 @@
           </div>
         </div>
         <div class="setting-row">
+          <i class="setting-icon fas fa-pen"></i>
           <div class="setting-info">
             <div class="setting-label" data-i18n="labelRecapMarker">Recap Marker</div>
             <div class="setting-description" data-i18n="descRecapMarker">Recap segment color</div>
@@ -1214,6 +1241,7 @@
           </div>
         </div>
         <div class="setting-row">
+          <i class="setting-icon fas fa-eye-dropper"></i>
           <div class="setting-info">
             <div class="setting-label" data-i18n="labelMarkerOpacity">Marker Opacity</div>
             <div class="setting-description" data-i18n="descMarkerOpacity">Transparency (0.1 - 1.0)</div>
