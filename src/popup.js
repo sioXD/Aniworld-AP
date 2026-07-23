@@ -306,27 +306,16 @@ function applyColor() {
 
 // Update conditional settings UI states
 function updateDependentSettings() {
-  const showButtonsChecked = document.getElementById('showButtons').checked;
-  const alwaysShowButton = document.getElementById('alwaysShowButton');
-  if (alwaysShowButton) {
-    const alwaysShowButtonRow = alwaysShowButton.closest('.setting-row');
-    if (alwaysShowButtonRow) {
-      alwaysShowButton.disabled = !showButtonsChecked;
-      alwaysShowButtonRow.style.opacity = showButtonsChecked ? '1' : '0.5';
-      alwaysShowButtonRow.style.pointerEvents = showButtonsChecked ? 'auto' : 'none';
-    }
-  }
+  document.querySelectorAll('.setting-row[data-depends-on]').forEach(row => {
+    const dependsOn = row.dataset.dependsOn;
+    const parentInput = document.getElementById(dependsOn);
+    const childInput = row.querySelector('input, select');
+    const enabled = parentInput && parentInput.checked;
 
-  const showSpeedControlChecked = document.getElementById('showSpeedControl').checked;
-  const persistentSpeed = document.getElementById('persistentSpeed');
-  if (persistentSpeed) {
-    const persistentSpeedRow = persistentSpeed.closest('.setting-row');
-    if (persistentSpeedRow) {
-      persistentSpeed.disabled = !showSpeedControlChecked;
-      persistentSpeedRow.style.opacity = showSpeedControlChecked ? '1' : '0.5';
-      persistentSpeedRow.style.pointerEvents = showSpeedControlChecked ? 'auto' : 'none';
-    }
-  }
+    if (childInput) childInput.disabled = !enabled;
+    row.classList.toggle('is-disabled', !enabled);
+    row.style.pointerEvents = enabled ? 'auto' : 'none';
+  });
 }
 
 // Load settings on popup open

@@ -336,9 +336,53 @@
       transition: background 0.15s ease;
     }
 
+    .setting-row[data-depends-on] {
+      position: relative;
+      padding-left: 32px;
+    }
+
+    .setting-row[data-depends-on]::before {
+      content: '';
+      position: absolute;
+      left: 20px;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: var(--border-color);
+      border-radius: 1px;
+      pointer-events: none;
+    }
+
+    .setting-row[data-depends-on].is-disabled::before {
+      background: var(--text-muted);
+      opacity: 0.25;
+    }
+
+    .setting-row.is-disabled .setting-icon {
+      color: var(--text-muted);
+      opacity: 0.4;
+    }
+
+    .setting-row.is-disabled .toggle,
+    .setting-row.is-disabled .setting-label,
+    .setting-row.is-disabled .setting-description {
+      opacity: 0.35;
+    }
+
     body[data-theme="classic"] .setting-row {
       padding: 14px 16px;
     }
+
+    body[data-theme="classic"] .setting-row[data-depends-on] {
+      padding-left: 36px;
+    }
+
+    body[data-theme="classic"] .setting-row[data-depends-on]::before {
+      left: 22px;
+      background: var(--border-light);
+    }
+
+
 
     .setting-row:last-child {
       border-bottom: none;
@@ -1086,7 +1130,7 @@
             <span class="toggle-track"></span>
           </label>
         </div>
-        <div class="setting-row">
+        <div class="setting-row" data-depends-on="showButtons">
           <i class="setting-icon fas fa-clock"></i>
           <div class="setting-info">
             <div class="setting-label" data-i18n="labelAlwaysShowButton">Always Show Skip Button</div>
@@ -1108,7 +1152,7 @@
             <span class="toggle-track"></span>
           </label>
         </div>
-        <div class="setting-row">
+        <div class="setting-row" data-depends-on="showSpeedControl">
           <i class="setting-icon fas fa-floppy-disk"></i>
           <div class="setting-info">
             <div class="setting-label" data-i18n="labelPersistentSpeed">Persistent Speed</div>
@@ -1120,7 +1164,7 @@
           </label>
         </div>
         <div class="setting-row">
-          <i class="setting-icon fas fa-arrow-left-arrow-right"></i>
+          <i class="setting-icon fas fa-arrows-left-right"></i>
           <div class="setting-info">
             <div class="setting-label" data-i18n="labelSkipOffset">Skip Offset</div>
             <div class="setting-description" data-i18n="descSkipOffset">Seconds to add after skip</div>
