@@ -70,7 +70,7 @@
 /* ===================== */
 #aniskip-speed-control {
   position: fixed;
-  bottom: 115px;
+  bottom: 125px;
   right: 10px;
   width: 128px;
   display: flex;
@@ -133,7 +133,7 @@
 :fullscreen #aniskip-speed-control,
 :-webkit-full-screen #aniskip-speed-control,
 :-moz-full-screen #aniskip-speed-control {
-  bottom: 145px;
+  bottom: 155px;
 }
 
 
@@ -218,6 +218,7 @@
   bottom: 60px;
   right: 10px;
   width: 128px;
+  height: 50px;
   background: var(--aniskip-bg-glass);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
@@ -275,6 +276,101 @@
 
 .aniskip-skip-unit {
     text-transform: lowercase;
+}
+
+/* Skip confirm UI (shown after a manual skip) */
+#aniskip-skip-button.aniskip-confirm-mode {
+  width: 128px;
+  height: 50px;
+  cursor: default;
+  flex-direction: column;
+  gap: 0;
+  padding: 6px 8px 6px 8px;
+}
+
+#aniskip-skip-button.aniskip-confirm-mode:hover {
+  transform: none;
+  border-color: var(--aniskip-border-subtle);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.aniskip-skip-confirm {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  padding-bottom: 8px;
+}
+
+.aniskip-skip-confirm-text {
+  flex: 1;
+  font-size: 10px;
+  font-weight: 600;
+  color: white;
+  text-align: center;
+  line-height: 1.0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.aniskip-skip-confirm-text.aniskip-confirm-success {
+  color: #22C55E;
+}
+
+.aniskip-skip-confirm-text.aniskip-confirm-error {
+  color: #ef4444;
+}
+
+.aniskip-confirm-btn {
+  flex-shrink: 0;
+  border: none;
+  background: rgba(255, 255, 255, 0.08);
+  color: white;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+#aniskip-confirm-yes:hover {
+  background: rgba(34, 197, 94, 0.25);
+  color: #22C55E;
+}
+
+#aniskip-confirm-no:hover {
+  background: rgba(239, 68, 68, 0.25);
+  color: #ef4444;
+}
+
+/* Countdown bar shown below the skip confirm buttons */
+.aniskip-skip-confirm-bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.aniskip-skip-confirm-bar-fill {
+  display: block;
+  height: 100%;
+  width: 100%;
+  border-radius: 2px;
+  background: linear-gradient(135deg, var(--aniskip-accent-primary), var(--aniskip-accent-secondary));
 }
 
 /* ===================== */

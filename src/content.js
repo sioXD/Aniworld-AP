@@ -66,9 +66,9 @@
       autoSkipRecap: false,
       showButtons: true,
       alwaysShowButton: false,
-      showSpeedControl: false,
+      showSpeedControl: true,
       persistentSpeed: false,
-      skipOffset: 0,
+      skipOffset: -5,
       playAfterSkip: false,
       nextEpisode: true,
       persistentVolume: false,
@@ -81,6 +81,8 @@
     },
     ui: { container: null, skipButton: null, panel: null },
     skippedSegments: new Set(),
+    pendingSkipConfirm: null,
+    skipConfirmTimeout: null,
     initialized: false,
     playbackPositionRestored: false
   };
@@ -113,6 +115,12 @@
       panelCancel: 'Cancel',
       voteUpvote: 'Upvote',
       voteDownvote: 'Downvote',
+      skipConfirmSave: 'Save to AniSkip?',
+      skipConfirmSaving: 'Saving...',
+      skipConfirmSaved: 'Saved!',
+      skipConfirmFailed: 'Save failed',
+      skipConfirmYes: 'Save segment',
+      skipConfirmNo: 'Dismiss',
       statusWaitingForPlayer: 'Waiting for video player...',
       statusPlayerFound: 'Player found, parsing anime info...',
       statusUsingCached: 'Using cached anime info',
@@ -161,6 +169,12 @@
       panelCancel: 'Abbrechen',
       voteUpvote: 'Positiv bewerten',
       voteDownvote: 'Negativ bewerten',
+      skipConfirmSave: 'Bei AniSkip speichern?',
+      skipConfirmSaving: 'Speichern...',
+      skipConfirmSaved: 'Gespeichert!',
+      skipConfirmFailed: 'Speichern fehlgeschlagen',
+      skipConfirmYes: 'Segment speichern',
+      skipConfirmNo: 'Verwerfen',
       statusWaitingForPlayer: 'Warte auf Video-Player...',
       statusPlayerFound: 'Player gefunden, analysiere Anime-Info...',
       statusUsingCached: 'Verwende zwischengespeicherte Anime-Info',
@@ -484,6 +498,14 @@
       <div id="aniskip-skip-button" class="aniskip-button aniskip-hidden">
         <span class="aniskip-skip-text">Skip</span>
         <span class="aniskip-skip-type"></span>
+        <span id="aniskip-skip-confirm" class="aniskip-skip-confirm aniskip-hidden">
+          <button id="aniskip-confirm-yes" class="aniskip-confirm-btn" title="Save">&#10003;</button>
+          <span class="aniskip-skip-confirm-text"></span>
+          <button id="aniskip-confirm-no" class="aniskip-confirm-btn" title="Dismiss">&#10007;</button>
+          <span class="aniskip-skip-confirm-bar">
+            <span class="aniskip-skip-confirm-bar-fill"></span>
+          </span>
+        </span>
       </div>
       <div id="aniskip-panel" class="aniskip-hidden">
         <div class="aniskip-panel-header">
@@ -598,21 +620,30 @@
     container.querySelector('#aniskip-toggle-btn').addEventListener('click', () => state.ui.panel.classList.toggle('aniskip-hidden'));
     container.querySelector('#aniskip-close-panel').addEventListener('click', () => state.ui.panel.classList.add('aniskip-hidden'));
     container.querySelector('#aniskip-skip-button').addEventListener('click', skipCurrent);
+    container.querySelector('#aniskip-confirm-yes').addEventListener('click', (e) => { e.stopPropagation(); handleSkipConfirm(true); });
+    container.querySelector('#aniskip-confirm-no').addEventListener('click', (e) => { e.stopPropagation(); handleSkipConfirm(false); });
     container.querySelector('#aniskip-change-anime').addEventListener('click', () => document.querySelector('#aniskip-search-panel').classList.toggle('aniskip-hidden'));
     container.querySelector('#aniskip-search-btn').addEventListener('click', searchAnime);
     container.querySelector('#aniskip-search-input').addEventListener('keypress', (e) => { if (e.key === 'Enter') searchAnime(); });
     
-    // Prevent keyboard events on input fields from bubbling to the video player
-    // JWPlayer uses number keys (1-9) to seek to percentages, which interferes with typing
-    const stopKeyboardPropagation = (e) => {
-      e.stopPropagation();
-    };
+    // Prevent keyboard events on input fields from being hijacked by the video
+    // player (JWPlayer uses space to play/pause and number keys 1-9 to seek).
+    // A window capture-phase listener runs before the player's document-level
+    // handlers and stops propagation for keys typed into our inputs, while the
+    // default text insertion (no preventDefault) still works.
+    const isInsideContainer = (e) => e.target && container.contains(e.target);
     
-    container.querySelectorAll('input[type="text"], select').forEach(input => {
-      input.addEventListener('keydown', stopKeyboardPropagation);
-      input.addEventListener('keyup', stopKeyboardPropagation);
-      input.addEventListener('keypress', stopKeyboardPropagation);
-    });
+    window.addEventListener('keydown', (e) => {
+      if (!isInsideContainer(e)) return;
+      if (e.key === 'Enter' && e.target.id === 'aniskip-search-input') searchAnime();
+      e.stopPropagation();
+    }, true);
+    window.addEventListener('keypress', (e) => {
+      if (isInsideContainer(e)) e.stopPropagation();
+    }, true);
+    window.addEventListener('keyup', (e) => {
+      if (isInsideContainer(e)) e.stopPropagation();
+    }, true);
     container.querySelector('#aniskip-toggle-submit').addEventListener('click', () => {
       const submitPanel = document.querySelector('#aniskip-submit-panel');
       const toggleBtn = container.querySelector('#aniskip-toggle-submit');
@@ -982,6 +1013,7 @@
 
   function checkSkipSegments() {
     if (!state.player) return;
+    if (state.ui.skipButton && state.ui.skipButton.classList.contains('aniskip-confirm-mode')) return;
     
     const currentTime = state.player.getPosition();
     
@@ -1058,6 +1090,9 @@
 
   function skipCurrent() {
     const skipButton = state.ui.skipButton;
+    if (skipButton.classList.contains('aniskip-confirm-mode')) return;
+    
+    const skipStart = state.player ? state.player.getPosition() : 0;
     let endTime = parseFloat(skipButton.dataset.endTime);
     const skipId = skipButton.dataset.skipId;
     const skipType = skipButton.dataset.skipType;
@@ -1080,8 +1115,176 @@
         markCurrentEpisodeAsSeen();
       }
       
-      skipButton.classList.add('aniskip-hidden');
+      // Ask if the user wants to save this skip as a new segment with AniSkip
+      showSkipConfirm(skipStart, endTime + state.settings.skipOffset);
       console.log('VOE AniSkip: Skipped to', endTime);
+    }
+  }
+
+  function showSkipConfirm(startTime, endTime) {
+    const skipButton = state.ui.skipButton;
+    if (!skipButton || !state.player) return;
+    
+    const duration = state.player.getDuration() || 0;
+    const isOpening = duration > 0 ? startTime <= duration / 2 : true;
+    const typeLabel = isOpening ? 'Opening' : 'Ending';
+    
+    state.pendingSkipConfirm = { startTime, endTime, type: isOpening ? 'op' : 'ed' };
+    
+    const confirm = skipButton.querySelector('.aniskip-skip-confirm');
+    const textEl = skipButton.querySelector('.aniskip-skip-confirm-text');
+    textEl.textContent = getMessage('skipConfirmSave', 'Save as $1 with AniSkip?').replace('$1', typeLabel);
+    textEl.classList.remove('aniskip-confirm-success', 'aniskip-confirm-error');
+    textEl.classList.remove('aniskip-hidden');
+    setSkipConfirmBtns(false);
+    
+    skipButton.querySelector('.aniskip-skip-text').classList.add('aniskip-hidden');
+    skipButton.querySelector('.aniskip-skip-type').classList.add('aniskip-hidden');
+    confirm.classList.remove('aniskip-hidden');
+    skipButton.classList.add('aniskip-confirm-mode');
+    skipButton.classList.remove('aniskip-hidden');
+    clearTimeout(state.skipConfirmTimeout);
+    state.skipConfirmTimeout = setTimeout(() => {
+      showSkipConfirmBtns();
+    }, 3000);
+  }
+
+  function showSkipConfirmBtns() {
+    const skipButton = state.ui.skipButton;
+    if (!skipButton || !skipButton.classList.contains('aniskip-confirm-mode')) return;
+    const textEl = skipButton.querySelector('.aniskip-skip-confirm-text');
+    textEl.classList.add('aniskip-hidden');
+    setSkipConfirmBtns(true);
+    setSkipConfirmBarVisible(true);
+    startSkipConfirmCountdown();
+  }
+
+  function setSkipConfirmBarVisible(visible) {
+    const skipButton = state.ui.skipButton;
+    if (!skipButton) return;
+    const bar = skipButton.querySelector('.aniskip-skip-confirm-bar');
+    if (bar) bar.classList.toggle('aniskip-hidden', !visible);
+  }
+
+  function setSkipConfirmBtns(visible) {
+    const skipButton = state.ui.skipButton;
+    if (!skipButton) return;
+    skipButton.querySelectorAll('.aniskip-confirm-btn').forEach((btn) => {
+      btn.classList.toggle('aniskip-hidden', !visible);
+    });
+  }
+
+  function startSkipConfirmCountdown() {
+    const skipButton = state.ui.skipButton;
+    const bar = skipButton && skipButton.querySelector('.aniskip-skip-confirm-bar-fill');
+    if (bar) {
+      bar.style.transition = 'none';
+      bar.style.width = '100%';
+      void bar.offsetWidth;
+      bar.style.transition = 'width 30s linear';
+      bar.style.width = '0%';
+    }
+    clearTimeout(state.skipConfirmTimeout);
+    state.skipConfirmTimeout = setTimeout(() => {
+      hideSkipConfirm();
+    }, 30000);
+  }
+
+  function showSkipFeedback(text, type = 'neutral') {
+    const skipButton = state.ui.skipButton;
+    if (!skipButton) return;
+    
+    const confirm = skipButton.querySelector('.aniskip-skip-confirm');
+    const textEl = skipButton.querySelector('.aniskip-skip-confirm-text');
+    
+    textEl.textContent = text;
+    textEl.classList.toggle('aniskip-confirm-success', type === 'success');
+    textEl.classList.toggle('aniskip-confirm-error', type === 'error');
+    textEl.classList.remove('aniskip-hidden');
+    setSkipConfirmBtns(false);
+    setSkipConfirmBarVisible(false);
+    confirm.classList.remove('aniskip-hidden');
+    skipButton.classList.add('aniskip-confirm-mode');
+    skipButton.classList.remove('aniskip-hidden');
+    
+    clearTimeout(state.skipConfirmTimeout);
+    state.skipConfirmTimeout = setTimeout(() => {
+      hideSkipConfirm();
+    }, 2000);
+  }
+
+  function resetSkipButton() {
+    const skipButton = state.ui.skipButton;
+    if (!skipButton) return;
+    clearTimeout(state.skipConfirmTimeout);
+    const bar = skipButton.querySelector('.aniskip-skip-confirm-bar-fill');
+    if (bar) {
+      bar.style.transition = 'none';
+      bar.style.width = '100%';
+    }
+    const confirm = skipButton.querySelector('.aniskip-skip-confirm');
+    const textEl = skipButton.querySelector('.aniskip-skip-confirm-text');
+    skipButton.querySelector('.aniskip-skip-text').classList.remove('aniskip-hidden');
+    skipButton.querySelector('.aniskip-skip-type').classList.remove('aniskip-hidden');
+    setSkipConfirmBtns(true);
+    textEl.classList.remove('aniskip-confirm-success', 'aniskip-confirm-error');
+    confirm.classList.add('aniskip-hidden');
+    skipButton.classList.remove('aniskip-confirm-mode');
+  }
+
+  function hideSkipConfirm() {
+    resetSkipButton();
+    if (state.ui.skipButton) state.ui.skipButton.classList.add('aniskip-hidden');
+  }
+
+  function handleSkipConfirm(approved) {
+    const skipButton = state.ui.skipButton;
+    if (!skipButton) return;
+    
+    const pending = state.pendingSkipConfirm;
+    state.pendingSkipConfirm = null;
+    
+    if (!approved || !pending) {
+      hideSkipConfirm();
+      return;
+    }
+    
+    showSkipFeedback(getMessage('skipConfirmSaving', 'Saving...'));
+    submitManualSkip(pending.startTime, pending.endTime, pending.type).then((ok) => {
+      showSkipFeedback(
+        ok ? getMessage('skipConfirmSaved', 'Saved!') : getMessage('skipConfirmFailed', 'Save failed'),
+        ok ? 'success' : 'error'
+      );
+    });
+  }
+
+  async function submitManualSkip(startTime, endTime, type) {
+    if (!state.currentMalId || !state.currentEpisode || !state.player) {
+      updateStatus(getMessage('statusCannotSubmit', 'Cannot submit: missing anime info'), true);
+      return false;
+    }
+    
+    updateStatus(getMessage('statusSubmitting', 'Submitting skip time...'));
+    
+    try {
+      const response = await browser.runtime.sendMessage({
+        action: 'createSkipTime',
+        malId: state.currentMalId,
+        episodeNumber: state.currentEpisode,
+        data: { skipType: type, startTime: Math.round(startTime * 1000) / 1000, endTime: Math.round(endTime * 1000) / 1000, episodeLength: Math.round(state.player.getDuration() * 1000) / 1000 }
+      });
+      
+      if (response.error) {
+        updateStatus(getMessage('statusSubmitFailed', 'Submit failed: $1').replace('$1', response.error), true);
+        return false;
+      }
+      
+      updateStatus(getMessage('statusSubmitSuccess', 'Skip time submitted successfully!'));
+      await fetchSkipTimes();
+      return true;
+    } catch (error) {
+      updateStatus(getMessage('statusFailedToFetch', 'Failed to submit skip time'), true);
+      return false;
     }
   }
 
@@ -1309,6 +1512,7 @@
       if (!animeInfo) animeInfo = parseAnimeInfo();
       
       if (animeInfo) {
+        console.log('VOE AniSkip: Parsed anime info:', animeInfo);
         state.currentEpisode = animeInfo.episode;
         state.currentSeason = animeInfo.season || 1;
         state.currentVideoId = generateVideoId(animeInfo);
@@ -1321,12 +1525,14 @@
         const cached = cache[animeInfo.animeName.toLowerCase()];
         
         if (cached) {
+          console.log('VOE AniSkip: Cache hit for', animeInfo.animeName, '->', cached.malId);
           state.currentMalId = cached.malId;
           document.querySelector('#aniskip-anime-name').textContent = cached.title;
           document.querySelector('#aniskip-mal-id').textContent = cached.malId;
           updateStatus(getMessage('statusUsingCached', 'Using cached anime info'));
           await fetchSkipTimes();
         } else {
+          console.log('VOE AniSkip: Cache miss for', animeInfo.animeName);
           document.querySelector('#aniskip-anime-name').textContent = animeInfo.animeName;
           document.querySelector('#aniskip-search-input').value = animeInfo.animeName;
           updateStatus(getMessage('statusSearching', 'Searching for anime: $1').replace('$1', animeInfo.animeName));
@@ -1334,11 +1540,14 @@
           let searchQuery = animeInfo.animeName;
           if (animeInfo.season && animeInfo.season > 1) searchQuery += ' season ' + animeInfo.season;
           
+          console.log('VOE AniSkip: MAL search query:', searchQuery);
           const results = await browser.runtime.sendMessage({ action: 'searchAnime', query: searchQuery });
-          
+          console.log('VOE AniSkip: MAL search results:', results && results.length, 'hits');
           if (results && results.length > 0) {
+            console.log('VOE AniSkip: Selecting first result:', results[0].mal_id, '-', results[0].title);
             await selectAnime(results[0].mal_id, results[0].title);
           } else {
+            console.log('VOE AniSkip: No MAL search results, falling back to manual search');
             updateStatus(getMessage('statusNotFound', 'Anime not found. Click "Change" to search manually.'));
             document.querySelector('#aniskip-search-panel').classList.remove('aniskip-hidden');
           }

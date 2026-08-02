@@ -44,6 +44,17 @@ async function getUserId() {
 
 // Search for anime on MyAnimeList via AniList GraphQL API
 async function searchAnime(query) {
+  console.log('AniSkip background: Searching MAL/AniList for:', query);
+  const anilistResults = await searchAniList(query);
+  if (anilistResults && anilistResults.length > 0) {
+    console.log('AniSkip background: AniList returned', anilistResults.length, 'results');
+    return anilistResults;
+  }
+  console.log('AniSkip background: AniList returned nothing, falling back to Kitsu');
+  return await searchKitsu(query);
+}
+
+async function searchAniList(query) {
   try {
     const response = await fetch(ANILIST_API, {
       method: 'POST',
@@ -66,6 +77,7 @@ async function searchAnime(query) {
         variables: { search: query }
       })
     });
+    console.log('AniSkip background: AniList response status:', response.status);
     if (!response.ok) {
       throw new Error(`AniList API error: ${response.status}`);
     }
@@ -79,9 +91,46 @@ async function searchAnime(query) {
         episodes: anime.episodes,
         images: { jpg: { small_image_url: anime.coverImage?.medium || '' } }
       }));
+    console.log('AniSkip background: AniList returned', results.length, 'results');
     return results;
   } catch (error) {
-    console.error('Error searching anime:', error);
+    console.error('Error searching anime on AniList:', error);
+    return [];
+  }
+}
+
+async function searchKitsu(query) {
+  try {
+    const url = `https://kitsu.io/api/edge/anime?filter%5Btext%5D=${encodeURIComponent(query)}&page%5Blimit%5D=10&include=mappings`;
+    const response = await fetch(url, { headers: { 'Accept': 'application/vnd.api+json' } });
+    console.log('AniSkip background: Kitsu response status:', response.status);
+    if (!response.ok) {
+      throw new Error(`Kitsu API error: ${response.status}`);
+    }
+    const data = await response.json();
+    const mappingById = {};
+    (data.included || []).forEach((m) => {
+      if (m.type === 'mappings') mappingById[m.id] = m.attributes;
+    });
+    const results = (data.data || [])
+      .map((anime) => {
+        const malMapping = (anime.relationships?.mappings?.data || [])
+          .map((ref) => mappingById[ref.id])
+          .find((attrs) => attrs && attrs.externalSite === 'myanimelist/anime');
+        if (!malMapping) return null;
+        return {
+          mal_id: Number(malMapping.externalId),
+          title: anime.attributes?.titles?.en || anime.attributes?.canonicalTitle || '',
+          type: anime.attributes?.subtype || '',
+          episodes: anime.attributes?.episodeCount,
+          images: { jpg: { small_image_url: anime.attributes?.posterImage?.small || '' } }
+        };
+      })
+      .filter(Boolean);
+    console.log('AniSkip background: Kitsu returned', results.length, 'results with MAL IDs');
+    return results;
+  } catch (error) {
+    console.error('Error searching anime on Kitsu:', error);
     return [];
   }
 }
@@ -260,9 +309,9 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
           autoSkipRecap: false,
           showButtons: true,
           alwaysShowButton: false,
-          showSpeedControl: false,
+          showSpeedControl: true,
           persistentSpeed: false,
-          skipOffset: 0,
+          skipOffset: -5,
           playAfterSkip: false,
           nextEpisode: true,
           persistentVolume: false,
