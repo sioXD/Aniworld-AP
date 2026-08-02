@@ -925,6 +925,61 @@
     });
   }
 
+  // Seek to a target position and reliably resume playback afterwards.
+  // JWPlayer/VOE can get stuck in a permanent loading state after a
+  // programmatic seek, so we pause, seek and then resume playback.
+  function seekPlayer(time) {
+    if (!state.player) return;
+
+    let wasPlaying = false;
+    try {
+      const playerState = state.player.getState ? state.player.getState() : null;
+      wasPlaying = playerState === 'playing' || playerState === 'buffering';
+    } catch (e) {}
+
+    let target = time;
+    try {
+      const duration = state.player.getDuration();
+      if (duration && target > duration) target = duration;
+      if (target < 0) target = 0;
+    } catch (e) {}
+
+    try {
+      if (state.player.pause) state.player.pause();
+    } catch (e) {}
+
+    let seeked = false;
+    const onSeeked = () => {
+      if (seeked) return;
+      seeked = true;
+      if (wasPlaying || state.settings.playAfterSkip) {
+        try {
+          const video = document.querySelector('video');
+          if (video) {
+            video.play().catch(() => {});
+          } else if (state.player && state.player.play) {
+            state.player.play();
+          }
+        } catch (e) {
+          console.log('VOE AniSkip: Could not resume playback after skip');
+        }
+      }
+    };
+
+    try {
+      if (state.player.on) state.player.on('seek', onSeeked);
+    } catch (e) {}
+
+    try {
+      state.player.seek(target);
+    } catch (e) {
+      console.log('VOE AniSkip: Seek failed', e);
+    }
+
+    // Fallback in case no seek event fires (e.g. seeking to current position)
+    setTimeout(onSeeked, 300);
+  }
+
   function checkSkipSegments() {
     if (!state.player) return;
     
@@ -946,29 +1001,13 @@
             state.skippedSegments.add(segmentId);
             
             // Skip to end of segment
-            state.player.seek(endTime + state.settings.skipOffset);
+            seekPlayer(endTime + state.settings.skipOffset);
             
             // If it's an ending, mark episode as seen
             if (segment.skipType === 'ed' || segment.skipType === 'mixed-ed') {
               console.log('VOE AniSkip: Auto-skipped ending, marking as seen');
               clearPlaybackPosition();
               markCurrentEpisodeAsSeen();
-            }
-            
-            // AUTO-PRESS PLAY AFTER SKIP
-            if (state.settings.playAfterSkip) {
-              setTimeout(() => {
-                try {
-                  const video = document.querySelector('video');
-                  if (video) {
-                    video.play().catch(() => {});
-                  } else if (state.player && state.player.play) {
-                    state.player.play();
-                  }
-                } catch (e) {
-                  console.log('VOE AniSkip: Could not auto-play after skip');
-                }
-              }, 150);
             }
             
             state.ui.skipButton.classList.add('aniskip-hidden');
@@ -1033,28 +1072,12 @@
       state.skippedSegments.add(skipId);
       
       // Skip to end of segment
-      state.player.seek(endTime + state.settings.skipOffset);
+      seekPlayer(endTime + state.settings.skipOffset);
       
       // If it's an ending, mark episode as seen
       if (skipType === 'ed' || skipType === 'mixed-ed') {
         clearPlaybackPosition();
         markCurrentEpisodeAsSeen();
-      }
-      
-      // AUTO-PRESS PLAY AFTER SKIP
-      if (state.settings.playAfterSkip) {
-        setTimeout(() => {
-          try {
-            const video = document.querySelector('video');
-            if (video) {
-              video.play().catch(() => {});
-            } else if (state.player && state.player.play) {
-              state.player.play();
-            }
-          } catch (e) {
-            console.log('VOE AniSkip: Could not auto-play after skip');
-          }
-        }, 150);
       }
       
       skipButton.classList.add('aniskip-hidden');
