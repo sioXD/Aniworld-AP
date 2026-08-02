@@ -487,7 +487,7 @@
       </div>
       <div id="aniskip-panel" class="aniskip-hidden">
         <div class="aniskip-panel-header">
-          <span class="aniskip-brand"><span class="aniskip-brand-ani">Ani</span><span class="aniskip-brand-world">World</span> <span class="aniskip-brand-ap">AP</span></span>
+          <span class="aniskip-brand"><span class="aniskip-brand-ani">Ani</span><span class="aniskip-brand-world">World</span> <span class="aniskip-brand-ap">AP [fork]</span></span>
           <button id="aniskip-close-panel" class="aniskip-icon-btn">×</button>
         </div>
         <div class="aniskip-panel-content">

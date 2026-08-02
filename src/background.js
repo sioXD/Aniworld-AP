@@ -2,7 +2,7 @@
 // Handles API requests and dynamic content script injection
 
 const ANISKIP_API = 'https://api.aniskip.com/v2';
-const JIKAN_API = 'https://api.jikan.moe/v4';
+const ANILIST_API = 'https://graphql.anilist.co';
 
 // Track which frames we've injected into
 const injectedFrames = new Set();
@@ -42,16 +42,44 @@ async function getUserId() {
   return userId;
 }
 
-// Search for anime on MyAnimeList via Jikan API
+// Search for anime on MyAnimeList via AniList GraphQL API
 async function searchAnime(query) {
   try {
-    const url = `${JIKAN_API}/anime?q=${encodeURIComponent(query)}&limit=10&sfw=true`;
-    const response = await fetch(url);
+    const response = await fetch(ANILIST_API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        query: `
+          query ($search: String) {
+            Page(page: 1, perPage: 10) {
+              media(search: $search, type: ANIME) {
+                id
+                idMal
+                title { english romaji }
+                format
+                episodes
+                coverImage { medium }
+              }
+            }
+          }
+        `,
+        variables: { search: query }
+      })
+    });
     if (!response.ok) {
-      throw new Error(`Jikan API error: ${response.status}`);
+      throw new Error(`AniList API error: ${response.status}`);
     }
     const data = await response.json();
-    return data.data || [];
+    const results = (data.data?.Page?.media || [])
+      .filter((anime) => anime.idMal)
+      .map((anime) => ({
+        mal_id: anime.idMal,
+        title: anime.title?.english || anime.title?.romaji || '',
+        type: anime.format,
+        episodes: anime.episodes,
+        images: { jpg: { small_image_url: anime.coverImage?.medium || '' } }
+      }));
+    return results;
   } catch (error) {
     console.error('Error searching anime:', error);
     return [];
