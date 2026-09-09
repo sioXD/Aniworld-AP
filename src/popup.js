@@ -343,7 +343,7 @@ async function loadSettings() {
     document.getElementById('markerOpacity').value = settings.markerOpacity || 0.5;
     
     // Load theme setting
-    const theme = settings.uiTheme || 'classic';
+    const theme = settings.uiTheme || 'aniworld';
     document.getElementById('uiTheme').value = theme;
     applyTheme(theme);
     
@@ -415,10 +415,10 @@ async function saveSettings() {
 document.addEventListener('DOMContentLoaded', async () => {
   // Load theme immediately to prevent flash
   try {
-    const result = await browser.storage.local.get({ uiTheme: 'classic' });
+    const result = await browser.storage.local.get({ uiTheme: 'aniworld' });
     document.body.setAttribute('data-theme', result.uiTheme);
   } catch (e) {
-    document.body.setAttribute('data-theme', 'classic');
+    document.body.setAttribute('data-theme', 'aniworld');
   }
 
   loadSettings();

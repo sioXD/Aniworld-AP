@@ -335,7 +335,7 @@
       play() { return videoEl.play(); },
       pause() { videoEl.pause(); },
       on(event, callback) {
-        const eventMap = { 'time': 'timeupdate', 'seek': 'seeked', 'meta': 'loadedmetadata', 'complete': 'ended', 'volume': 'volumechange' };
+        const eventMap = { 'time': 'timeupdate', 'seek': 'seeked', 'seeked': 'seeked', 'meta': 'loadedmetadata', 'complete': 'ended', 'volume': 'volumechange' };
         videoEl.addEventListener(eventMap[event] || event, callback);
       },
       getContainer() { return videoEl.parentElement; },
@@ -458,7 +458,8 @@
     const display = document.querySelector('#aniskip-speed-display');
     if (!display) return;
     const speed = video ? video.playbackRate : 1.0;
-    display.textContent = speed.toFixed(2).replace(/\.?0+$/, '') + 'x';
+    const formatted = Number.isInteger(speed) ? speed.toFixed(1) : (Math.round(speed * 100) / 100).toString();
+    display.textContent = formatted + 'x';
   }
 
   async function loadPersistentSpeed() {
@@ -491,7 +492,7 @@
     container.id = 'aniskip-container';
     
     // Apply theme class based on settings
-    const theme = state.settings?.uiTheme || 'classic';
+    const theme = state.settings?.uiTheme || 'aniworld';
     container.className = `theme-${theme}`;
     
     container.innerHTML = `
@@ -980,25 +981,33 @@
     } catch (e) {}
 
     let seeked = false;
+    const resumePlayback = () => {
+      try {
+        if (state.player && state.player.play) {
+          const result = state.player.play();
+          if (result && typeof result.catch === 'function') {
+            result.catch(() => {
+              console.log('VOE AniSkip: Could not resume playback after skip');
+            });
+          }
+        }
+      } catch (e) {
+        console.log('VOE AniSkip: Could not resume playback after skip');
+      }
+    };
     const onSeeked = () => {
       if (seeked) return;
       seeked = true;
       if (wasPlaying || state.settings.playAfterSkip) {
-        try {
-          const video = document.querySelector('video');
-          if (video) {
-            video.play().catch(() => {});
-          } else if (state.player && state.player.play) {
-            state.player.play();
-          }
-        } catch (e) {
-          console.log('VOE AniSkip: Could not resume playback after skip');
-        }
+        resumePlayback();
       }
     };
 
+    // JWPlayer fires 'seek' as soon as a seek is requested and 'seeked' once it
+    // has actually completed. Resuming on 'seek' races the in-progress buffer
+    // load and can leave the player stuck loading forever, so wait for 'seeked'.
     try {
-      if (state.player.on) state.player.on('seek', onSeeked);
+      if (state.player.on) state.player.on('seeked', onSeeked);
     } catch (e) {}
 
     try {
@@ -1007,8 +1016,21 @@
       console.log('VOE AniSkip: Seek failed', e);
     }
 
-    // Fallback in case no seek event fires (e.g. seeking to current position)
-    setTimeout(onSeeked, 300);
+    // Fallback in case no seeked event fires (e.g. seeking to current position)
+    setTimeout(onSeeked, 2000);
+
+    // Watchdog: if the player is still stuck buffering shortly after the skip,
+    // force playback through the player API to recover from the stuck state.
+    setTimeout(() => {
+      try {
+        if (!state.player) return;
+        const playerState = state.player.getState ? state.player.getState() : null;
+        if (playerState === 'buffering' || playerState === 'loading') {
+          console.log('VOE AniSkip: Player stuck buffering after skip, forcing play');
+          resumePlayback();
+        }
+      } catch (e) {}
+    }, 5000);
   }
 
   function checkSkipSegments() {
@@ -1115,8 +1137,10 @@
         markCurrentEpisodeAsSeen();
       }
       
-      // Ask if the user wants to save this skip as a new segment with AniSkip
-      showSkipConfirm(skipStart, endTime + state.settings.skipOffset);
+      // Only ask to save for manual 90s skips; segments from AniSkip already exist
+      if (skipType === 'manual-90') {
+        showSkipConfirm(skipStart, endTime + state.settings.skipOffset);
+      }
       console.log('VOE AniSkip: Skipped to', endTime);
     }
   }

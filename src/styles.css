@@ -166,12 +166,11 @@
 .aniskip-toggle-btn:hover {
   background: var(--aniskip-bg-elevated);
   border-color: var(--aniskip-border-glow);
-  transform: scale(1.05);
   box-shadow: 0 4px 24px var(--aniskip-accent-glow);
 }
 
 .aniskip-toggle-btn:active {
-  transform: scale(0.98);
+  background: var(--aniskip-bg-elevated);
 }
 
 .aniskip-toggle-btn.aniskip-controls-hidden {
@@ -239,12 +238,11 @@
 
 #aniskip-skip-button:hover {
   border-color: var(--aniskip-border-glow);
-  transform: scale(1.03) translateY(-2px);
   box-shadow: 0 4px 24px var(--aniskip-accent-glow);
 }
 
 #aniskip-skip-button:active {
-  transform: scale(0.98);
+  background: var(--aniskip-bg-elevated);
 }
 
 #aniskip-skip-button.aniskip-controls-hidden {
@@ -494,11 +492,10 @@
   background: rgba(255, 255, 255, 0.1);
   border-color: var(--aniskip-border-glow);
   color: var(--aniskip-text-primary);
-  transform: translateY(-1px);
 }
 
 .aniskip-footer-btn:active {
-  transform: translateY(0);
+  background: rgba(255, 255, 255, 0.15);
 }
 
 .aniskip-footer-btn svg {
@@ -584,12 +581,11 @@
 }
 
 .aniskip-btn:hover {
-  transform: translateY(-1px);
   box-shadow: 0 4px 20px var(--aniskip-accent-glow);
 }
 
 .aniskip-btn:active {
-  transform: translateY(0);
+  background: linear-gradient(135deg, var(--aniskip-accent-secondary), var(--aniskip-accent-primary));
 }
 
 .aniskip-small-btn {
@@ -627,7 +623,6 @@
 
 .aniskip-icon-btn:hover {
   background: rgba(255, 255, 255, 0.2);
-  transform: scale(1.1);
 }
 
 /* ===================== */
@@ -683,7 +678,6 @@
 .aniskip-search-result:hover {
   background: rgba(255, 255, 255, 0.08);
   border-color: var(--aniskip-border-glow);
-  transform: translateX(4px);
 }
 
 .aniskip-search-result img {
@@ -789,7 +783,6 @@
 
 .aniskip-vote-btn:hover {
   opacity: 1;
-  transform: scale(1.2);
   background: rgba(255, 255, 255, 0.1);
 }
 

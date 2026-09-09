@@ -24,7 +24,7 @@ async function updateToolbarIcon(theme) {
 
 // Initialize icon on startup
 async function initToolbarIcon() {
-  const settings = await browser.storage.local.get({ uiTheme: 'classic' });
+  const settings = await browser.storage.local.get({ uiTheme: 'aniworld' });
   await updateToolbarIcon(settings.uiTheme);
 }
 
