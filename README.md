@@ -27,9 +27,13 @@ This fork adds the following features to enhance the viewing experience on AniWo
 
 ## CI/CD Release
 
+To publish a release, change the `version` field in `manifest.json` to the next version and push the change to `main`:
 
-```properties
-git commit -m "..."
-git tag v0.1.0
-git push origin main --tags
+```bash
+# Set "version": "1.6.8" in manifest.json first.
+git add manifest.json
+git commit -m "bump version to 1.6.8"
+git push origin main
 ```
+
+The release workflow compares the previous and current manifest versions. When the version changes, it automatically creates the matching `v<version>` tag and GitHub Release with the built extension ZIP. Manifest changes that do not change the version do not create a release. If `AMO_ENABLED` and the AMO secrets are configured, the signed extension is also published to AMO.

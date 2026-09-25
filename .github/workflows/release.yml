@@ -2,18 +2,79 @@ name: Release
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches:
+      - main
+    paths:
+      - manifest.json
 
 permissions:
   contents: write
 
 jobs:
+  check_version:
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.version.outputs.changed }}
+      tag: ${{ steps.version.outputs.tag }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Check manifest version
+        id: version
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
+        run: |
+          set -euo pipefail
+
+          current_version="$(node -p "require('./manifest.json').version")"
+          previous_version=""
+
+          if [[ -n "$BEFORE_SHA" && "$BEFORE_SHA" != "0000000000000000000000000000000000000000" ]]; then
+            previous_version="$(
+              git show "${BEFORE_SHA}:manifest.json" |
+                node -p "JSON.parse(require('fs').readFileSync(0, 'utf8')).version"
+            )"
+          fi
+
+          if [[ "$current_version" == "$previous_version" ]]; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "manifest.json version is unchanged ($current_version); skipping release."
+            exit 0
+          fi
+
+          if [[ ! "$current_version" =~ ^(0|[1-9][0-9]{0,8})(\.(0|[1-9][0-9]{0,8})){0,3}$ ]]; then
+            echo "::error::manifest.json contains an invalid AMO version: $current_version"
+            exit 1
+          fi
+
+          tag="v$current_version"
+          if git ls-remote --exit-code --tags origin "refs/tags/$tag" >/dev/null 2>&1; then
+            echo "::error::Tag $tag already exists; refusing to overwrite an existing release."
+            exit 1
+          fi
+
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "manifest.json version changed: $previous_version -> $current_version"
+
   build:
+    needs: check_version
+    if: needs.check_version.outputs.changed == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 20
       - name: Install web-ext
@@ -22,14 +83,21 @@ jobs:
         run: echo "" | pwsh -File pack.ps1
         shell: bash
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
+          tag_name: ${{ needs.check_version.outputs.tag }}
+          target_commitish: ${{ github.sha }}
           files: web-ext-artifacts/*.zip
+          fail_on_unmatched_files: true
           generate_release_notes: true
 
-  publish-amo:
-    needs: build
-    if: vars.AMO_ENABLED == 'true'
+  publish_amo:
+    needs:
+      - check_version
+      - build
+    if: >-
+      needs.check_version.outputs.changed == 'true' &&
+      vars.AMO_ENABLED == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
