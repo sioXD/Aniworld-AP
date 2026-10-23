@@ -10,7 +10,7 @@ This fork adds the following features to enhance the viewing experience on AniWo
 
 - **Speed Control** - Adjust playback speed (0.25× to 5×) via -/+ buttons, click center to reset to 1×
 - **Speed Control Settings** - Toggle speed buttons on/off (+ Remember speed across episodes)
-- **Next Episode Setting** - Navigate to the next episode when the current one ends (logic already exists, but no popup button)
+- **Next Episode** - Navigate automatically at the end of an episode or manually with the next-episode button in the player
 - **Always Show Skip Button** - Skip 90s if no OP/ED is playing
 - **Version** and the **update date** are now shown
 

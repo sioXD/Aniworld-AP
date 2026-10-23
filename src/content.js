@@ -79,7 +79,8 @@
       markerColorRecap: '#ffdd00',
       markerOpacity: 0.5
     },
-    ui: { container: null, skipButton: null, panel: null },
+    ui: { container: null, skipButton: null, panel: null, nextEpisodeButton: null, syncWithPlayerControls: null },
+    nextEpisodeAvailable: false,
     skippedSegments: new Set(),
     pendingSkipConfirm: null,
     skipConfirmTimeout: null,
@@ -96,6 +97,7 @@
       typeMixedEnding: 'Mixed Ending',
       typeRecap: 'Recap',
       skipButtonText: 'Skip',
+      nextEpisodeButton: 'Next episode',
       panelInitializing: 'Initializing...',
       panelAnime: 'Anime:',
       panelSeason: 'Season:',
@@ -150,6 +152,7 @@
       typeMixedEnding: 'Gemischtes Outro',
       typeRecap: 'Zusammenfassung',
       skipButtonText: 'Überspringen',
+      nextEpisodeButton: 'Nächste Folge',
       panelInitializing: 'Initialisierung...',
       panelAnime: 'Anime:',
       panelSeason: 'Staffel:',
@@ -483,6 +486,54 @@
     } catch (e) {}
   }
 
+  function updateNextEpisodeButtonLabel() {
+    const button = state.ui.nextEpisodeButton;
+    if (!button) return;
+
+    const label = getMessage('nextEpisodeButton', 'Next episode');
+    button.title = label;
+    button.setAttribute('aria-label', label);
+  }
+
+  function positionNextEpisodeButton() {
+    const button = state.ui.nextEpisodeButton;
+    if (!button) return;
+
+    const settingsButton = document.querySelector(
+      '.jw-settings-submenu-button.jw-icon-settings, .jw-icon-settings[aria-label="Settings"]'
+    );
+    const settingsRect = settingsButton?.getBoundingClientRect();
+
+    if (!settingsRect || settingsRect.width === 0 || settingsRect.height === 0) {
+      // Use the CSS fallback until JWPlayer has rendered its settings control.
+      button.style.top = '';
+      button.style.right = '';
+      button.style.bottom = '';
+      return;
+    }
+
+    const gap = 8;
+    button.style.top = 'auto';
+    button.style.right = `${Math.max(8, window.innerWidth - settingsRect.left + gap)}px`;
+    button.style.bottom = `${Math.max(8, window.innerHeight - settingsRect.bottom)}px`;
+  }
+
+  function setNextEpisodeAvailability(available) {
+    state.nextEpisodeAvailable = available === true;
+
+    const button = state.ui.nextEpisodeButton;
+    if (button) {
+      button.disabled = !state.nextEpisodeAvailable;
+      button.classList.toggle('aniskip-hidden', !state.nextEpisodeAvailable);
+      button.setAttribute('aria-hidden', String(!state.nextEpisodeAvailable));
+      updateNextEpisodeButtonLabel();
+    }
+
+    if (state.ui.syncWithPlayerControls) {
+      state.ui.syncWithPlayerControls();
+    }
+  }
+
   // Create UI
   function createUI() {
     const existing = document.getElementById('aniskip-container');
@@ -543,7 +594,10 @@
           <button id="aniskip-refresh" class="aniskip-footer-btn"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg> Refresh</button>
         </div>
       </div>
-      <button id="aniskip-toggle-btn" class="aniskip-toggle-btn" title="AniSkip">
+      <button id="aniskip-next-episode-btn" class="aniskip-next-episode-btn aniskip-hidden" type="button" aria-hidden="true" disabled>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 4 10 8-10 8V4Z"></path><line x1="19" y1="5" x2="19" y2="19"></line></svg>
+      </button>
+      <button id="aniskip-toggle-btn" class="aniskip-toggle-btn" type="button" title="AniSkip">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
       </button>
       <div id="aniskip-speed-control" class="aniskip-speed-control aniskip-hidden">
@@ -564,6 +618,8 @@
     state.ui.container = container;
     state.ui.skipButton = container.querySelector('#aniskip-skip-button');
     state.ui.panel = container.querySelector('#aniskip-panel');
+    state.ui.nextEpisodeButton = container.querySelector('#aniskip-next-episode-btn');
+    updateNextEpisodeButtonLabel();
     
     // Watch for fullscreen changes and move UI accordingly
     function handleFullscreenChange() {
@@ -591,16 +647,26 @@
       const toggleBtn = container.querySelector('#aniskip-toggle-btn');
       const skipBtn = state.ui.skipButton;
       const speedControl = container.querySelector('#aniskip-speed-control');
+      const nextEpisodeBtn = state.ui.nextEpisodeButton;
       const playerContainer = document.querySelector('.jw-wrapper, .jwplayer');
       const controlsHidden = playerContainer && playerContainer.classList.contains('jw-flag-user-inactive');
       const controlbar = document.querySelector('.jw-controlbar');
       const controlbarHidden = controlbar && window.getComputedStyle(controlbar).opacity === '0';
       const shouldHide = controlsHidden || controlbarHidden;
+
+      positionNextEpisodeButton();
       
+      if (nextEpisodeBtn) {
+        nextEpisodeBtn.classList.toggle('aniskip-hidden', !state.nextEpisodeAvailable);
+        nextEpisodeBtn.disabled = !state.nextEpisodeAvailable;
+        nextEpisodeBtn.setAttribute('aria-hidden', String(!state.nextEpisodeAvailable));
+      }
+
       if (!state.ui.panel.classList.contains('aniskip-hidden')) {
         toggleBtn.classList.remove('aniskip-controls-hidden');
         skipBtn.classList.remove('aniskip-controls-hidden');
         if (speedControl) speedControl.classList.remove('aniskip-controls-hidden');
+        if (nextEpisodeBtn) nextEpisodeBtn.classList.remove('aniskip-controls-hidden');
         return;
       }
       
@@ -608,17 +674,22 @@
         toggleBtn.classList.add('aniskip-controls-hidden');
         skipBtn.classList.add('aniskip-controls-hidden');
         if (speedControl) speedControl.classList.add('aniskip-controls-hidden');
+        if (nextEpisodeBtn) nextEpisodeBtn.classList.add('aniskip-controls-hidden');
       } else {
         toggleBtn.classList.remove('aniskip-controls-hidden');
         skipBtn.classList.remove('aniskip-controls-hidden');
         if (speedControl) speedControl.classList.remove('aniskip-controls-hidden');
+        if (nextEpisodeBtn) nextEpisodeBtn.classList.remove('aniskip-controls-hidden');
       }
     }
     
+    state.ui.syncWithPlayerControls = syncWithPlayerControls;
+    syncWithPlayerControls();
     setInterval(syncWithPlayerControls, 200);
     document.addEventListener('mousemove', syncWithPlayerControls);
     
     container.querySelector('#aniskip-toggle-btn').addEventListener('click', () => state.ui.panel.classList.toggle('aniskip-hidden'));
+    state.ui.nextEpisodeButton.addEventListener('click', () => requestNextEpisode(true));
     container.querySelector('#aniskip-close-panel').addEventListener('click', () => state.ui.panel.classList.add('aniskip-hidden'));
     container.querySelector('#aniskip-skip-button').addEventListener('click', skipCurrent);
     container.querySelector('#aniskip-confirm-yes').addEventListener('click', (e) => { e.stopPropagation(); handleSkipConfirm(true); });
@@ -957,9 +1028,11 @@
     });
   }
 
-  // Seek to a target position and reliably resume playback afterwards.
-  // JWPlayer/VOE can get stuck in a permanent loading state after a
-  // programmatic seek, so we pause, seek and then resume playback.
+  // Seek to a target position without interrupting playback.
+  // Pausing before the seek caused a visible freeze after every skip, because
+  // playback only resumed once 'seeked' fired (or after the 2s fallback).
+  // Instead we seek while the player keeps its play state and only force play
+  // as a recovery measure if the player actually dropped out of playback.
   function seekPlayer(time) {
     if (!state.player) return;
 
@@ -969,6 +1042,8 @@
       wasPlaying = playerState === 'playing' || playerState === 'buffering';
     } catch (e) {}
 
+    const shouldPlay = wasPlaying || state.settings.playAfterSkip;
+
     let target = time;
     try {
       const duration = state.player.getDuration();
@@ -976,39 +1051,39 @@
       if (target < 0) target = 0;
     } catch (e) {}
 
-    try {
-      if (state.player.pause) state.player.pause();
-    } catch (e) {}
+    let playbackConfirmed = false;
 
-    let seeked = false;
-    const resumePlayback = () => {
+    const isPlaying = () => {
       try {
-        if (state.player && state.player.play) {
-          const result = state.player.play();
-          if (result && typeof result.catch === 'function') {
-            result.catch(() => {
+        const playerState = state.player && state.player.getState ? state.player.getState() : null;
+        return playerState === 'playing' || playerState === 'buffering';
+      } catch (e) {
+        return false;
+      }
+    };
+
+    const ensurePlayback = () => {
+      if (!shouldPlay || playbackConfirmed) return;
+      if (isPlaying()) {
+        playbackConfirmed = true;
+        return;
+      }
+
+      try {
+        const result = state.player && state.player.play ? state.player.play() : null;
+        if (result && typeof result.then === 'function') {
+          result
+            .then(() => { playbackConfirmed = true; })
+            .catch(() => {
               console.log('VOE AniSkip: Could not resume playback after skip');
             });
-          }
+        } else {
+          playbackConfirmed = true;
         }
       } catch (e) {
         console.log('VOE AniSkip: Could not resume playback after skip');
       }
     };
-    const onSeeked = () => {
-      if (seeked) return;
-      seeked = true;
-      if (wasPlaying || state.settings.playAfterSkip) {
-        resumePlayback();
-      }
-    };
-
-    // JWPlayer fires 'seek' as soon as a seek is requested and 'seeked' once it
-    // has actually completed. Resuming on 'seek' races the in-progress buffer
-    // load and can leave the player stuck loading forever, so wait for 'seeked'.
-    try {
-      if (state.player.on) state.player.on('seeked', onSeeked);
-    } catch (e) {}
 
     try {
       state.player.seek(target);
@@ -1016,18 +1091,27 @@
       console.log('VOE AniSkip: Seek failed', e);
     }
 
-    // Fallback in case no seeked event fires (e.g. seeking to current position)
-    setTimeout(onSeeked, 2000);
+    if (!shouldPlay) return;
 
-    // Watchdog: if the player is still stuck buffering shortly after the skip,
-    // force playback through the player API to recover from the stuck state.
+    // If the seek still dropped the player out of playback, resume it.
+    // The short delay lets JWPlayer enter its buffering state first, so we do
+    // not fight a seek that is already on its way.
+    setTimeout(ensurePlayback, 250);
+    setTimeout(ensurePlayback, 2000);
+
+    try {
+      if (state.player.on) state.player.on('seeked', ensurePlayback);
+    } catch (e) {}
+
+    // Watchdog: recover from a player that got stuck buffering after the seek.
     setTimeout(() => {
       try {
         if (!state.player) return;
         const playerState = state.player.getState ? state.player.getState() : null;
         if (playerState === 'buffering' || playerState === 'loading') {
           console.log('VOE AniSkip: Player stuck buffering after skip, forcing play');
-          resumePlayback();
+          playbackConfirmed = false;
+          ensurePlayback();
         }
       } catch (e) {}
     }, 5000);
@@ -1326,9 +1410,15 @@
     }
   }
 
-  function requestNextEpisode() {
+  function requestNextEpisode(force = false) {
     if (window.self !== window.top) {
-      window.parent.postMessage({ type: 'ANISKIP_NEXT_EPISODE' }, '*');
+      window.parent.postMessage({ type: 'ANISKIP_NEXT_EPISODE', force }, '*');
+    }
+  }
+
+  function requestNextEpisodeStatus() {
+    if (window.self !== window.top) {
+      window.parent.postMessage({ type: 'ANISKIP_REQUEST_NEXT_EPISODE_STATUS' }, '*');
     }
   }
 
@@ -1400,6 +1490,9 @@
   window.addEventListener('message', (event) => {
     if (event.data?.type === 'ANISKIP_AUTO_PLAY') handleAutoPlay();
     if (event.data?.type === 'ANISKIP_ENTER_FULLSCREEN') enterFullscreenFromPlayer();
+    if (event.data?.type === 'ANISKIP_NEXT_EPISODE_AVAILABLE') {
+      setNextEpisodeAvailability(event.data.available);
+    }
   });
 
   // Enter fullscreen using JWPlayer or native video
@@ -1524,6 +1617,8 @@
     }
     
     createUI();
+    requestNextEpisodeStatus();
+    setTimeout(requestNextEpisodeStatus, 1000);
     updateStatus(getMessage('statusWaitingForPlayer', 'Waiting for video player...'));
     
     try {
@@ -1631,6 +1726,7 @@
     if (message.action === 'settingsUpdated') {
       state.settings = message.settings;
       console.log('VOE AniSkip: Settings updated', state.settings);
+      updateNextEpisodeButtonLabel();
       
       // Update theme class on container
       const container = document.getElementById('aniskip-container');

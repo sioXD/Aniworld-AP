@@ -158,11 +158,24 @@
     return !!getNextSeasonFirstEpisodeUrl();
   }
 
+  function notifyNextEpisodeAvailability(iframe) {
+    if (!iframe || !iframe.contentWindow) return;
+
+    try {
+      iframe.contentWindow.postMessage({
+        type: 'ANISKIP_NEXT_EPISODE_AVAILABLE',
+        available: hasNextEpisode()
+      }, '*');
+    } catch (error) {
+      console.log('VOE AniSkip: Could not send next episode status:', error);
+    }
+  }
+
   // Navigate to next episode
-  async function goToNextEpisode() {
-    // Check if auto-play next is enabled
-    const { nextEpisode } = await browser.storage.local.get('nextEpisode');
-    if (nextEpisode === false) {
+  async function goToNextEpisode(force = false) {
+    // Manual navigation is independent of automatic next-episode navigation.
+    const { nextEpisode } = await browser.storage.local.get({ nextEpisode: true });
+    if (!force && nextEpisode === false) {
       console.log('VOE AniSkip: Next episode disabled, not navigating');
       return;
     }
@@ -222,9 +235,19 @@
       console.log('VOE AniSkip: Received next episode request from iframe');
       if (!isNavigating) {
         isNavigating = true;
-        goToNextEpisode().finally(() => {
+        goToNextEpisode(event.data.force === true).finally(() => {
           setTimeout(() => { isNavigating = false; }, 2000);
         });
+      }
+    }
+
+    if (event.data && event.data.type === 'ANISKIP_REQUEST_NEXT_EPISODE_STATUS') {
+      const status = {
+        type: 'ANISKIP_NEXT_EPISODE_AVAILABLE',
+        available: hasNextEpisode()
+      };
+      if (event.source) {
+        event.source.postMessage(status, '*');
       }
     }
     
@@ -418,6 +441,8 @@
       } catch (e) {
         console.error('VOE AniSkip: Failed to store info', e);
       }
+    } else {
+      notifyIframes(null);
     }
   }
 
@@ -426,11 +451,14 @@
     const iframes = document.querySelectorAll('iframe');
     iframes.forEach(iframe => {
       try {
-        iframe.contentWindow.postMessage({
-          type: 'ANISKIP_ANIME_INFO',
-          data: info
-        }, '*');
-        console.log('VOE AniSkip: Sent info to iframe');
+        if (info) {
+          iframe.contentWindow.postMessage({
+            type: 'ANISKIP_ANIME_INFO',
+            data: info
+          }, '*');
+          console.log('VOE AniSkip: Sent info to iframe');
+        }
+        notifyNextEpisodeAvailability(iframe);
       } catch (e) {
         // Cross-origin, can't access directly
       }
@@ -454,6 +482,7 @@
                   }, '*');
                 } catch (e) {}
               }
+              notifyNextEpisodeAvailability(node);
             }, 1000);
           }
         });
