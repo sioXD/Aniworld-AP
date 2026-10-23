@@ -314,6 +314,7 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
           skipOffset: -5,
           playAfterSkip: false,
           nextEpisode: true,
+          showNextEpisodeButton: false,
           persistentVolume: false,
           persistentPlaybackPosition: false,
           playbackPositionExpirationDays: 7,

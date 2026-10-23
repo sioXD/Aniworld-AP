@@ -35,6 +35,8 @@ const translations = {
     sectionPlayback: "Playback",
     labelNextEpisode: "Next Episode",
     descNextEpisode: "Auto navigate to the next episode",
+    labelShowNextEpisodeButton: "Next Episode Button",
+    descShowNextEpisodeButton: "Show a button in the player to jump to the next episode",
     labelPlayAfterSkip: "Play After Skip",
     descPlayAfterSkip: "Resume playback after skipping",
     labelRememberVolume: "Remember Volume",
@@ -90,6 +92,8 @@ const translations = {
     sectionPlayback: "Wiedergabe",
     labelNextEpisode: "Nächste Folge",
     descNextEpisode: "Automatisch zur nächsten Folge navigieren",
+    labelShowNextEpisodeButton: "Nächste-Folge-Button",
+    descShowNextEpisodeButton: "Button im Player anzeigen, um zur nächsten Folge zu springen",
     labelPlayAfterSkip: "Nach Skip abspielen",
     descPlayAfterSkip: "Wiedergabe nach dem Überspringen fortsetzen",
     labelRememberVolume: "Lautstärke merken",
@@ -137,6 +141,7 @@ const settingIds = [
   'persistentSpeed',
   'skipOffset',
   'nextEpisode',
+  'showNextEpisodeButton',
   'playAfterSkip',
   'persistentVolume',
   'persistentPlaybackPosition',
@@ -333,6 +338,7 @@ async function loadSettings() {
     document.getElementById('persistentSpeed').checked = settings.persistentSpeed || false;
     document.getElementById('skipOffset').value = settings.skipOffset || 0;
     document.getElementById('nextEpisode').checked = settings.nextEpisode !== false;
+    document.getElementById('showNextEpisodeButton').checked = settings.showNextEpisodeButton === true;
     document.getElementById('playAfterSkip').checked = settings.playAfterSkip === true;
     document.getElementById('persistentVolume').checked = settings.persistentVolume === true;
     document.getElementById('persistentPlaybackPosition').checked = settings.persistentPlaybackPosition === true;
@@ -377,6 +383,7 @@ async function saveSettings() {
     skipOffset: parseFloat(document.getElementById('skipOffset').value) || 0,
     playAfterSkip: document.getElementById('playAfterSkip').checked,
     nextEpisode: document.getElementById('nextEpisode').checked,
+    showNextEpisodeButton: document.getElementById('showNextEpisodeButton').checked,
     persistentVolume: document.getElementById('persistentVolume').checked,
     persistentPlaybackPosition: document.getElementById('persistentPlaybackPosition').checked,
     playbackPositionExpirationDays: parseInt(document.getElementById('playbackPositionExpirationDays').value) || 7,

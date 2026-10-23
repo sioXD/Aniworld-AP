@@ -71,6 +71,7 @@
       skipOffset: -5,
       playAfterSkip: false,
       nextEpisode: true,
+      showNextEpisodeButton: false,
       persistentVolume: false,
       persistentPlaybackPosition: false,
       playbackPositionExpirationDays: 7,
@@ -518,14 +519,19 @@
     button.style.bottom = `${Math.max(8, window.innerHeight - settingsRect.bottom)}px`;
   }
 
+  function shouldShowNextEpisodeButton() {
+    return state.nextEpisodeAvailable && state.settings.showNextEpisodeButton === true;
+  }
+
   function setNextEpisodeAvailability(available) {
     state.nextEpisodeAvailable = available === true;
 
     const button = state.ui.nextEpisodeButton;
     if (button) {
+      const visible = shouldShowNextEpisodeButton();
       button.disabled = !state.nextEpisodeAvailable;
-      button.classList.toggle('aniskip-hidden', !state.nextEpisodeAvailable);
-      button.setAttribute('aria-hidden', String(!state.nextEpisodeAvailable));
+      button.classList.toggle('aniskip-hidden', !visible);
+      button.setAttribute('aria-hidden', String(!visible));
       updateNextEpisodeButtonLabel();
     }
 
@@ -657,9 +663,10 @@
       positionNextEpisodeButton();
       
       if (nextEpisodeBtn) {
-        nextEpisodeBtn.classList.toggle('aniskip-hidden', !state.nextEpisodeAvailable);
+        const showNext = shouldShowNextEpisodeButton();
+        nextEpisodeBtn.classList.toggle('aniskip-hidden', !showNext);
         nextEpisodeBtn.disabled = !state.nextEpisodeAvailable;
-        nextEpisodeBtn.setAttribute('aria-hidden', String(!state.nextEpisodeAvailable));
+        nextEpisodeBtn.setAttribute('aria-hidden', String(!showNext));
       }
 
       if (!state.ui.panel.classList.contains('aniskip-hidden')) {
@@ -1727,6 +1734,7 @@
       state.settings = message.settings;
       console.log('VOE AniSkip: Settings updated', state.settings);
       updateNextEpisodeButtonLabel();
+      if (state.ui.syncWithPlayerControls) state.ui.syncWithPlayerControls();
       
       // Update theme class on container
       const container = document.getElementById('aniskip-container');
