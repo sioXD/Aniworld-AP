@@ -492,35 +492,41 @@
     if (!button) return;
 
     const label = getMessage('nextEpisodeButton', 'Next episode');
-    button.title = label;
     button.setAttribute('aria-label', label);
+
+    const tooltip = button.querySelector('.jw-text');
+    if (tooltip) tooltip.textContent = label;
   }
 
-  function positionNextEpisodeButton() {
+  // The next episode button is a native JWPlayer control: it is mounted into
+  // the control bar directly left of the settings icon, so it inherits the
+  // player styling (hover, fullscreen, tooltips) and shrinks the timeline.
+  function mountNextEpisodeButton() {
     const button = state.ui.nextEpisodeButton;
     if (!button) return;
+
+    // Only touch the player's control bar while the feature is enabled.
+    if (state.settings.showNextEpisodeButton !== true) {
+      if (state.ui.container && button.parentNode !== state.ui.container) {
+        state.ui.container.appendChild(button);
+      }
+      return;
+    }
 
     const settingsButton = document.querySelector(
       '.jw-settings-submenu-button.jw-icon-settings, .jw-icon-settings[aria-label="Settings"]'
     );
-    const settingsRect = settingsButton?.getBoundingClientRect();
+    if (!settingsButton || !settingsButton.parentNode) return;
 
-    if (!settingsRect || settingsRect.width === 0 || settingsRect.height === 0) {
-      // Use the CSS fallback until JWPlayer has rendered its settings control.
-      button.style.top = '';
-      button.style.right = '';
-      button.style.bottom = '';
-      return;
+    if (button.parentNode !== settingsButton.parentNode || button.nextElementSibling !== settingsButton) {
+      settingsButton.parentNode.insertBefore(button, settingsButton);
     }
-
-    const gap = 8;
-    button.style.top = 'auto';
-    button.style.right = `${Math.max(8, window.innerWidth - settingsRect.left + gap)}px`;
-    button.style.bottom = `${Math.max(8, window.innerHeight - settingsRect.bottom)}px`;
   }
 
   function shouldShowNextEpisodeButton() {
-    return state.nextEpisodeAvailable && state.settings.showNextEpisodeButton === true;
+    const button = state.ui.nextEpisodeButton;
+    const mounted = button && button.closest('.jw-controlbar');
+    return !!mounted && state.nextEpisodeAvailable && state.settings.showNextEpisodeButton === true;
   }
 
   function setNextEpisodeAvailability(available) {
@@ -529,7 +535,6 @@
     const button = state.ui.nextEpisodeButton;
     if (button) {
       const visible = shouldShowNextEpisodeButton();
-      button.disabled = !state.nextEpisodeAvailable;
       button.classList.toggle('aniskip-hidden', !visible);
       button.setAttribute('aria-hidden', String(!visible));
       updateNextEpisodeButtonLabel();
@@ -544,6 +549,11 @@
   function createUI() {
     const existing = document.getElementById('aniskip-container');
     if (existing) existing.remove();
+
+    // The next episode button lives inside the player control bar and is not
+    // removed with the container, so clean it up explicitly.
+    const existingNextButton = document.getElementById('aniskip-next-episode-btn');
+    if (existingNextButton) existingNextButton.remove();
     
     const container = document.createElement('div');
     container.id = 'aniskip-container';
@@ -600,9 +610,10 @@
           <button id="aniskip-refresh" class="aniskip-footer-btn"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg> Refresh</button>
         </div>
       </div>
-      <button id="aniskip-next-episode-btn" class="aniskip-next-episode-btn aniskip-hidden" type="button" aria-hidden="true" disabled>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 4 10 8-10 8V4Z"></path><line x1="19" y1="5" x2="19" y2="19"></line></svg>
-      </button>
+      <div id="aniskip-next-episode-btn" class="jw-icon jw-icon-inline jw-button-color jw-reset aniskip-next-episode-btn aniskip-hidden" role="button" tabindex="0" aria-label="Next episode" aria-hidden="true">
+        <svg class="jw-svg-icon aniskip-next-episode-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" focusable="false" aria-hidden="true"><path d="M40 45 L160 120 L40 195 Z"></path><rect x="176" y="45" width="28" height="150"></rect></svg>
+        <div class="jw-reset-text jw-tooltip aniskip-next-episode-tooltip" dir="auto"><div class="jw-text">Next episode</div></div>
+      </div>
       <button id="aniskip-toggle-btn" class="aniskip-toggle-btn" type="button" title="AniSkip">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
       </button>
@@ -626,6 +637,7 @@
     state.ui.panel = container.querySelector('#aniskip-panel');
     state.ui.nextEpisodeButton = container.querySelector('#aniskip-next-episode-btn');
     updateNextEpisodeButtonLabel();
+    mountNextEpisodeButton();
     
     // Watch for fullscreen changes and move UI accordingly
     function handleFullscreenChange() {
@@ -660,12 +672,11 @@
       const controlbarHidden = controlbar && window.getComputedStyle(controlbar).opacity === '0';
       const shouldHide = controlsHidden || controlbarHidden;
 
-      positionNextEpisodeButton();
-      
+      mountNextEpisodeButton();
+
       if (nextEpisodeBtn) {
         const showNext = shouldShowNextEpisodeButton();
         nextEpisodeBtn.classList.toggle('aniskip-hidden', !showNext);
-        nextEpisodeBtn.disabled = !state.nextEpisodeAvailable;
         nextEpisodeBtn.setAttribute('aria-hidden', String(!showNext));
       }
 
@@ -673,7 +684,6 @@
         toggleBtn.classList.remove('aniskip-controls-hidden');
         skipBtn.classList.remove('aniskip-controls-hidden');
         if (speedControl) speedControl.classList.remove('aniskip-controls-hidden');
-        if (nextEpisodeBtn) nextEpisodeBtn.classList.remove('aniskip-controls-hidden');
         return;
       }
       
@@ -681,12 +691,10 @@
         toggleBtn.classList.add('aniskip-controls-hidden');
         skipBtn.classList.add('aniskip-controls-hidden');
         if (speedControl) speedControl.classList.add('aniskip-controls-hidden');
-        if (nextEpisodeBtn) nextEpisodeBtn.classList.add('aniskip-controls-hidden');
       } else {
         toggleBtn.classList.remove('aniskip-controls-hidden');
         skipBtn.classList.remove('aniskip-controls-hidden');
         if (speedControl) speedControl.classList.remove('aniskip-controls-hidden');
-        if (nextEpisodeBtn) nextEpisodeBtn.classList.remove('aniskip-controls-hidden');
       }
     }
     
@@ -696,7 +704,10 @@
     document.addEventListener('mousemove', syncWithPlayerControls);
     
     container.querySelector('#aniskip-toggle-btn').addEventListener('click', () => state.ui.panel.classList.toggle('aniskip-hidden'));
-    state.ui.nextEpisodeButton.addEventListener('click', () => requestNextEpisode(true));
+    state.ui.nextEpisodeButton.addEventListener('click', (event) => {
+      event.stopPropagation();
+      requestNextEpisode(true);
+    });
     container.querySelector('#aniskip-close-panel').addEventListener('click', () => state.ui.panel.classList.add('aniskip-hidden'));
     container.querySelector('#aniskip-skip-button').addEventListener('click', skipCurrent);
     container.querySelector('#aniskip-confirm-yes').addEventListener('click', (e) => { e.stopPropagation(); handleSkipConfirm(true); });
@@ -711,17 +722,27 @@
     // handlers and stops propagation for keys typed into our inputs, while the
     // default text insertion (no preventDefault) still works.
     const isInsideContainer = (e) => e.target && container.contains(e.target);
-    
+    const isNextEpisodeButton = (e) => e.target && state.ui.nextEpisodeButton &&
+      (e.target === state.ui.nextEpisodeButton || state.ui.nextEpisodeButton.contains(e.target));
+
     window.addEventListener('keydown', (e) => {
+      if (isNextEpisodeButton(e)) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          requestNextEpisode(true);
+        }
+        e.stopPropagation();
+        return;
+      }
       if (!isInsideContainer(e)) return;
       if (e.key === 'Enter' && e.target.id === 'aniskip-search-input') searchAnime();
       e.stopPropagation();
     }, true);
     window.addEventListener('keypress', (e) => {
-      if (isInsideContainer(e)) e.stopPropagation();
+      if (isInsideContainer(e) || isNextEpisodeButton(e)) e.stopPropagation();
     }, true);
     window.addEventListener('keyup', (e) => {
-      if (isInsideContainer(e)) e.stopPropagation();
+      if (isInsideContainer(e) || isNextEpisodeButton(e)) e.stopPropagation();
     }, true);
     container.querySelector('#aniskip-toggle-submit').addEventListener('click', () => {
       const submitPanel = document.querySelector('#aniskip-submit-panel');

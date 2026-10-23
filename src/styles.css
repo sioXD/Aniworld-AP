@@ -139,11 +139,12 @@
 
 
 /* ===================== */
-/* Control Buttons       */
+/* Info Toggle           */
 /* ===================== */
-.aniskip-toggle-btn,
-.aniskip-next-episode-btn {
+.aniskip-toggle-btn {
   position: fixed;
+  top: 10px;
+  right: 10px;
   width: 36px;
   height: 36px;
   border-radius: 12px;
@@ -162,51 +163,37 @@
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
 }
 
-.aniskip-toggle-btn {
-  top: 10px;
-  right: 10px;
-}
-
-.aniskip-next-episode-btn {
-  right: 56px;
-  bottom: 10px;
-}
-
-.aniskip-toggle-btn:hover,
-.aniskip-next-episode-btn:hover {
+.aniskip-toggle-btn:hover {
   background: var(--aniskip-bg-elevated);
   border-color: var(--aniskip-border-glow);
   box-shadow: 0 4px 24px var(--aniskip-accent-glow);
 }
 
-.aniskip-toggle-btn:active,
-.aniskip-next-episode-btn:active {
+.aniskip-toggle-btn:active {
   background: var(--aniskip-bg-elevated);
 }
 
-.aniskip-next-episode-btn:disabled {
-  cursor: default;
-  opacity: 0.55;
-}
-
-.aniskip-toggle-btn.aniskip-controls-hidden,
-.aniskip-next-episode-btn.aniskip-controls-hidden {
+.aniskip-toggle-btn.aniskip-controls-hidden {
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
 }
 
-.aniskip-toggle-btn svg,
-.aniskip-next-episode-btn svg {
+.aniskip-toggle-btn svg {
   color: var(--aniskip-text-primary);
   width: 18px;
   height: 18px;
   transition: color 0.2s ease;
 }
 
-.aniskip-toggle-btn:hover svg,
-.aniskip-next-episode-btn:hover svg {
+.aniskip-toggle-btn:hover svg {
   color: var(--aniskip-accent-primary);
+}
+
+/* Next episode control: mounted into the JWPlayer control bar and styled by
+   JWPlayer's native jw-icon classes so it matches the settings/fullscreen icons. */
+.aniskip-next-episode-btn .jw-svg-icon {
+  fill: currentColor;
 }
 
 /* Fullscreen adjustments */
@@ -214,12 +201,6 @@
 :-webkit-full-screen .aniskip-toggle-btn,
 :-moz-full-screen .aniskip-toggle-btn {
   top: 16px;
-}
-
-:fullscreen .aniskip-next-episode-btn,
-:-webkit-full-screen .aniskip-next-episode-btn,
-:-moz-full-screen .aniskip-next-episode-btn {
-  bottom: 16px;
 }
 
 :fullscreen #aniskip-skip-button,
