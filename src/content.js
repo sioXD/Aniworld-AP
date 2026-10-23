@@ -71,7 +71,7 @@
       skipOffset: -5,
       playAfterSkip: false,
       nextEpisode: true,
-      showNextEpisodeButton: false,
+      showNextEpisodeButton: true,
       persistentVolume: false,
       persistentPlaybackPosition: false,
       playbackPositionExpirationDays: 7,
@@ -506,7 +506,7 @@
     if (!button) return;
 
     // Only touch the player's control bar while the feature is enabled.
-    if (state.settings.showNextEpisodeButton !== true) {
+    if (state.settings.showNextEpisodeButton === false) {
       if (state.ui.container && button.parentNode !== state.ui.container) {
         state.ui.container.appendChild(button);
       }
@@ -526,7 +526,7 @@
   function shouldShowNextEpisodeButton() {
     const button = state.ui.nextEpisodeButton;
     const mounted = button && button.closest('.jw-controlbar');
-    return !!mounted && state.nextEpisodeAvailable && state.settings.showNextEpisodeButton === true;
+    return !!mounted && state.nextEpisodeAvailable && state.settings.showNextEpisodeButton !== false;
   }
 
   function setNextEpisodeAvailability(available) {

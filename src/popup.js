@@ -338,7 +338,7 @@ async function loadSettings() {
     document.getElementById('persistentSpeed').checked = settings.persistentSpeed || false;
     document.getElementById('skipOffset').value = settings.skipOffset || 0;
     document.getElementById('nextEpisode').checked = settings.nextEpisode !== false;
-    document.getElementById('showNextEpisodeButton').checked = settings.showNextEpisodeButton === true;
+    document.getElementById('showNextEpisodeButton').checked = settings.showNextEpisodeButton !== false;
     document.getElementById('playAfterSkip').checked = settings.playAfterSkip === true;
     document.getElementById('persistentVolume').checked = settings.persistentVolume === true;
     document.getElementById('persistentPlaybackPosition').checked = settings.persistentPlaybackPosition === true;
