@@ -19,7 +19,7 @@ if ! command -v web-ext &>/dev/null; then
 	exit 1
 fi
 
-web-ext build --ignore-files docs META-INF CHANGELOG.md CONTRIBUTING.md LICENSE original_README.md pack.ps1 README.md SECURITY.md
+web-ext build --ignore-files docs META-INF CHANGELOG.md CONTRIBUTING.md LICENSE original_README.md pack.ps1 pack.sh README.md SECURITY.md
 
 archive=$(ls -t web-ext-artifacts/*.zip 2>/dev/null | head -1)
 if [ -z "$archive" ]; then

@@ -21,7 +21,7 @@ try {
 
     # Build the extension with web-ext so Firefox-compatible packaging is handled automatically
     try {
-        web-ext build --ignore-files docs META-INF .\CHANGELOG.md .\CONTRIBUTING.md .\LICENSE .\original_README.md .\pack.ps1 .\README.md .\SECURITY.md
+        web-ext build --ignore-files docs META-INF .\CHANGELOG.md .\CONTRIBUTING.md .\LICENSE .\original_README.md .\pack.ps1 .\pack.sh .\README.md .\SECURITY.md
     }
     catch {
         Write-Host "web-ext not found" -ForegroundColor Red
