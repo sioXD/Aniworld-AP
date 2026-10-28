@@ -1126,7 +1126,7 @@
             <div class="setting-description" data-i18n="descShowButtons">Display manual skip buttons</div>
           </div>
           <label class="toggle">
-            <input type="checkbox" id="showButtons" checked>
+            <input type="checkbox" id="showButtons">
             <span class="toggle-track"></span>
           </label>
         </div>
@@ -1148,7 +1148,7 @@
             <div class="setting-description" data-i18n="descShowSpeedControl">Show speed adjustment buttons</div>
           </div>
           <label class="toggle">
-            <input type="checkbox" id="showSpeedControl" checked>
+            <input type="checkbox" id="showSpeedControl">
             <span class="toggle-track"></span>
           </label>
         </div>
@@ -1169,7 +1169,7 @@
             <div class="setting-label" data-i18n="labelSkipOffset">Skip Offset</div>
             <div class="setting-description" data-i18n="descSkipOffset">Seconds to add after skip</div>
           </div>
-          <input type="number" id="skipOffset" class="number-input" value="-5" min="-5" max="5" step="0.5">
+          <input type="number" id="skipOffset" class="number-input" min="-5" max="5" step="0.5">
         </div>
       </div>
     </div>
@@ -1189,7 +1189,7 @@
             <div class="setting-description" data-i18n="descNextEpisode">Auto navigate to the next episode</div>
           </div>
           <label class="toggle">
-            <input type="checkbox" id="nextEpisode" checked>
+            <input type="checkbox" id="nextEpisode">
             <span class="toggle-track"></span>
           </label>
         </div>
@@ -1200,7 +1200,7 @@
             <div class="setting-description" data-i18n="descShowNextEpisodeButton">Show a button in the player to jump to the next episode</div>
           </div>
           <label class="toggle">
-            <input type="checkbox" id="showNextEpisodeButton" checked>
+            <input type="checkbox" id="showNextEpisodeButton">
             <span class="toggle-track"></span>
           </label>
         </div>
@@ -1211,7 +1211,7 @@
             <div class="setting-description" data-i18n="descPlayAfterSkip">Resume playback after skipping</div>
           </div>
           <label class="toggle">
-            <input type="checkbox" id="playAfterSkip" checked>
+            <input type="checkbox" id="playAfterSkip">
             <span class="toggle-track"></span>
           </label>
         </div>
@@ -1222,7 +1222,7 @@
             <div class="setting-description" data-i18n="descRememberVolume">Persist volume across episodes</div>
           </div>
           <label class="toggle">
-            <input type="checkbox" id="persistentVolume" checked>
+            <input type="checkbox" id="persistentVolume">
             <span class="toggle-track"></span>
           </label>
         </div>
@@ -1233,7 +1233,7 @@
             <div class="setting-description" data-i18n="descRememberPosition">Resume where you left off</div>
           </div>
           <label class="toggle">
-            <input type="checkbox" id="persistentPlaybackPosition" checked>
+            <input type="checkbox" id="persistentPlaybackPosition">
             <span class="toggle-track"></span>
           </label>
         </div>
@@ -1243,7 +1243,7 @@
             <div class="setting-label" data-i18n="labelPositionExpiry">Position Expiry</div>
             <div class="setting-description" data-i18n="descPositionExpiry">Days until position resets</div>
           </div>
-          <input type="number" id="playbackPositionExpirationDays" class="number-input" value="7" min="1" max="30" step="1">
+          <input type="number" id="playbackPositionExpirationDays" class="number-input" min="1" max="30" step="1">
         </div>
       </div>
     </div>
@@ -1266,7 +1266,7 @@
             <button type="button" class="color-button" id="markerColorOpBtn" data-target="markerColorOp">
               <span class="color-preview" id="markerColorOpPreview"></span>
             </button>
-            <input type="text" id="markerColorOp" class="color-text-input" value="#ff00fb" maxlength="7">
+            <input type="text" id="markerColorOp" class="color-text-input" maxlength="7">
           </div>
         </div>
         <div class="setting-row">
@@ -1279,7 +1279,7 @@
             <button type="button" class="color-button" id="markerColorEdBtn" data-target="markerColorEd">
               <span class="color-preview" id="markerColorEdPreview"></span>
             </button>
-            <input type="text" id="markerColorEd" class="color-text-input" value="#22C55E" maxlength="7">
+            <input type="text" id="markerColorEd" class="color-text-input" maxlength="7">
           </div>
         </div>
         <div class="setting-row">
@@ -1292,7 +1292,7 @@
             <button type="button" class="color-button" id="markerColorRecapBtn" data-target="markerColorRecap">
               <span class="color-preview" id="markerColorRecapPreview"></span>
             </button>
-            <input type="text" id="markerColorRecap" class="color-text-input" value="#ffdd00" maxlength="7">
+            <input type="text" id="markerColorRecap" class="color-text-input" maxlength="7">
           </div>
         </div>
         <div class="setting-row">
@@ -1301,7 +1301,7 @@
             <div class="setting-label" data-i18n="labelMarkerOpacity">Marker Opacity</div>
             <div class="setting-description" data-i18n="descMarkerOpacity">Transparency (0.1 - 1.0)</div>
           </div>
-          <input type="number" id="markerOpacity" class="number-input" value="0.5" min="0.1" max="1" step="0.1">
+          <input type="number" id="markerOpacity" class="number-input" min="0.1" max="1" step="0.1">
         </div>
       </div>
     </div>
@@ -1342,6 +1342,7 @@
     </div>
   </div>
 
+  <script src="defaults.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>

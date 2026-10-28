@@ -59,27 +59,7 @@
     currentEpisode: null,
     currentSeason: null,
     currentVideoId: null,
-    settings: {
-      language: 'en',
-      autoSkipOp: false,
-      autoSkipEd: false,
-      autoSkipRecap: false,
-      showButtons: true,
-      alwaysShowButton: false,
-      showSpeedControl: true,
-      persistentSpeed: false,
-      skipOffset: -5,
-      playAfterSkip: false,
-      nextEpisode: true,
-      showNextEpisodeButton: true,
-      persistentVolume: false,
-      persistentPlaybackPosition: false,
-      playbackPositionExpirationDays: 7,
-      markerColorOp: '#ff00fb',
-      markerColorEd: '#22C55E',
-      markerColorRecap: '#ffdd00',
-      markerOpacity: 0.5
-    },
+    settings: { ...DEFAULT_SETTINGS },
     ui: { container: null, skipButton: null, panel: null, nextEpisodeButton: null, syncWithPlayerControls: null },
     nextEpisodeAvailable: false,
     skippedSegments: new Set(),
@@ -1016,10 +996,10 @@
     }
 
     // Get colors from settings
-    const opacity = state.settings.markerOpacity || 0.5;
-    const colorOp = hexToRgba(state.settings.markerColorOp || '#ff00fb', opacity);
-    const colorEd = hexToRgba(state.settings.markerColorEd || '#22C55E', opacity);
-    const colorRecap = hexToRgba(state.settings.markerColorRecap || '#ffdd00', opacity);
+    const opacity = state.settings.markerOpacity || DEFAULT_SETTINGS.markerOpacity;
+    const colorOp = hexToRgba(state.settings.markerColorOp || DEFAULT_SETTINGS.markerColorOp, opacity);
+    const colorEd = hexToRgba(state.settings.markerColorEd || DEFAULT_SETTINGS.markerColorEd, opacity);
+    const colorRecap = hexToRgba(state.settings.markerColorRecap || DEFAULT_SETTINGS.markerColorRecap, opacity);
     
     state.skipTimes.forEach(segment => {
       const startPercent = (segment.interval.startTime / duration) * 100;

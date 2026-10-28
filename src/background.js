@@ -24,7 +24,7 @@ async function updateToolbarIcon(theme) {
 
 // Initialize icon on startup
 async function initToolbarIcon() {
-  const settings = await browser.storage.local.get({ uiTheme: 'aniworld' });
+  const settings = await browser.storage.local.get({ uiTheme: DEFAULT_SETTINGS.uiTheme });
   await updateToolbarIcon(settings.uiTheme);
 }
 
@@ -216,6 +216,12 @@ async function injectContentScript(tabId, frameId) {
       file: 'src/styles.css'
     });
     
+    // Inject shared defaults first
+    await browser.tabs.executeScript(tabId, {
+      frameId: frameId,
+      file: 'src/defaults.js'
+    });
+
     // Then inject JS
     await browser.tabs.executeScript(tabId, {
       frameId: frameId,
@@ -302,28 +308,7 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
         return await voteSkipTime(message.skipId, message.voteType);
       
       case 'getSettings':
-        const settings = await browser.storage.local.get({
-          language: 'en',
-          autoSkipOp: false,
-          autoSkipEd: false,
-          autoSkipRecap: false,
-          showButtons: true,
-          alwaysShowButton: false,
-          showSpeedControl: true,
-          persistentSpeed: false,
-          skipOffset: -5,
-          playAfterSkip: false,
-          nextEpisode: true,
-          showNextEpisodeButton: true,
-          persistentVolume: false,
-          persistentPlaybackPosition: false,
-          playbackPositionExpirationDays: 7,
-          markerColorOp: '#ff00fb',
-          markerColorEd: '#22C55E',
-          markerColorRecap: '#ffdd00',
-          markerOpacity: 0.5,
-          uiTheme: 'aniworld'
-        });
+        const settings = await browser.storage.local.get(DEFAULT_SETTINGS);
         return settings;
       
       case 'saveSettings':

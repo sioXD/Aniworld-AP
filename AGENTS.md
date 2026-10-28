@@ -11,7 +11,7 @@ Firefox WebExtension (Manifest V2) that auto-skips anime openings/endings on ani
 - **No dev server.** Load via `about:debugging` → This Firefox → Load Temporary Add-on → `manifest.json`.
 - **Packaging:** `powershell -File pack.ps1` (requires `npm install --global web-ext`). Produces `.zip` via `web-ext build`.
 - **Release:** Change the `version` field in `manifest.json` and push the commit to `main` → GitHub Actions in `.github/workflows/release.yml` detects the version change, creates the matching `v<version>` Git tag and Release with the built artifact. Optionally publishes to AMO if `AMO_ENABLED` variable and `AMO_JWT_ISSUER`/`AMO_JWT_SECRET` secrets are set.
-- **Entrypoints:** `src/background.js` (persistent background), `src/aniworld.js` (aniworld.to content script), `src/content.js` (injected into VOE iframe), `src/popup.js` (settings popup).
+- **Entrypoints:** `src/defaults.js` (shared `DEFAULT_SETTINGS`), `src/background.js` (persistent background), `src/aniworld.js` (aniworld.to content script), `src/content.js` (injected into VOE iframe), `src/popup.js` (settings popup).
 
 ## Architecture
 
@@ -25,7 +25,8 @@ Firefox WebExtension (Manifest V2) that auto-skips anime openings/endings on ani
 
 - i18n: inline translation objects in `content.js` (en/de) and `popup.js` (en/de). `data-i18n` attributes on HTML elements.
 - Theming: CSS custom properties with `.theme-classic` / `.theme-aniworld` selectors. Both in `styles.css` (injected) and `popup.html` (inline `<style>`).
-- Always use `browser.storage.local.get()` with default values (not bare key access).
+- Always use `browser.storage.local.get()` with default values (not bare key access). The defaults live in `src/defaults.js` as `DEFAULT_SETTINGS` — never inline a literal that exists there.
+- Adding a setting = one entry in `DEFAULT_SETTINGS`, one `.setting-row` in `popup.html` (id must match the key, no `checked`/`value` attributes), and two i18n entries in `popup.js`. `popup.js` collects controls from the DOM and derives load/save from the element type, so no list needs updating.
 - Manual testing only: load in Firefox, navigate to aniworld.to, test with various anime/episodes.
 
 ## Gotchas

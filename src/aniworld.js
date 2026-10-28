@@ -174,7 +174,7 @@
   // Navigate to next episode
   async function goToNextEpisode(force = false) {
     // Manual navigation is independent of automatic next-episode navigation.
-    const { nextEpisode } = await browser.storage.local.get({ nextEpisode: true });
+    const { nextEpisode } = await browser.storage.local.get({ nextEpisode: DEFAULT_SETTINGS.nextEpisode });
     if (!force && nextEpisode === false) {
       console.log('VOE AniSkip: Next episode disabled, not navigating');
       return;

@@ -130,30 +130,59 @@ function applyTranslations(lang) {
   document.title = t.settingsTitle || 'AniWorld AP [fork] Settings';
 }
 
-const settingIds = [
-  'language',
-  'autoSkipOp', 
-  'autoSkipEd', 
-  'autoSkipRecap', 
-  'showButtons',
-  'alwaysShowButton',
-  'showSpeedControl',
-  'persistentSpeed',
-  'skipOffset',
-  'nextEpisode',
-  'showNextEpisodeButton',
-  'playAfterSkip',
-  'persistentVolume',
-  'persistentPlaybackPosition',
-  'playbackPositionExpirationDays',
-  'markerColorOp',
-  'markerColorEd',
-  'markerColorRecap',
-  'markerOpacity',
-  'uiTheme'
-];
+// Every setting is an <input> or <select> inside a .setting-row, so the
+// controls are collected from the DOM instead of a hand-maintained id list.
+// Adding a setting = one row in popup.html + one entry in defaults.js.
+function getSettingElements() {
+  return Array.from(document.querySelectorAll('.setting-row input, .setting-row select'));
+}
 
-const colorInputIds = ['markerColorOp', 'markerColorEd', 'markerColorRecap'];
+function getColorInputs() {
+  return Array.from(document.querySelectorAll('.color-text-input'));
+}
+
+// Read a control's value, keeping the type of its default
+function readSettingValue(element) {
+  const fallback = DEFAULT_SETTINGS[element.id];
+
+  if (element.type === 'checkbox') {
+    return element.checked;
+  }
+
+  if (typeof fallback === 'number') {
+    const value = parseFloat(element.value);
+    return Number.isFinite(value) ? value : fallback;
+  }
+
+  return element.value;
+}
+
+// Write a stored value into a control
+function writeSettingValue(element, value) {
+  if (element.type === 'checkbox') {
+    element.checked = Boolean(value);
+    return;
+  }
+
+  if (element.classList.contains('color-text-input')) {
+    element.value = String(value).toUpperCase();
+    return;
+  }
+
+  element.value = value;
+}
+
+// Render DEFAULT_SETTINGS immediately so the popup never shows empty controls
+// while the stored settings are still being loaded.
+function renderDefaultSettings() {
+  getSettingElements().forEach(element => {
+    const value = DEFAULT_SETTINGS[element.id];
+    if (value === undefined) return;
+    writeSettingValue(element, value);
+  });
+  updateColorPreviews();
+  updateDependentSettings();
+}
 
 // Preset colors for the color picker
 const presetColors = [
@@ -169,10 +198,9 @@ let currentColorValue = null;
 
 // Update color preview buttons
 function updateColorPreviews() {
-  colorInputIds.forEach(id => {
-    const input = document.getElementById(id);
-    const preview = document.getElementById(id + 'Preview');
-    if (input && preview) {
+  getColorInputs().forEach(input => {
+    const preview = document.getElementById(input.id + 'Preview');
+    if (preview) {
       preview.style.backgroundColor = input.value;
     }
   });
@@ -327,36 +355,20 @@ function updateDependentSettings() {
 async function loadSettings() {
   try {
     const settings = await browser.runtime.sendMessage({ action: 'getSettings' });
-    
-    document.getElementById('language').value = settings.language || 'en';
-    document.getElementById('autoSkipOp').checked = settings.autoSkipOp || false;
-    document.getElementById('autoSkipEd').checked = settings.autoSkipEd || false;
-    document.getElementById('autoSkipRecap').checked = settings.autoSkipRecap || false;
-    document.getElementById('showButtons').checked = settings.showButtons !== false;
-    document.getElementById('alwaysShowButton').checked = settings.alwaysShowButton || false;
-    document.getElementById('showSpeedControl').checked = settings.showSpeedControl || false;
-    document.getElementById('persistentSpeed').checked = settings.persistentSpeed || false;
-    document.getElementById('skipOffset').value = settings.skipOffset || 0;
-    document.getElementById('nextEpisode').checked = settings.nextEpisode !== false;
-    document.getElementById('showNextEpisodeButton').checked = settings.showNextEpisodeButton !== false;
-    document.getElementById('playAfterSkip').checked = settings.playAfterSkip === true;
-    document.getElementById('persistentVolume').checked = settings.persistentVolume === true;
-    document.getElementById('persistentPlaybackPosition').checked = settings.persistentPlaybackPosition === true;
-    document.getElementById('playbackPositionExpirationDays').value = settings.playbackPositionExpirationDays || 7;
-    document.getElementById('markerColorOp').value = (settings.markerColorOp || '#ff00fb').toUpperCase();
-    document.getElementById('markerColorEd').value = (settings.markerColorEd || '#22C55E').toUpperCase();
-    document.getElementById('markerColorRecap').value = (settings.markerColorRecap || '#ffdd00').toUpperCase();
-    document.getElementById('markerOpacity').value = settings.markerOpacity || 0.5;
-    
-    // Load theme setting
-    const theme = settings.uiTheme || 'aniworld';
-    document.getElementById('uiTheme').value = theme;
-    applyTheme(theme);
-    
-    // Apply language
-    const language = settings.language || 'en';
-    applyTranslations(language);
-    
+
+    // Fill every control from the settings object — the background already
+    // applied DEFAULT_SETTINGS, so no per-field fallbacks are needed here.
+    getSettingElements().forEach(element => {
+      const value = settings[element.id] !== undefined
+        ? settings[element.id]
+        : DEFAULT_SETTINGS[element.id];
+      writeSettingValue(element, value);
+    });
+
+    // Apply theme and language
+    applyTheme(settings.uiTheme || DEFAULT_SETTINGS.uiTheme);
+    applyTranslations(settings.language || DEFAULT_SETTINGS.language);
+
     updateColorPreviews();
     updateDependentSettings();
   } catch (error) {
@@ -371,28 +383,10 @@ function applyTheme(theme) {
 
 // Save settings
 async function saveSettings() {
-  const settings = {
-    language: document.getElementById('language').value,
-    autoSkipOp: document.getElementById('autoSkipOp').checked,
-    autoSkipEd: document.getElementById('autoSkipEd').checked,
-    autoSkipRecap: document.getElementById('autoSkipRecap').checked,
-    showButtons: document.getElementById('showButtons').checked,
-    alwaysShowButton: document.getElementById('alwaysShowButton').checked,
-    showSpeedControl: document.getElementById('showSpeedControl').checked,
-    persistentSpeed: document.getElementById('persistentSpeed').checked,
-    skipOffset: parseFloat(document.getElementById('skipOffset').value) || 0,
-    playAfterSkip: document.getElementById('playAfterSkip').checked,
-    nextEpisode: document.getElementById('nextEpisode').checked,
-    showNextEpisodeButton: document.getElementById('showNextEpisodeButton').checked,
-    persistentVolume: document.getElementById('persistentVolume').checked,
-    persistentPlaybackPosition: document.getElementById('persistentPlaybackPosition').checked,
-    playbackPositionExpirationDays: parseInt(document.getElementById('playbackPositionExpirationDays').value) || 7,
-    markerColorOp: document.getElementById('markerColorOp').value,
-    markerColorEd: document.getElementById('markerColorEd').value,
-    markerColorRecap: document.getElementById('markerColorRecap').value,
-    markerOpacity: parseFloat(document.getElementById('markerOpacity').value) || 0.5,
-    uiTheme: document.getElementById('uiTheme').value
-  };
+  const settings = {};
+  getSettingElements().forEach(element => {
+    settings[element.id] = readSettingValue(element);
+  });
 
   // Apply theme immediately
   applyTheme(settings.uiTheme);
@@ -420,12 +414,15 @@ async function saveSettings() {
 
 // Add event listeners
 document.addEventListener('DOMContentLoaded', async () => {
+  // Fill the UI from the defaults first, then overwrite with stored settings
+  renderDefaultSettings();
+
   // Load theme immediately to prevent flash
   try {
-    const result = await browser.storage.local.get({ uiTheme: 'aniworld' });
+    const result = await browser.storage.local.get({ uiTheme: DEFAULT_SETTINGS.uiTheme });
     document.body.setAttribute('data-theme', result.uiTheme);
   } catch (e) {
-    document.body.setAttribute('data-theme', 'aniworld');
+    document.body.setAttribute('data-theme', DEFAULT_SETTINGS.uiTheme);
   }
 
   loadSettings();
@@ -443,35 +440,31 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
   
   // Add change listeners to all settings
-  settingIds.forEach(id => {
-    const element = document.getElementById(id);
-    if (element) {
-      // Skip color inputs - they have special handling
-      if (colorInputIds.includes(id)) {
-        // Handle direct text input in color fields
-        element.addEventListener('change', () => {
-          let value = normalizeHex(element.value);
-          if (isValidHex(value)) {
-            element.value = value;
-            updateColorPreviews();
-            saveSettings();
-          }
-        });
-        return;
-      }
-      
-      element.addEventListener('change', saveSettings);
-      if (element.type === 'number') {
-        element.addEventListener('input', saveSettings);
-      }
+  getSettingElements().forEach(element => {
+    // Color inputs have their own validation path
+    if (element.classList.contains('color-text-input')) {
+      element.addEventListener('change', () => {
+        let value = normalizeHex(element.value);
+        if (isValidHex(value)) {
+          element.value = value;
+          updateColorPreviews();
+          saveSettings();
+        }
+      });
+      return;
+    }
+
+    element.addEventListener('change', saveSettings);
+    if (element.type === 'number') {
+      element.addEventListener('input', saveSettings);
     }
   });
 
   // Add click handlers for color buttons
-  colorInputIds.forEach(id => {
-    const btn = document.getElementById(id + 'Btn');
+  getColorInputs().forEach(input => {
+    const btn = document.getElementById(input.id + 'Btn');
     if (btn) {
-      btn.addEventListener('click', () => openColorPicker(id));
+      btn.addEventListener('click', () => openColorPicker(input.id));
     }
   });
 });
