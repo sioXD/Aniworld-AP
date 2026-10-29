@@ -86,16 +86,16 @@ pack.ps1
 ./pack.sh
 ```
 
-Both scripts stamp the current version and date into `src/popup.html` and build a ZIP into `web-ext-artifacts/` via `web-ext build`. `web-ext` must be installed globally.
+Both scripts stamp the current version and date into `src/popup.html` and build a ZIP into `web-ext-artifacts/` via `web-ext build`. `web-ext` must be installed globally. The files that end up in the archive are defined in `.web-ext-config.mjs` (it also applies to `web-ext lint` and `web-ext sign`).
 
 ### Releasing (CI/CD)
 
 Change the `version` field in `manifest.json` to the next version and push the change to `main`:
 
 ```bash
-# Set "version": "1.6.8" in manifest.json first.
+# Set "version": "1.7.2" in manifest.json first.
 git add manifest.json
-git commit -m "bump version to 1.6.8"
+git commit -m "bump version to 1.7.2"
 git push origin main
 ```
 

@@ -15,14 +15,14 @@ popup="src/popup.html"
 sed -i -E "s|<span id=\"version\"[^>]*>[^<]*</span>|<span id=\"version\" class=\"version\">v$version</span>|" "$popup"
 sed -i -E "s|<span id=\"releaseDate\"[^>]*>[^<]*</span>|<span id=\"releaseDate\">$current_date</span>|" "$popup"
 
-# Build with web-ext
+# Build with web-ext (ignore rules live in .web-ext-config.mjs)
 if ! command -v web-ext &>/dev/null; then
 	echo "web-ext not found"
 	echo "Install it with: npm install --global web-ext"
 	exit 1
 fi
 
-web-ext build --ignore-files docs META-INF CHANGELOG.md CONTRIBUTING.md LICENSE original_README.md pack.ps1 pack.sh README.md SECURITY.md
+web-ext build
 
 archive=$(ls -t web-ext-artifacts/*.zip 2>/dev/null | head -1)
 if [ -z "$archive" ]; then

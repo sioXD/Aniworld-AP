@@ -25,8 +25,9 @@ try {
     Set-Content -Path $popupPath -Value $popupContent -NoNewline
 
     # Build the extension with web-ext so Firefox-compatible packaging is handled automatically
+    # (ignore rules live in .web-ext-config.mjs)
     try {
-        web-ext build --ignore-files docs META-INF .\CHANGELOG.md .\CONTRIBUTING.md .\LICENSE .\original_README.md .\pack.ps1 .\pack.sh .\README.md .\SECURITY.md
+        web-ext build
     }
     catch {
         Write-Host "web-ext not found" -ForegroundColor Red

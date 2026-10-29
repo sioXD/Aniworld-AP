@@ -968,7 +968,7 @@
 					<span class="brand-tag">fork</span>
 				</a>
 				<nav class="topnav">
-					<span class="chip version">v1.7.0</span>
+					<span class="chip version">v1.7.1</span>
 					<a class="btn btn-ghost btn-sm" href="https://github.com/sioXD/Aniworld-AP">
 						<svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
 							<path
@@ -1021,7 +1021,7 @@
 					</a>
 				</div>
 				<div class="facts">
-					<span class="fact green"><span class="dot"></span>v1.7.0 · current</span>
+					<span class="fact green"><span class="dot"></span>v1.7.1 · current</span>
 					<span class="fact"><span class="dot"></span>Firefox 142+ · desktop &amp; Android</span>
 					<span class="fact"><span class="dot"></span>Runs inside the VOE player</span>
 					<span class="fact"><span class="dot"></span>MIT licensed</span>
@@ -1064,7 +1064,7 @@
 									<tr>
 										<th>Version</th>
 										<td>
-											<code>1.7.0</code> — see <a href="https://github.com/sioXD/Aniworld-AP/releases">releases</a>
+											<code>1.7.1</code> — see <a href="https://github.com/sioXD/Aniworld-AP/releases">releases</a>
 										</td>
 									</tr>
 									<tr>
@@ -1658,8 +1658,10 @@
 <span class="p">./pack.sh</span></pre>
 					</div>
 					<p style="margin-top: 12px; color: var(--text-2); font-size: 0.93rem">
-						Both scripts stamp the current version and date into <code>src/popup.html</code>, build a ZIP into
-						<code>web-ext-artifacts/</code> and skip <code>docs/</code>.
+						Both scripts stamp the current version and date into <code>src/popup.html</code> and build a ZIP into
+						<code>web-ext-artifacts/</code>. What ends up in the archive is defined in
+						<code>.web-ext-config.mjs</code> — it keeps <code>docs/</code>, <code>dist/</code>, the pack scripts and
+						the Markdown files out of the package.
 					</p>
 
 					<h3 style="margin-top: 28px">Releases</h3>
@@ -1670,9 +1672,9 @@
 						the AMO secrets are configured, the signed build is published as well.
 					</p>
 					<div class="code">
-						<pre><span class="c"># manifest.json → "version": "1.7.1"</span>
+						<pre><span class="c"># manifest.json → "version": "1.7.2"</span>
 <span class="p">git</span> add manifest.json
-<span class="p">git</span> commit -m <span style="color:#b9c4ff">"bump version to 1.7.1"</span>
+<span class="p">git</span> commit -m <span style="color:#b9c4ff">"bump version to 1.7.2"</span>
 <span class="p">git</span> push origin main</pre>
 					</div>
 
@@ -1695,7 +1697,11 @@
 									</tr>
 									<tr>
 										<th><code>pack.ps1</code> / <code>pack.sh</code></th>
-										<td>Version stamping and <code>web-ext build</code></td>
+										<td>Version stamping, then <code>web-ext build</code></td>
+									</tr>
+									<tr>
+										<th><code>.web-ext-config.mjs</code></th>
+										<td>Ignore rules shared by <code>lint</code>, <code>build</code> and <code>sign</code></td>
 									</tr>
 									<tr>
 										<th><code>.github/workflows/</code></th>
