@@ -1,1493 +1,1562 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title data-i18n="settingsTitle">AniWorld AP [fork] Settings</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <style>
-    /* ============================================
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title data-i18n="settingsTitle">AniWorld AP [fork] Settings</title>
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link
+			href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+			rel="stylesheet"
+		/>
+		<style>
+			/* ============================================
        BASE STYLES (shared)
        ============================================ */
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+			* {
+				box-sizing: border-box;
+				margin: 0;
+				padding: 0;
+			}
 
-    body {
-      width: 340px;
-      font-size: 14px;
-      line-height: 1.4;
-    }
+			body {
+				width: 340px;
+				font-size: 14px;
+				line-height: 1.4;
+			}
 
-    /* ============================================
+			/* ============================================
        CLASSIC THEME (default)
        ============================================ */
-    body, body[data-theme="classic"] {
-      --bg-primary: #0a0a0f;
-      --bg-secondary: #12121a;
-      --bg-tertiary: #1a1a25;
-      --bg-hover: rgba(255, 255, 255, 0.02);
-      --accent-primary: #ff3366;
-      --accent-secondary: #7c3aed;
-      --accent-glow: rgba(255, 51, 102, 0.4);
-      --accent-green: #22c55e;
-      --text-primary: #f0f0f5;
-      --text-secondary: #8888a0;
-      --text-muted: #5c5c70;
-      --border-color: rgba(255, 255, 255, 0.06);
-      --border-light: rgba(255, 255, 255, 0.1);
-      
-      font-family: 'Space Grotesk', -apple-system, sans-serif;
-      background: var(--bg-primary);
-      color: var(--text-primary);
-    }
+			body,
+			body[data-theme="classic"] {
+				--bg-primary: #0a0a0f;
+				--bg-secondary: #12121a;
+				--bg-tertiary: #1a1a25;
+				--bg-hover: rgba(255, 255, 255, 0.02);
+				--accent-primary: #ff3366;
+				--accent-secondary: #7c3aed;
+				--accent-glow: rgba(255, 51, 102, 0.4);
+				--accent-green: #22c55e;
+				--text-primary: #f0f0f5;
+				--text-secondary: #8888a0;
+				--text-muted: #5c5c70;
+				--border-color: rgba(255, 255, 255, 0.06);
+				--border-light: rgba(255, 255, 255, 0.1);
 
-    /* Classic theme decorative gradients */
-    body[data-theme="classic"]::before,
-    body:not([data-theme="aniworld"])::before {
-      content: '';
-      position: fixed;
-      top: -50%;
-      right: -50%;
-      width: 100%;
-      height: 100%;
-      background: radial-gradient(circle, rgba(255, 51, 102, 0.08) 0%, transparent 60%);
-      pointer-events: none;
-      z-index: 0;
-    }
+				font-family:
+					"Space Grotesk",
+					-apple-system,
+					sans-serif;
+				background: var(--bg-primary);
+				color: var(--text-primary);
+			}
 
-    body[data-theme="classic"]::after,
-    body:not([data-theme="aniworld"])::after {
-      content: '';
-      position: fixed;
-      bottom: -30%;
-      left: -30%;
-      width: 80%;
-      height: 80%;
-      background: radial-gradient(circle, rgba(124, 58, 237, 0.06) 0%, transparent 50%);
-      pointer-events: none;
-      z-index: 0;
-    }
+			/* Classic theme decorative gradients */
+			body[data-theme="classic"]::before,
+			body:not([data-theme="aniworld"])::before {
+				content: "";
+				position: fixed;
+				top: -50%;
+				right: -50%;
+				width: 100%;
+				height: 100%;
+				background: radial-gradient(circle, rgba(255, 51, 102, 0.08) 0%, transparent 60%);
+				pointer-events: none;
+				z-index: 0;
+			}
 
-    /* ============================================
+			body[data-theme="classic"]::after,
+			body:not([data-theme="aniworld"])::after {
+				content: "";
+				position: fixed;
+				bottom: -30%;
+				left: -30%;
+				width: 80%;
+				height: 80%;
+				background: radial-gradient(circle, rgba(124, 58, 237, 0.06) 0%, transparent 50%);
+				pointer-events: none;
+				z-index: 0;
+			}
+
+			/* ============================================
        ANIWORLD THEME
        ============================================ */
-    body[data-theme="aniworld"] {
-      --bg-primary: #121c22;
-      --bg-secondary: #1a2a33;
-      --bg-tertiary: #243743;
-      --bg-hover: #2d444f;
-      --accent-primary: #637cf9;
-      --accent-secondary: #637cf9;
-      --accent-glow: rgba(99, 124, 249, 0.3);
-      --accent-green: #63d02b;
-      --text-primary: #e8e8e8;
-      --text-secondary: #b0c4ce;
-      --text-muted: #7a9aa8;
-      --border-color: #2d444f;
-      --border-light: #3a5565;
-      
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-      background: var(--bg-primary);
-      color: var(--text-primary);
-    }
+			body[data-theme="aniworld"] {
+				--bg-primary: #121c22;
+				--bg-secondary: #1a2a33;
+				--bg-tertiary: #243743;
+				--bg-hover: #2d444f;
+				--accent-primary: #637cf9;
+				--accent-secondary: #637cf9;
+				--accent-glow: rgba(99, 124, 249, 0.3);
+				--accent-green: #63d02b;
+				--text-primary: #e8e8e8;
+				--text-secondary: #b0c4ce;
+				--text-muted: #7a9aa8;
+				--border-color: #2d444f;
+				--border-light: #3a5565;
 
-    body[data-theme="aniworld"]::before,
-    body[data-theme="aniworld"]::after {
-      display: none;
-    }
+				font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, sans-serif;
+				background: var(--bg-primary);
+				color: var(--text-primary);
+			}
 
-    /* ============================================
+			body[data-theme="aniworld"]::before,
+			body[data-theme="aniworld"]::after {
+				display: none;
+			}
+
+			/* ============================================
        HEADER
        ============================================ */
-    .header {
-      position: relative;
-      background: var(--bg-secondary);
-      padding: 16px 18px;
-      border-bottom: 1px solid var(--border-color);
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      z-index: 1;
-    }
+			.header {
+				position: relative;
+				background: var(--bg-secondary);
+				padding: 16px 18px;
+				border-bottom: 1px solid var(--border-color);
+				display: flex;
+				align-items: center;
+				gap: 14px;
+				z-index: 1;
+			}
 
-    /* Classic theme header gradient bar */
-    body[data-theme="classic"] .header::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 2px;
-      background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary), var(--accent-primary));
-      background-size: 200% 100%;
-      animation: shimmer 3s ease-in-out infinite;
-    }
+			/* Classic theme header gradient bar */
+			body[data-theme="classic"] .header::before {
+				content: "";
+				position: absolute;
+				top: 0;
+				left: 0;
+				right: 0;
+				height: 2px;
+				background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary), var(--accent-primary));
+				background-size: 200% 100%;
+				animation: shimmer 3s ease-in-out infinite;
+			}
 
-    @keyframes shimmer {
-      0%, 100% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-    }
+			@keyframes shimmer {
+				0%,
+				100% {
+					background-position: 0% 50%;
+				}
+				50% {
+					background-position: 100% 50%;
+				}
+			}
 
-    .logo-container {
-      position: relative;
-      width: 42px;
-      height: 42px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
+			.logo-container {
+				position: relative;
+				width: 42px;
+				height: 42px;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+			}
 
-    /* Classic theme logo ring */
-    body[data-theme="classic"] .logo-ring {
-      position: absolute;
-      inset: 0;
-      border-radius: 12px;
-      background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
-      opacity: 0.2;
-      animation: pulse-ring 2s ease-in-out infinite;
-    }
+			/* Classic theme logo ring */
+			body[data-theme="classic"] .logo-ring {
+				position: absolute;
+				inset: 0;
+				border-radius: 12px;
+				background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+				opacity: 0.2;
+				animation: pulse-ring 2s ease-in-out infinite;
+			}
 
-    body:not([data-theme="classic"]) .logo-ring {
-      display: none;
-    }
+			body:not([data-theme="classic"]) .logo-ring {
+				display: none;
+			}
 
-    @keyframes pulse-ring {
-      0%, 100% { transform: scale(1); opacity: 0.2; }
-      50% { transform: scale(1.05); opacity: 0.3; }
-    }
+			@keyframes pulse-ring {
+				0%,
+				100% {
+					transform: scale(1);
+					opacity: 0.2;
+				}
+				50% {
+					transform: scale(1.05);
+					opacity: 0.3;
+				}
+			}
 
-    .logo-icon {
-      position: relative;
-      width: 42px;
-      height: 42px;
-      background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 16px;
-      font-weight: 700;
-      color: white;
-      box-shadow: 0 2px 8px var(--accent-glow);
-    }
+			.logo-icon {
+				position: relative;
+				width: 42px;
+				height: 42px;
+				background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+				border-radius: 10px;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				font-size: 16px;
+				font-weight: 700;
+				color: white;
+				box-shadow: 0 2px 8px var(--accent-glow);
+			}
 
-    body[data-theme="aniworld"] .logo-icon {
-      background: linear-gradient(135deg, #637cf9, #8b5cf6);
-      border-radius: 10px;
-      box-shadow: 0 2px 10px rgba(99, 124, 249, 0.4);
-    }
+			body[data-theme="aniworld"] .logo-icon {
+				background: linear-gradient(135deg, #637cf9, #8b5cf6);
+				border-radius: 10px;
+				box-shadow: 0 2px 10px rgba(99, 124, 249, 0.4);
+			}
 
-    body[data-theme="classic"] .logo-icon {
-      background: linear-gradient(135deg, #ff3366, #7c3aed);
-      border-radius: 14px;
-      box-shadow: 0 4px 20px var(--accent-glow);
-    }
+			body[data-theme="classic"] .logo-icon {
+				background: linear-gradient(135deg, #ff3366, #7c3aed);
+				border-radius: 14px;
+				box-shadow: 0 4px 20px var(--accent-glow);
+			}
 
-    .header-text h1 {
-      font-size: 17px;
-      font-weight: 600;
-      margin-bottom: 2px;
-    }
+			.header-text h1 {
+				font-size: 17px;
+				font-weight: 600;
+				margin-bottom: 2px;
+			}
 
-    .header-text h1 .brand-world {
-      color: var(--accent-primary);
-    }
+			.header-text h1 .brand-world {
+				color: var(--accent-primary);
+			}
 
-    .header-text h1 .brand-ap {
-      color: var(--text-secondary);
-      font-weight: 400;
-      font-size: 14px;
-      margin-left: 4px;
-    }
+			.header-text h1 .brand-ap {
+				color: var(--text-secondary);
+				font-weight: 400;
+				font-size: 14px;
+				margin-left: 4px;
+			}
 
-    .header-text .tagline {
-      font-size: 12px;
-      color: var(--text-secondary);
-    }
+			.header-text .tagline {
+				font-size: 12px;
+				color: var(--text-secondary);
+			}
 
-    body[data-theme="classic"] .header-text .tagline {
-      font-size: 11px;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-      color: var(--text-muted);
-    }
+			body[data-theme="classic"] .header-text .tagline {
+				font-size: 11px;
+				letter-spacing: 0.5px;
+				text-transform: uppercase;
+				color: var(--text-muted);
+			}
 
-    /* ============================================
+			/* ============================================
        CONTENT
        ============================================ */
-    .content {
-      margin: 0 10px 10px;
-      /* Fixed band of panel colour above the scroll area, so scrolled rows are
+			.content {
+				margin: 0 10px 10px;
+				/* Fixed band of panel colour above the scroll area, so scrolled rows are
          clipped below the concave fillets instead of right at their base. */
-      border-top: 10px solid var(--bg-secondary);
-      padding: 4px 12px 12px;
-      /* Popups are capped at 600px: header + tabs + footer need room */
-      max-height: 360px;
-      overflow-y: auto;
-      background: var(--bg-secondary);
-      border-radius: 0 0 14px 14px;
-      position: relative;
-      z-index: 1;
-    }
+				border-top: 10px solid var(--bg-secondary);
+				padding: 4px 12px 12px;
+				/* Popups are capped at 600px: header + tabs + footer need room */
+				max-height: 360px;
+				overflow-y: auto;
+				background: var(--bg-secondary);
+				border-radius: 0 0 14px 14px;
+				position: relative;
+				z-index: 1;
+			}
 
-    body[data-theme="classic"] .content {
-      padding: 4px 16px 16px;
-    }
+			body[data-theme="classic"] .content {
+				padding: 4px 16px 16px;
+			}
 
-    /* The active tab is flush with one side of the panel, so that top corner
+			/* The active tab is flush with one side of the panel, so that top corner
        stays square; every corner the tab does not occupy is rounded like the
        bottom ones. `data-active-tab` is set by initTabs(). */
-    body[data-active-tab="general"] .content {
-      border-top-right-radius: 14px;
-    }
+			body[data-active-tab="general"] .content {
+				border-top-right-radius: 14px;
+			}
 
-    body[data-active-tab="styles"] .content {
-      border-top-left-radius: 14px;
-      border-top-right-radius: 14px;
-    }
+			body[data-active-tab="styles"] .content {
+				border-top-left-radius: 14px;
+				border-top-right-radius: 14px;
+			}
 
-    body[data-active-tab="advanced"] .content {
-      border-top-left-radius: 14px;
-    }
+			body[data-active-tab="advanced"] .content {
+				border-top-left-radius: 14px;
+			}
 
-    /* ============================================
+			/* ============================================
        SECTIONS
        ============================================ */
-    .section {
-      margin-bottom: 14px;
-    }
+			.section {
+				margin-bottom: 14px;
+			}
 
-    body[data-theme="classic"] .section {
-      margin-bottom: 20px;
-    }
+			body[data-theme="classic"] .section {
+				margin-bottom: 20px;
+			}
 
-    .section:last-child {
-      margin-bottom: 0;
-    }
+			.section:last-child {
+				margin-bottom: 0;
+			}
 
-    .section-header {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 10px;
-      padding-left: 2px;
-    }
+			.section-header {
+				display: flex;
+				align-items: center;
+				gap: 8px;
+				margin-bottom: 10px;
+				padding-left: 2px;
+			}
 
-    body[data-theme="classic"] .section-header {
-      gap: 10px;
-      margin-bottom: 12px;
-    }
+			body[data-theme="classic"] .section-header {
+				gap: 10px;
+				margin-bottom: 12px;
+			}
 
-    .section-icon {
-      display: none;
-    }
+			.section-icon {
+				display: none;
+			}
 
-    body[data-theme="classic"] .section-icon {
-      display: flex;
-      width: 28px;
-      height: 28px;
-      border-radius: 8px;
-      background: var(--bg-tertiary);
-      border: 1px solid var(--border-color);
-      align-items: center;
-      justify-content: center;
-    }
+			body[data-theme="classic"] .section-icon {
+				display: flex;
+				width: 28px;
+				height: 28px;
+				border-radius: 8px;
+				background: var(--bg-tertiary);
+				border: 1px solid var(--border-color);
+				align-items: center;
+				justify-content: center;
+			}
 
-    body[data-theme="classic"] .section-icon i {
-      font-size: 12px;
-    }
+			body[data-theme="classic"] .section-icon i {
+				font-size: 12px;
+			}
 
-    .section-header > i {
-      color: var(--accent-primary);
-      font-size: 13px;
-      width: 16px;
-      text-align: center;
-    }
+			.section-header > i {
+				color: var(--accent-primary);
+				font-size: 13px;
+				width: 16px;
+				text-align: center;
+			}
 
-    body[data-theme="classic"] .section-header > i {
-      display: none;
-    }
+			body[data-theme="classic"] .section-header > i {
+				display: none;
+			}
 
-    .section-icon i {
-      color: var(--accent-primary);
-    }
+			.section-icon i {
+				color: var(--accent-primary);
+			}
 
-    .section-title {
-      font-size: 12px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: var(--text-secondary);
-    }
+			.section-title {
+				font-size: 12px;
+				font-weight: 600;
+				text-transform: uppercase;
+				letter-spacing: 0.5px;
+				color: var(--text-secondary);
+			}
 
-    body[data-theme="classic"] .section-title {
-      font-size: 11px;
-      letter-spacing: 1.2px;
-    }
+			body[data-theme="classic"] .section-title {
+				font-size: 11px;
+				letter-spacing: 1.2px;
+			}
 
-    /* ============================================
+			/* ============================================
        TABS
        ============================================ */
-    .tabs {
-      position: relative;
-      display: flex;
-      margin: 10px 10px 0;
-      z-index: 2;
-    }
+			.tabs {
+				position: relative;
+				display: flex;
+				margin: 10px 10px 0;
+				z-index: 2;
+			}
 
-    .tab {
-      position: relative;
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      padding: 9px 6px 10px;
-      background: transparent;
-      border: none;
-      border-radius: 12px 12px 0 0;
-      color: var(--text-secondary);
-      font-family: inherit;
-      font-size: 12px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: color 0.2s ease, background 0.2s ease;
-    }
+			.tab {
+				position: relative;
+				flex: 1;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				gap: 6px;
+				padding: 9px 6px 10px;
+				background: transparent;
+				border: none;
+				border-radius: 12px 12px 0 0;
+				color: var(--text-secondary);
+				font-family: inherit;
+				font-size: 12px;
+				font-weight: 500;
+				cursor: pointer;
+				transition:
+					color 0.2s ease,
+					background 0.2s ease;
+			}
 
-    .tab i {
-      font-size: 11px;
-      opacity: 0.85;
-    }
+			.tab i {
+				font-size: 11px;
+				opacity: 0.85;
+			}
 
-    body[data-theme="classic"] .tab {
-      border-radius: 14px 14px 0 0;
-      font-size: 11px;
-      letter-spacing: 0.8px;
-      text-transform: uppercase;
-    }
+			body[data-theme="classic"] .tab {
+				border-radius: 14px 14px 0 0;
+				font-size: 11px;
+				letter-spacing: 0.8px;
+				text-transform: uppercase;
+			}
 
-    .tab:hover {
-      color: var(--text-primary);
-    }
+			.tab:hover {
+				color: var(--text-primary);
+			}
 
-    .tab.active {
-      background: var(--bg-secondary);
-      color: var(--text-primary);
-      font-weight: 600;
-    }
+			.tab.active {
+				background: var(--bg-secondary);
+				color: var(--text-primary);
+				font-weight: 600;
+			}
 
-    .tab.active i {
-      opacity: 1;
-      color: var(--accent-primary);
-    }
+			.tab.active i {
+				opacity: 1;
+				color: var(--accent-primary);
+			}
 
-    /* Concave fillets where the active tab flows into the panel below.
+			/* Concave fillets where the active tab flows into the panel below.
        The helper box sits beside the tab and a radial gradient carves a
        quarter circle out of its outer top corner, so the tab colour curls
        down into the panel instead of bulging away from it. The box is 1px
        wider than the gap it bridges, so it overlaps the tab and the two
        anti-aliased edges cannot leave a light seam. */
-    .tab.active::before,
-    .tab.active::after {
-      content: '';
-      position: absolute;
-      bottom: 0;
-      width: 13px;
-      height: 12px;
-      pointer-events: none;
-    }
+			.tab.active::before,
+			.tab.active::after {
+				content: "";
+				position: absolute;
+				bottom: 0;
+				width: 13px;
+				height: 12px;
+				pointer-events: none;
+			}
 
-    .tab.active::before {
-      left: -12px;
-      background: radial-gradient(
-        circle at 0 0,
-        transparent 11.5px,
-        var(--bg-secondary) 12px
-      );
-    }
+			.tab.active::before {
+				left: -12px;
+				background: radial-gradient(circle at 0 0, transparent 11.5px, var(--bg-secondary) 12px);
+			}
 
-    .tab.active::after {
-      right: -12px;
-      background: radial-gradient(
-        circle at 100% 0,
-        transparent 11.5px,
-        var(--bg-secondary) 12px
-      );
-    }
+			.tab.active::after {
+				right: -12px;
+				background: radial-gradient(circle at 100% 0, transparent 11.5px, var(--bg-secondary) 12px);
+			}
 
-    /* The outer edges sit flush with the panel, so they need no fillet */
-    .tab.active:first-child::before,
-    .tab.active:last-child::after {
-      display: none;
-    }
+			/* The outer edges sit flush with the panel, so they need no fillet */
+			.tab.active:first-child::before,
+			.tab.active:last-child::after {
+				display: none;
+			}
 
-    .tab:focus-visible {
-      outline: 2px solid var(--accent-primary);
-      outline-offset: -2px;
-      border-radius: 12px 12px 0 0;
-    }
+			.tab:focus-visible {
+				outline: 2px solid var(--accent-primary);
+				outline-offset: -2px;
+				border-radius: 12px 12px 0 0;
+			}
 
-    .tab-panel {
-      display: none;
-    }
+			.tab-panel {
+				display: none;
+			}
 
-    .tab-panel.active {
-      display: block;
-    }
+			.tab-panel.active {
+				display: block;
+			}
 
-    /* ============================================
+			/* ============================================
        SETTINGS CARD
        ============================================ */
-    .settings-card {
-      background: var(--bg-primary);
-      border-radius: 8px;
-      border: 1px solid var(--border-color);
-      overflow: hidden;
-    }
+			.settings-card {
+				background: var(--bg-primary);
+				border-radius: 8px;
+				border: 1px solid var(--border-color);
+				overflow: hidden;
+			}
 
-    body[data-theme="classic"] .settings-card {
-      border-radius: 14px;
-      transition: border-color 0.2s ease;
-    }
+			body[data-theme="classic"] .settings-card {
+				border-radius: 14px;
+				transition: border-color 0.2s ease;
+			}
 
-    body[data-theme="classic"] .settings-card:hover {
-      border-color: var(--border-light);
-    }
+			body[data-theme="classic"] .settings-card:hover {
+				border-color: var(--border-light);
+			}
 
-    .setting-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 12px 14px;
-      border-bottom: 1px solid var(--border-color);
-      transition: background 0.15s ease;
-    }
+			.setting-row {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				padding: 12px 14px;
+				border-bottom: 1px solid var(--border-color);
+				transition: background 0.15s ease;
+			}
 
-    .setting-row[data-depends-on] {
-      position: relative;
-      padding-left: 32px;
-    }
+			.setting-row[data-depends-on] {
+				position: relative;
+				padding-left: 32px;
+			}
 
-    .setting-row[data-depends-on]::before {
-      content: '';
-      position: absolute;
-      left: 20px;
-      top: 0;
-      bottom: 0;
-      width: 2px;
-      background: var(--border-color);
-      border-radius: 1px;
-      pointer-events: none;
-    }
+			.setting-row[data-depends-on]::before {
+				content: "";
+				position: absolute;
+				left: 20px;
+				top: 0;
+				bottom: 0;
+				width: 2px;
+				background: var(--border-color);
+				border-radius: 1px;
+				pointer-events: none;
+			}
 
-    .setting-row[data-depends-on].is-disabled::before {
-      background: var(--text-muted);
-      opacity: 0.25;
-    }
+			.setting-row[data-depends-on].is-disabled::before {
+				background: var(--text-muted);
+				opacity: 0.25;
+			}
 
-    .setting-row.is-disabled .setting-icon {
-      color: var(--text-muted);
-      opacity: 0.4;
-    }
+			.setting-row.is-disabled .setting-icon {
+				color: var(--text-muted);
+				opacity: 0.4;
+			}
 
-    .setting-row.is-disabled .toggle,
-    .setting-row.is-disabled .setting-label,
-    .setting-row.is-disabled .setting-description {
-      opacity: 0.35;
-    }
+			.setting-row.is-disabled .toggle,
+			.setting-row.is-disabled .setting-label,
+			.setting-row.is-disabled .setting-description {
+				opacity: 0.35;
+			}
 
-    body[data-theme="classic"] .setting-row {
-      padding: 14px 16px;
-    }
+			body[data-theme="classic"] .setting-row {
+				padding: 14px 16px;
+			}
 
-    body[data-theme="classic"] .setting-row[data-depends-on] {
-      padding-left: 36px;
-    }
+			body[data-theme="classic"] .setting-row[data-depends-on] {
+				padding-left: 36px;
+			}
 
-    body[data-theme="classic"] .setting-row[data-depends-on]::before {
-      left: 22px;
-      background: var(--border-light);
-    }
+			body[data-theme="classic"] .setting-row[data-depends-on]::before {
+				left: 22px;
+				background: var(--border-light);
+			}
 
+			.setting-row:last-child {
+				border-bottom: none;
+			}
 
+			.setting-row:hover {
+				background: var(--bg-hover);
+			}
 
-    .setting-row:last-child {
-      border-bottom: none;
-    }
+			.setting-info {
+				flex: 1;
+				min-width: 0;
+			}
 
-    .setting-row:hover {
-      background: var(--bg-hover);
-    }
+			.setting-icon {
+				width: 16px;
+				text-align: center;
+				font-size: 12px;
+				color: var(--text-muted);
+				flex-shrink: 0;
+				margin-right: 12px;
+			}
 
-    .setting-info {
-      flex: 1;
-      min-width: 0;
-    }
+			.setting-label {
+				font-size: 13px;
+				font-weight: 500;
+				color: var(--text-primary);
+				margin-bottom: 1px;
+			}
 
-    .setting-icon {
-      width: 16px;
-      text-align: center;
-      font-size: 12px;
-      color: var(--text-muted);
-      flex-shrink: 0;
-      margin-right: 12px;
-    }
+			body[data-theme="classic"] .setting-label {
+				margin-bottom: 2px;
+			}
 
-    .setting-label {
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--text-primary);
-      margin-bottom: 1px;
-    }
+			.setting-description {
+				font-size: 11px;
+				color: var(--text-muted);
+			}
 
-    body[data-theme="classic"] .setting-label {
-      margin-bottom: 2px;
-    }
+			body[data-theme="classic"] .setting-description {
+				line-height: 1.4;
+			}
 
-    .setting-description {
-      font-size: 11px;
-      color: var(--text-muted);
-    }
-
-    body[data-theme="classic"] .setting-description {
-      line-height: 1.4;
-    }
-
-    /* ============================================
+			/* ============================================
        TOGGLE SWITCH
        ============================================ */
-    .toggle {
-      position: relative;
-      width: 42px;
-      height: 24px;
-      flex-shrink: 0;
-    }
+			.toggle {
+				position: relative;
+				width: 42px;
+				height: 24px;
+				flex-shrink: 0;
+			}
 
-    body[data-theme="classic"] .toggle {
-      width: 46px;
-      height: 26px;
-    }
+			body[data-theme="classic"] .toggle {
+				width: 46px;
+				height: 26px;
+			}
 
-    .toggle input {
-      opacity: 0;
-      width: 0;
-      height: 0;
-    }
+			.toggle input {
+				opacity: 0;
+				width: 0;
+				height: 0;
+			}
 
-    .toggle-track {
-      position: absolute;
-      cursor: pointer;
-      inset: 0;
-      background: var(--bg-tertiary);
-      border: 1px solid var(--border-light);
-      transition: all 0.25s ease;
-      border-radius: 24px;
-    }
+			.toggle-track {
+				position: absolute;
+				cursor: pointer;
+				inset: 0;
+				background: var(--bg-tertiary);
+				border: 1px solid var(--border-light);
+				transition: all 0.25s ease;
+				border-radius: 24px;
+			}
 
-    body[data-theme="classic"] .toggle-track {
-      border-radius: 26px;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
+			body[data-theme="classic"] .toggle-track {
+				border-radius: 26px;
+				transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+			}
 
-    .toggle-track::before {
-      position: absolute;
-      content: "";
-      height: 18px;
-      width: 18px;
-      left: 2px;
-      bottom: 2px;
-      background: var(--text-secondary);
-      transition: all 0.25s ease;
-      border-radius: 50%;
-    }
+			.toggle-track::before {
+				position: absolute;
+				content: "";
+				height: 18px;
+				width: 18px;
+				left: 2px;
+				bottom: 2px;
+				background: var(--text-secondary);
+				transition: all 0.25s ease;
+				border-radius: 50%;
+			}
 
-    body[data-theme="classic"] .toggle-track::before {
-      height: 20px;
-      width: 20px;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
+			body[data-theme="classic"] .toggle-track::before {
+				height: 20px;
+				width: 20px;
+				transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+			}
 
-    .toggle input:checked + .toggle-track {
-      background: var(--accent-primary);
-      border-color: var(--accent-primary);
-    }
+			.toggle input:checked + .toggle-track {
+				background: var(--accent-primary);
+				border-color: var(--accent-primary);
+			}
 
-    body[data-theme="classic"] .toggle input:checked + .toggle-track {
-      background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
-      border-color: transparent;
-      box-shadow: 0 2px 12px var(--accent-glow);
-    }
+			body[data-theme="classic"] .toggle input:checked + .toggle-track {
+				background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+				border-color: transparent;
+				box-shadow: 0 2px 12px var(--accent-glow);
+			}
 
-    .toggle input:checked + .toggle-track::before {
-      transform: translateX(18px);
-      background: white;
-    }
+			.toggle input:checked + .toggle-track::before {
+				transform: translateX(18px);
+				background: white;
+			}
 
-    body[data-theme="classic"] .toggle input:checked + .toggle-track::before {
-      transform: translateX(20px);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-    }
+			body[data-theme="classic"] .toggle input:checked + .toggle-track::before {
+				transform: translateX(20px);
+				box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+			}
 
-    .toggle input:focus + .toggle-track {
-      outline: 2px solid var(--accent-primary);
-      outline-offset: 2px;
-    }
+			.toggle input:focus + .toggle-track {
+				outline: 2px solid var(--accent-primary);
+				outline-offset: 2px;
+			}
 
-    /* ============================================
+			/* ============================================
        NUMBER INPUT
        ============================================ */
-    .number-input {
-      width: 65px;
-      padding: 6px 10px;
-      background: var(--bg-tertiary);
-      border: 1px solid var(--border-color);
-      border-radius: 6px;
-      color: var(--text-primary);
-      font-family: 'SF Mono', 'Consolas', monospace;
-      font-size: 13px;
-      text-align: center;
-      transition: all 0.2s ease;
-    }
+			.number-input {
+				width: 65px;
+				padding: 6px 10px;
+				background: var(--bg-tertiary);
+				border: 1px solid var(--border-color);
+				border-radius: 6px;
+				color: var(--text-primary);
+				font-family: "SF Mono", "Consolas", monospace;
+				font-size: 13px;
+				text-align: center;
+				transition: all 0.2s ease;
+			}
 
-    body[data-theme="classic"] .number-input {
-      width: 70px;
-      padding: 8px 12px;
-      border-radius: 8px;
-      font-family: 'JetBrains Mono', monospace;
-      font-weight: 500;
-    }
+			body[data-theme="classic"] .number-input {
+				width: 70px;
+				padding: 8px 12px;
+				border-radius: 8px;
+				font-family: "JetBrains Mono", monospace;
+				font-weight: 500;
+			}
 
-    .number-input:hover {
-      border-color: var(--border-light);
-    }
+			.number-input:hover {
+				border-color: var(--border-light);
+			}
 
-    .number-input:focus {
-      outline: none;
-      border-color: var(--accent-primary);
-      box-shadow: 0 0 0 2px rgba(99, 124, 249, 0.2);
-    }
+			.number-input:focus {
+				outline: none;
+				border-color: var(--accent-primary);
+				box-shadow: 0 0 0 2px rgba(99, 124, 249, 0.2);
+			}
 
-    body[data-theme="classic"] .number-input:focus {
-      box-shadow: 0 0 0 3px rgba(255, 51, 102, 0.15);
-    }
+			body[data-theme="classic"] .number-input:focus {
+				box-shadow: 0 0 0 3px rgba(255, 51, 102, 0.15);
+			}
 
-    /* ============================================
+			/* ============================================
        SELECT INPUT (Theme selector)
        ============================================ */
-    .select-input {
-      padding: 6px 10px;
-      background: var(--bg-tertiary);
-      border: 1px solid var(--border-color);
-      border-radius: 6px;
-      color: var(--text-primary);
-      font-family: inherit;
-      font-size: 12px;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
+			.select-input {
+				padding: 6px 10px;
+				background: var(--bg-tertiary);
+				border: 1px solid var(--border-color);
+				border-radius: 6px;
+				color: var(--text-primary);
+				font-family: inherit;
+				font-size: 12px;
+				cursor: pointer;
+				transition: all 0.2s ease;
+			}
 
-    body[data-theme="classic"] .select-input {
-      padding: 8px 12px;
-      border-radius: 8px;
-    }
+			body[data-theme="classic"] .select-input {
+				padding: 8px 12px;
+				border-radius: 8px;
+			}
 
-    .select-input:hover {
-      border-color: var(--border-light);
-    }
+			.select-input:hover {
+				border-color: var(--border-light);
+			}
 
-    .select-input:focus {
-      outline: none;
-      border-color: var(--accent-primary);
-      box-shadow: 0 0 0 2px rgba(99, 124, 249, 0.2);
-    }
+			.select-input:focus {
+				outline: none;
+				border-color: var(--accent-primary);
+				box-shadow: 0 0 0 2px rgba(99, 124, 249, 0.2);
+			}
 
-    body[data-theme="classic"] .select-input:focus {
-      box-shadow: 0 0 0 3px rgba(255, 51, 102, 0.15);
-    }
+			body[data-theme="classic"] .select-input:focus {
+				box-shadow: 0 0 0 3px rgba(255, 51, 102, 0.15);
+			}
 
-    /* ============================================
+			/* ============================================
        COLOR PICKER
        ============================================ */
-    .color-picker-wrapper {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
+			.color-picker-wrapper {
+				display: flex;
+				align-items: center;
+				gap: 8px;
+			}
 
-    .color-button {
-      width: 32px;
-      height: 32px;
-      padding: 3px;
-      border: 1px solid var(--border-color);
-      border-radius: 6px;
-      cursor: pointer;
-      background: var(--bg-tertiary);
-      transition: all 0.2s ease;
-    }
+			.color-button {
+				width: 32px;
+				height: 32px;
+				padding: 3px;
+				border: 1px solid var(--border-color);
+				border-radius: 6px;
+				cursor: pointer;
+				background: var(--bg-tertiary);
+				transition: all 0.2s ease;
+			}
 
-    body[data-theme="classic"] .color-button {
-      width: 36px;
-      height: 36px;
-      border-width: 2px;
-      border-radius: 10px;
-    }
+			body[data-theme="classic"] .color-button {
+				width: 36px;
+				height: 36px;
+				border-width: 2px;
+				border-radius: 10px;
+			}
 
-    .color-button:hover {
-      border-color: var(--border-light);
-    }
+			.color-button:hover {
+				border-color: var(--border-light);
+			}
 
-    body[data-theme="classic"] .color-button:hover {
-      border-color: var(--border-light);
-    }
+			body[data-theme="classic"] .color-button:hover {
+				border-color: var(--border-light);
+			}
 
-    .color-button:focus {
-      outline: none;
-      border-color: var(--accent-primary);
-    }
+			.color-button:focus {
+				outline: none;
+				border-color: var(--accent-primary);
+			}
 
-    body[data-theme="classic"] .color-button:focus {
-      box-shadow: 0 0 0 3px rgba(255, 51, 102, 0.15);
-    }
+			body[data-theme="classic"] .color-button:focus {
+				box-shadow: 0 0 0 3px rgba(255, 51, 102, 0.15);
+			}
 
-    .color-preview {
-      display: block;
-      width: 100%;
-      height: 100%;
-      border-radius: 4px;
-    }
+			.color-preview {
+				display: block;
+				width: 100%;
+				height: 100%;
+				border-radius: 4px;
+			}
 
-    body[data-theme="classic"] .color-preview {
-      border-radius: 6px;
-    }
+			body[data-theme="classic"] .color-preview {
+				border-radius: 6px;
+			}
 
-    .color-text-input {
-      width: 70px;
-      padding: 5px 8px;
-      background: var(--bg-tertiary);
-      border: 1px solid var(--border-color);
-      border-radius: 6px;
-      color: var(--text-primary);
-      font-family: 'SF Mono', 'Consolas', monospace;
-      font-size: 11px;
-      text-transform: uppercase;
-      text-align: center;
-      transition: all 0.2s ease;
-    }
+			.color-text-input {
+				width: 70px;
+				padding: 5px 8px;
+				background: var(--bg-tertiary);
+				border: 1px solid var(--border-color);
+				border-radius: 6px;
+				color: var(--text-primary);
+				font-family: "SF Mono", "Consolas", monospace;
+				font-size: 11px;
+				text-transform: uppercase;
+				text-align: center;
+				transition: all 0.2s ease;
+			}
 
-    body[data-theme="classic"] .color-text-input {
-      padding: 6px 8px;
-      border-radius: 8px;
-      font-family: 'JetBrains Mono', monospace;
-      font-weight: 500;
-    }
+			body[data-theme="classic"] .color-text-input {
+				padding: 6px 8px;
+				border-radius: 8px;
+				font-family: "JetBrains Mono", monospace;
+				font-weight: 500;
+			}
 
-    .color-text-input:hover {
-      border-color: var(--border-light);
-    }
+			.color-text-input:hover {
+				border-color: var(--border-light);
+			}
 
-    .color-text-input:focus {
-      outline: none;
-      border-color: var(--accent-primary);
-      box-shadow: 0 0 0 2px rgba(99, 124, 249, 0.2);
-    }
+			.color-text-input:focus {
+				outline: none;
+				border-color: var(--accent-primary);
+				box-shadow: 0 0 0 2px rgba(99, 124, 249, 0.2);
+			}
 
-    body[data-theme="classic"] .color-text-input:focus {
-      box-shadow: 0 0 0 3px rgba(255, 51, 102, 0.15);
-    }
+			body[data-theme="classic"] .color-text-input:focus {
+				box-shadow: 0 0 0 3px rgba(255, 51, 102, 0.15);
+			}
 
-    /* ============================================
+			/* ============================================
        COLOR PICKER MODAL
        ============================================ */
-    .color-picker-modal {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0, 0, 0, 0.6);
-      z-index: 1000;
-      align-items: center;
-      justify-content: center;
-    }
+			.color-picker-modal {
+				display: none;
+				position: fixed;
+				top: 0;
+				left: 0;
+				right: 0;
+				bottom: 0;
+				background: rgba(0, 0, 0, 0.6);
+				z-index: 1000;
+				align-items: center;
+				justify-content: center;
+			}
 
-    body[data-theme="classic"] .color-picker-modal {
-      background: rgba(0, 0, 0, 0.7);
-      backdrop-filter: blur(4px);
-    }
+			body[data-theme="classic"] .color-picker-modal {
+				background: rgba(0, 0, 0, 0.7);
+				backdrop-filter: blur(4px);
+			}
 
-    .color-picker-modal.active {
-      display: flex;
-    }
+			.color-picker-modal.active {
+				display: flex;
+			}
 
-    .color-picker-content {
-      background: var(--bg-secondary);
-      border: 1px solid var(--border-color);
-      border-radius: 10px;
-      padding: 16px;
-      width: 270px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
-    }
+			.color-picker-content {
+				background: var(--bg-secondary);
+				border: 1px solid var(--border-color);
+				border-radius: 10px;
+				padding: 16px;
+				width: 270px;
+				box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+			}
 
-    body[data-theme="classic"] .color-picker-content {
-      border-radius: 16px;
-      width: 280px;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
-    }
+			body[data-theme="classic"] .color-picker-content {
+				border-radius: 16px;
+				width: 280px;
+				box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+			}
 
-    .color-picker-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 14px;
-    }
+			.color-picker-header {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				margin-bottom: 14px;
+			}
 
-    .color-picker-title {
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--text-primary);
-    }
+			.color-picker-title {
+				font-size: 14px;
+				font-weight: 600;
+				color: var(--text-primary);
+			}
 
-    body[data-theme="classic"] .color-picker-title {
-      font-size: 13px;
-    }
+			body[data-theme="classic"] .color-picker-title {
+				font-size: 13px;
+			}
 
-    .color-picker-close {
-      width: 26px;
-      height: 26px;
-      border: none;
-      background: var(--bg-tertiary);
-      border-radius: 6px;
-      color: var(--text-secondary);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.2s ease;
-    }
+			.color-picker-close {
+				width: 26px;
+				height: 26px;
+				border: none;
+				background: var(--bg-tertiary);
+				border-radius: 6px;
+				color: var(--text-secondary);
+				cursor: pointer;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				transition: all 0.2s ease;
+			}
 
-    body[data-theme="classic"] .color-picker-close {
-      width: 28px;
-      height: 28px;
-      border-radius: 8px;
-    }
+			body[data-theme="classic"] .color-picker-close {
+				width: 28px;
+				height: 28px;
+				border-radius: 8px;
+			}
 
-    .color-picker-close:hover {
-      background: var(--bg-hover);
-      color: var(--text-primary);
-    }
+			.color-picker-close:hover {
+				background: var(--bg-hover);
+				color: var(--text-primary);
+			}
 
-    body[data-theme="classic"] .color-picker-close:hover {
-      background: var(--bg-primary);
-    }
+			body[data-theme="classic"] .color-picker-close:hover {
+				background: var(--bg-primary);
+			}
 
-    .color-presets {
-      display: grid;
-      grid-template-columns: repeat(8, 1fr);
-      gap: 6px;
-      margin-bottom: 14px;
-    }
+			.color-presets {
+				display: grid;
+				grid-template-columns: repeat(8, 1fr);
+				gap: 6px;
+				margin-bottom: 14px;
+			}
 
-    .color-preset {
-      width: 100%;
-      aspect-ratio: 1;
-      border: 2px solid transparent;
-      border-radius: 4px;
-      cursor: pointer;
-      transition: all 0.15s ease;
-    }
+			.color-preset {
+				width: 100%;
+				aspect-ratio: 1;
+				border: 2px solid transparent;
+				border-radius: 4px;
+				cursor: pointer;
+				transition: all 0.15s ease;
+			}
 
-    body[data-theme="classic"] .color-preset {
-      border-radius: 6px;
-    }
+			body[data-theme="classic"] .color-preset {
+				border-radius: 6px;
+			}
 
-    .color-preset:hover {
-      border-color: var(--border-light);
-      z-index: 1;
-    }
+			.color-preset:hover {
+				border-color: var(--border-light);
+				z-index: 1;
+			}
 
-    body[data-theme="classic"] .color-preset:hover {
-      border-color: var(--border-light);
-    }
+			body[data-theme="classic"] .color-preset:hover {
+				border-color: var(--border-light);
+			}
 
-    .color-preset.selected {
-      border-color: white;
-    }
+			.color-preset.selected {
+				border-color: white;
+			}
 
-    body[data-theme="classic"] .color-preset.selected {
-      box-shadow: 0 0 0 2px var(--accent-primary);
-    }
+			body[data-theme="classic"] .color-preset.selected {
+				box-shadow: 0 0 0 2px var(--accent-primary);
+			}
 
-    .color-picker-custom {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-    }
+			.color-picker-custom {
+				display: flex;
+				gap: 10px;
+				align-items: center;
+			}
 
-    .color-picker-custom-input {
-      flex: 1;
-      padding: 10px 12px;
-      background: var(--bg-tertiary);
-      border: 1px solid var(--border-color);
-      border-radius: 6px;
-      color: var(--text-primary);
-      font-family: 'SF Mono', 'Consolas', monospace;
-      font-size: 13px;
-      text-transform: uppercase;
-    }
+			.color-picker-custom-input {
+				flex: 1;
+				padding: 10px 12px;
+				background: var(--bg-tertiary);
+				border: 1px solid var(--border-color);
+				border-radius: 6px;
+				color: var(--text-primary);
+				font-family: "SF Mono", "Consolas", monospace;
+				font-size: 13px;
+				text-transform: uppercase;
+			}
 
-    body[data-theme="classic"] .color-picker-custom-input {
-      border-radius: 8px;
-      font-family: 'JetBrains Mono', monospace;
-    }
+			body[data-theme="classic"] .color-picker-custom-input {
+				border-radius: 8px;
+				font-family: "JetBrains Mono", monospace;
+			}
 
-    .color-picker-custom-input:focus {
-      outline: none;
-      border-color: var(--accent-primary);
-    }
+			.color-picker-custom-input:focus {
+				outline: none;
+				border-color: var(--accent-primary);
+			}
 
-    .color-picker-custom-preview {
-      width: 40px;
-      height: 40px;
-      border-radius: 6px;
-      border: 1px solid var(--border-color);
-    }
+			.color-picker-custom-preview {
+				width: 40px;
+				height: 40px;
+				border-radius: 6px;
+				border: 1px solid var(--border-color);
+			}
 
-    body[data-theme="classic"] .color-picker-custom-preview {
-      width: 42px;
-      height: 42px;
-      border-radius: 10px;
-      border-width: 2px;
-    }
+			body[data-theme="classic"] .color-picker-custom-preview {
+				width: 42px;
+				height: 42px;
+				border-radius: 10px;
+				border-width: 2px;
+			}
 
-    .color-picker-actions {
-      display: flex;
-      gap: 8px;
-      margin-top: 14px;
-    }
+			.color-picker-actions {
+				display: flex;
+				gap: 8px;
+				margin-top: 14px;
+			}
 
-    .color-picker-btn {
-      flex: 1;
-      padding: 10px;
-      border: none;
-      border-radius: 6px;
-      font-family: inherit;
-      font-size: 13px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
+			.color-picker-btn {
+				flex: 1;
+				padding: 10px;
+				border: none;
+				border-radius: 6px;
+				font-family: inherit;
+				font-size: 13px;
+				font-weight: 500;
+				cursor: pointer;
+				transition: all 0.2s ease;
+			}
 
-    body[data-theme="classic"] .color-picker-btn {
-      border-radius: 8px;
-      font-size: 12px;
-      font-weight: 600;
-    }
+			body[data-theme="classic"] .color-picker-btn {
+				border-radius: 8px;
+				font-size: 12px;
+				font-weight: 600;
+			}
 
-    .color-picker-btn-cancel {
-      background: var(--bg-tertiary);
-      color: var(--text-secondary);
-    }
+			.color-picker-btn-cancel {
+				background: var(--bg-tertiary);
+				color: var(--text-secondary);
+			}
 
-    .color-picker-btn-cancel:hover {
-      background: var(--bg-hover);
-      color: var(--text-primary);
-    }
+			.color-picker-btn-cancel:hover {
+				background: var(--bg-hover);
+				color: var(--text-primary);
+			}
 
-    body[data-theme="classic"] .color-picker-btn-cancel:hover {
-      background: var(--bg-primary);
-    }
+			body[data-theme="classic"] .color-picker-btn-cancel:hover {
+				background: var(--bg-primary);
+			}
 
-    .color-picker-btn-apply {
-      background: var(--accent-primary);
-      color: white;
-    }
+			.color-picker-btn-apply {
+				background: var(--accent-primary);
+				color: white;
+			}
 
-    body[data-theme="classic"] .color-picker-btn-apply {
-      background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
-    }
+			body[data-theme="classic"] .color-picker-btn-apply {
+				background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+			}
 
-    .color-picker-btn-apply:hover {
-      opacity: 0.9;
-    }
+			.color-picker-btn-apply:hover {
+				opacity: 0.9;
+			}
 
-    body[data-theme="classic"] .color-picker-btn-apply:hover {
-      opacity: 0.9;
-      box-shadow: 0 4px 12px var(--accent-glow);
-    }
+			body[data-theme="classic"] .color-picker-btn-apply:hover {
+				opacity: 0.9;
+				box-shadow: 0 4px 12px var(--accent-glow);
+			}
 
-    /* ============================================
+			/* ============================================
        FOOTER
        ============================================ */
-    .footer {
-      padding: 12px 16px;
-      background: var(--bg-secondary);
-      border-top: 1px solid var(--border-color);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      position: relative;
-      z-index: 1;
-    }
+			.footer {
+				padding: 12px 16px;
+				background: var(--bg-secondary);
+				border-top: 1px solid var(--border-color);
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				position: relative;
+				z-index: 1;
+			}
 
-    body[data-theme="classic"] .footer {
-      padding: 14px 20px;
-    }
+			body[data-theme="classic"] .footer {
+				padding: 14px 20px;
+			}
 
-    .footer-link {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      color: var(--text-secondary);
-      text-decoration: none;
-      font-size: 12px;
-      transition: color 0.2s ease;
-    }
+			.footer-link {
+				display: flex;
+				align-items: center;
+				gap: 6px;
+				color: var(--text-secondary);
+				text-decoration: none;
+				font-size: 12px;
+				transition: color 0.2s ease;
+			}
 
-    .footer-link:hover {
-      color: var(--accent-primary);
-    }
+			.footer-link:hover {
+				color: var(--accent-primary);
+			}
 
-    .footer-link i {
-      font-size: 14px;
-    }
+			.footer-link i {
+				font-size: 14px;
+			}
 
-    .footer-right {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
+			.footer-right {
+				display: flex;
+				align-items: center;
+				gap: 10px;
+			}
 
-    body[data-theme="classic"] .footer-right {
-      gap: 12px;
-    }
+			body[data-theme="classic"] .footer-right {
+				gap: 12px;
+			}
 
-    .save-indicator {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      font-size: 11px;
-      font-weight: 500;
-      color: var(--accent-green);
-      opacity: 0;
-      transform: translateY(4px);
-      transition: all 0.3s ease;
-    }
+			.save-indicator {
+				display: flex;
+				align-items: center;
+				gap: 4px;
+				font-size: 11px;
+				font-weight: 500;
+				color: var(--accent-green);
+				opacity: 0;
+				transform: translateY(4px);
+				transition: all 0.3s ease;
+			}
 
-    .save-indicator.visible {
-      opacity: 1;
-      transform: translateY(0);
-    }
+			.save-indicator.visible {
+				opacity: 1;
+				transform: translateY(0);
+			}
 
-    .save-indicator i {
-      font-size: 10px;
-    }
+			.save-indicator i {
+				font-size: 10px;
+			}
 
-    body[data-theme="classic"] .save-indicator i {
-      font-size: 12px;
-    }
+			body[data-theme="classic"] .save-indicator i {
+				font-size: 12px;
+			}
 
-    .version {
-      font-family: 'SF Mono', 'Consolas', monospace;
-      font-size: 11px;
-      color: var(--text-muted);
-      padding: 4px 8px;
-      background: var(--bg-tertiary);
-      border-radius: 4px;
-    }
+			.version {
+				font-family: "SF Mono", "Consolas", monospace;
+				font-size: 11px;
+				color: var(--text-muted);
+				padding: 4px 8px;
+				background: var(--bg-tertiary);
+				border-radius: 4px;
+			}
 
-    body[data-theme="classic"] .version {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 10px;
-      border-radius: 6px;
-    }
+			body[data-theme="classic"] .version {
+				font-family: "JetBrains Mono", monospace;
+				font-size: 10px;
+				border-radius: 6px;
+			}
 
-    /* ============================================
+			/* ============================================
        SCROLLBAR
        ============================================ */
-    ::-webkit-scrollbar {
-      width: 6px;
-    }
+			::-webkit-scrollbar {
+				width: 6px;
+			}
 
-    ::-webkit-scrollbar-track {
-      background: transparent;
-    }
+			::-webkit-scrollbar-track {
+				background: transparent;
+			}
 
-    ::-webkit-scrollbar-thumb {
-      background: var(--border-color);
-      border-radius: 3px;
-    }
+			::-webkit-scrollbar-thumb {
+				background: var(--border-color);
+				border-radius: 3px;
+			}
 
-    ::-webkit-scrollbar-thumb:hover {
-      background: var(--border-light);
-    }
+			::-webkit-scrollbar-thumb:hover {
+				background: var(--border-light);
+			}
 
-    /* ============================================
+			/* ============================================
        CLASSIC THEME ANIMATIONS
        ============================================ */
-    body[data-theme="classic"] .tab-panel.active .section {
-      animation: fadeSlideIn 0.4s ease forwards;
-      opacity: 0;
-    }
+			body[data-theme="classic"] .tab-panel.active .section {
+				animation: fadeSlideIn 0.4s ease forwards;
+				opacity: 0;
+			}
 
-    body[data-theme="classic"] .tab-panel.active .section:nth-child(1) { animation-delay: 0.05s; }
-    body[data-theme="classic"] .tab-panel.active .section:nth-child(2) { animation-delay: 0.1s; }
-    body[data-theme="classic"] .tab-panel.active .section:nth-child(3) { animation-delay: 0.15s; }
+			body[data-theme="classic"] .tab-panel.active .section:nth-child(1) {
+				animation-delay: 0.05s;
+			}
+			body[data-theme="classic"] .tab-panel.active .section:nth-child(2) {
+				animation-delay: 0.1s;
+			}
+			body[data-theme="classic"] .tab-panel.active .section:nth-child(3) {
+				animation-delay: 0.15s;
+			}
 
-    @keyframes fadeSlideIn {
-      from {
-        opacity: 0;
-        transform: translateY(8px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-  </style>
-</head>
-<body data-theme="aniworld">
-  <div class="header">
-    <div class="logo-container">
-      <div class="logo-ring"></div>
-      <div class="logo-icon">AP</div>
-    </div>
-    <div class="header-text">
-      <h1>Ani<span class="brand-world">World</span><span class="brand-ap">AP [fork]</span></h1>
-      <div class="tagline" data-i18n="tagline">Skip Intros & Outros</div>
-    </div>
-  </div>
+			@keyframes fadeSlideIn {
+				from {
+					opacity: 0;
+					transform: translateY(8px);
+				}
+				to {
+					opacity: 1;
+					transform: translateY(0);
+				}
+			}
+		</style>
+	</head>
+	<body data-theme="aniworld">
+		<div class="header">
+			<div class="logo-container">
+				<div class="logo-ring"></div>
+				<div class="logo-icon">AP</div>
+			</div>
+			<div class="header-text">
+				<h1>Ani<span class="brand-world">World</span><span class="brand-ap">AP [fork]</span></h1>
+				<div class="tagline" data-i18n="tagline">Skip Intros & Outros</div>
+			</div>
+		</div>
 
-  <div class="tabs" role="tablist">
-    <button type="button" class="tab active" id="tab-general" role="tab" aria-selected="true" aria-controls="panel-general" data-tab="general">
-      <i class="fas fa-sliders"></i>
-      <span data-i18n="tabGeneral">General</span>
-    </button>
-    <button type="button" class="tab" id="tab-styles" role="tab" aria-selected="false" aria-controls="panel-styles" data-tab="styles">
-      <i class="fas fa-palette"></i>
-      <span data-i18n="tabStyles">Styles</span>
-    </button>
-    <button type="button" class="tab" id="tab-advanced" role="tab" aria-selected="false" aria-controls="panel-advanced" data-tab="advanced">
-      <i class="fas fa-gears"></i>
-      <span data-i18n="tabAdvanced">Advanced</span>
-    </button>
-  </div>
-  <div class="content">
-    <div class="tab-panel active" id="panel-general" data-panel="general" role="tabpanel" aria-labelledby="tab-general">
-      <div class="section">
-        <div class="section-header">
-          <i class="fas fa-forward"></i>
-          <div class="section-icon"><i class="fas fa-forward"></i></div>
-          <div class="section-title" data-i18n="sectionAutoSkip">Auto Skip</div>
-        </div>
-        <div class="settings-card">
-          <div class="setting-row">
-                    <i class="setting-icon fas fa-forward"></i>
-                    <div class="setting-info">
-                      <div class="setting-label" data-i18n="labelSkipOpening">Skip Opening</div>
-                      <div class="setting-description" data-i18n="descSkipOpening">Auto-skip anime intros</div>
-                    </div>
-                    <label class="toggle">
-                      <input type="checkbox" id="autoSkipOp">
-                      <span class="toggle-track"></span>
-                    </label>
-                  </div>
-          <div class="setting-row">
-                    <i class="setting-icon fas fa-backward"></i>
-                    <div class="setting-info">
-                      <div class="setting-label" data-i18n="labelSkipEnding">Skip Ending</div>
-                      <div class="setting-description" data-i18n="descSkipEnding">Auto-skip anime outros</div>
-                    </div>
-                    <label class="toggle">
-                      <input type="checkbox" id="autoSkipEd">
-                      <span class="toggle-track"></span>
-                    </label>
-                  </div>
-          <div class="setting-row">
-                    <i class="setting-icon fas fa-rotate-left"></i>
-                    <div class="setting-info">
-                      <div class="setting-label" data-i18n="labelSkipRecap">Skip Recap</div>
-                      <div class="setting-description" data-i18n="descSkipRecap">Auto-skip recap segments</div>
-                    </div>
-                    <label class="toggle">
-                      <input type="checkbox" id="autoSkipRecap">
-                      <span class="toggle-track"></span>
-                    </label>
-                  </div>
-        </div>
-      </div>
+		<div class="tabs" role="tablist">
+			<button
+				type="button"
+				class="tab active"
+				id="tab-general"
+				role="tab"
+				aria-selected="true"
+				aria-controls="panel-general"
+				data-tab="general"
+			>
+				<i class="fas fa-sliders"></i>
+				<span data-i18n="tabGeneral">General</span>
+			</button>
+			<button
+				type="button"
+				class="tab"
+				id="tab-styles"
+				role="tab"
+				aria-selected="false"
+				aria-controls="panel-styles"
+				data-tab="styles"
+			>
+				<i class="fas fa-palette"></i>
+				<span data-i18n="tabStyles">Styles</span>
+			</button>
+			<button
+				type="button"
+				class="tab"
+				id="tab-advanced"
+				role="tab"
+				aria-selected="false"
+				aria-controls="panel-advanced"
+				data-tab="advanced"
+			>
+				<i class="fas fa-gears"></i>
+				<span data-i18n="tabAdvanced">Advanced</span>
+			</button>
+		</div>
+		<div class="content">
+			<div
+				class="tab-panel active"
+				id="panel-general"
+				data-panel="general"
+				role="tabpanel"
+				aria-labelledby="tab-general"
+			>
+				<div class="section">
+					<div class="section-header">
+						<i class="fas fa-forward"></i>
+						<div class="section-icon"><i class="fas fa-forward"></i></div>
+						<div class="section-title" data-i18n="sectionAutoSkip">Auto Skip</div>
+					</div>
+					<div class="settings-card">
+						<div class="setting-row">
+							<i class="setting-icon fas fa-forward"></i>
+							<div class="setting-info">
+								<div class="setting-label" data-i18n="labelSkipOpening">Skip Opening</div>
+								<div class="setting-description" data-i18n="descSkipOpening">Auto-skip anime intros</div>
+							</div>
+							<label class="toggle">
+								<input type="checkbox" id="autoSkipOp" />
+								<span class="toggle-track"></span>
+							</label>
+						</div>
+						<div class="setting-row">
+							<i class="setting-icon fas fa-backward"></i>
+							<div class="setting-info">
+								<div class="setting-label" data-i18n="labelSkipEnding">Skip Ending</div>
+								<div class="setting-description" data-i18n="descSkipEnding">Auto-skip anime outros</div>
+							</div>
+							<label class="toggle">
+								<input type="checkbox" id="autoSkipEd" />
+								<span class="toggle-track"></span>
+							</label>
+						</div>
+						<div class="setting-row">
+							<i class="setting-icon fas fa-rotate-left"></i>
+							<div class="setting-info">
+								<div class="setting-label" data-i18n="labelSkipRecap">Skip Recap</div>
+								<div class="setting-description" data-i18n="descSkipRecap">Auto-skip recap segments</div>
+							</div>
+							<label class="toggle">
+								<input type="checkbox" id="autoSkipRecap" />
+								<span class="toggle-track"></span>
+							</label>
+						</div>
+					</div>
+				</div>
 
-      <div class="section">
-        <div class="section-header">
-          <i class="fas fa-tv"></i>
-          <div class="section-icon"><i class="fas fa-tv"></i></div>
-          <div class="section-title" data-i18n="sectionDisplay">Display</div>
-        </div>
-        <div class="settings-card">
-          <div class="setting-row">
-                    <i class="setting-icon fas fa-eye"></i>
-                    <div class="setting-info">
-                      <div class="setting-label" data-i18n="labelShowButtons">Show Skip Buttons</div>
-                      <div class="setting-description" data-i18n="descShowButtons">Display manual skip buttons</div>
-                    </div>
-                    <label class="toggle">
-                      <input type="checkbox" id="showButtons">
-                      <span class="toggle-track"></span>
-                    </label>
-                  </div>
-          <div class="setting-row" data-depends-on="showButtons">
-                    <i class="setting-icon fas fa-clock"></i>
-                    <div class="setting-info">
-                      <div class="setting-label" data-i18n="labelAlwaysShowButton">Always Show Skip Button</div>
-                      <div class="setting-description" data-i18n="descAlwaysShowButton">Skip 90s if no OP/ED is playing</div>
-                    </div>
-                    <label class="toggle">
-                      <input type="checkbox" id="alwaysShowButton">
-                      <span class="toggle-track"></span>
-                    </label>
-                  </div>
-          <div class="setting-row">
-                    <i class="setting-icon fas fa-gauge-high"></i>
-                    <div class="setting-info">
-                      <div class="setting-label" data-i18n="labelShowSpeedControl">Show Speed Control</div>
-                      <div class="setting-description" data-i18n="descShowSpeedControl">Show speed adjustment buttons</div>
-                    </div>
-                    <label class="toggle">
-                      <input type="checkbox" id="showSpeedControl">
-                      <span class="toggle-track"></span>
-                    </label>
-                  </div>
-          <div class="setting-row" data-depends-on="showSpeedControl">
-                    <i class="setting-icon fas fa-floppy-disk"></i>
-                    <div class="setting-info">
-                      <div class="setting-label" data-i18n="labelPersistentSpeed">Persistent Speed</div>
-                      <div class="setting-description" data-i18n="descPersistentSpeed">Remember speed across episodes</div>
-                    </div>
-                    <label class="toggle">
-                      <input type="checkbox" id="persistentSpeed">
-                      <span class="toggle-track"></span>
-                    </label>
-                  </div>
-        </div>
-      </div>
+				<div class="section">
+					<div class="section-header">
+						<i class="fas fa-tv"></i>
+						<div class="section-icon"><i class="fas fa-tv"></i></div>
+						<div class="section-title" data-i18n="sectionDisplay">Display</div>
+					</div>
+					<div class="settings-card">
+						<div class="setting-row">
+							<i class="setting-icon fas fa-eye"></i>
+							<div class="setting-info">
+								<div class="setting-label" data-i18n="labelShowButtons">Show Skip Buttons</div>
+								<div class="setting-description" data-i18n="descShowButtons">Display manual skip buttons</div>
+							</div>
+							<label class="toggle">
+								<input type="checkbox" id="showButtons" />
+								<span class="toggle-track"></span>
+							</label>
+						</div>
+						<div class="setting-row" data-depends-on="showButtons">
+							<i class="setting-icon fas fa-clock"></i>
+							<div class="setting-info">
+								<div class="setting-label" data-i18n="labelAlwaysShowButton">Always Show Skip Button</div>
+								<div class="setting-description" data-i18n="descAlwaysShowButton">Skip 90s if no OP/ED is playing</div>
+							</div>
+							<label class="toggle">
+								<input type="checkbox" id="alwaysShowButton" />
+								<span class="toggle-track"></span>
+							</label>
+						</div>
+						<div class="setting-row">
+							<i class="setting-icon fas fa-gauge-high"></i>
+							<div class="setting-info">
+								<div class="setting-label" data-i18n="labelShowSpeedControl">Show Speed Control</div>
+								<div class="setting-description" data-i18n="descShowSpeedControl">Show speed adjustment buttons</div>
+							</div>
+							<label class="toggle">
+								<input type="checkbox" id="showSpeedControl" />
+								<span class="toggle-track"></span>
+							</label>
+						</div>
+						<div class="setting-row" data-depends-on="showSpeedControl">
+							<i class="setting-icon fas fa-floppy-disk"></i>
+							<div class="setting-info">
+								<div class="setting-label" data-i18n="labelPersistentSpeed">Persistent Speed</div>
+								<div class="setting-description" data-i18n="descPersistentSpeed">Remember speed across episodes</div>
+							</div>
+							<label class="toggle">
+								<input type="checkbox" id="persistentSpeed" />
+								<span class="toggle-track"></span>
+							</label>
+						</div>
+					</div>
+				</div>
 
-      <div class="section">
-        <div class="section-header">
-          <i class="fas fa-clock"></i>
-          <div class="section-icon"><i class="fas fa-clock"></i></div>
-          <div class="section-title" data-i18n="sectionPlayback">Playback</div>
-        </div>
-        <div class="settings-card">
-          <div class="setting-row">
-                    <i class="setting-icon fas fa-forward"></i>
-                    <div class="setting-info">
-                      <div class="setting-label" data-i18n="labelNextEpisode">Next Episode</div>
-                      <div class="setting-description" data-i18n="descNextEpisode">Auto navigate to the next episode</div>
-                    </div>
-                    <label class="toggle">
-                      <input type="checkbox" id="nextEpisode">
-                      <span class="toggle-track"></span>
-                    </label>
-                  </div>
-          <div class="setting-row">
-                    <i class="setting-icon fas fa-forward-step"></i>
-                    <div class="setting-info">
-                      <div class="setting-label" data-i18n="labelShowNextEpisodeButton">Next Episode Button</div>
-                      <div class="setting-description" data-i18n="descShowNextEpisodeButton">Show a button in the player to jump to the next episode</div>
-                    </div>
-                    <label class="toggle">
-                      <input type="checkbox" id="showNextEpisodeButton">
-                      <span class="toggle-track"></span>
-                    </label>
-                  </div>
-        </div>
-      </div>
-    </div>
+				<div class="section">
+					<div class="section-header">
+						<i class="fas fa-clock"></i>
+						<div class="section-icon"><i class="fas fa-clock"></i></div>
+						<div class="section-title" data-i18n="sectionPlayback">Playback</div>
+					</div>
+					<div class="settings-card">
+						<div class="setting-row">
+							<i class="setting-icon fas fa-forward"></i>
+							<div class="setting-info">
+								<div class="setting-label" data-i18n="labelNextEpisode">Next Episode</div>
+								<div class="setting-description" data-i18n="descNextEpisode">Auto navigate to the next episode</div>
+							</div>
+							<label class="toggle">
+								<input type="checkbox" id="nextEpisode" />
+								<span class="toggle-track"></span>
+							</label>
+						</div>
+						<div class="setting-row">
+							<i class="setting-icon fas fa-forward-step"></i>
+							<div class="setting-info">
+								<div class="setting-label" data-i18n="labelShowNextEpisodeButton">Next Episode Button</div>
+								<div class="setting-description" data-i18n="descShowNextEpisodeButton">
+									Show a button in the player to jump to the next episode
+								</div>
+							</div>
+							<label class="toggle">
+								<input type="checkbox" id="showNextEpisodeButton" />
+								<span class="toggle-track"></span>
+							</label>
+						</div>
+					</div>
+				</div>
+			</div>
 
-    <div class="tab-panel" id="panel-styles" data-panel="styles" role="tabpanel" aria-labelledby="tab-styles">
-      <div class="section">
-        <div class="section-header">
-          <i class="fas fa-paint-brush"></i>
-          <div class="section-icon"><i class="fas fa-paint-brush"></i></div>
-          <div class="section-title" data-i18n="sectionAppearance">Appearance</div>
-        </div>
-        <div class="settings-card">
-          <div class="setting-row">
-                    <i class="setting-icon fas fa-globe"></i>
-                    <div class="setting-info">
-                      <div class="setting-label" data-i18n="labelLanguage">Language</div>
-                      <div class="setting-description" data-i18n="descLanguage">Choose your preferred language</div>
-                    </div>
-                    <select id="language" class="select-input">
-                      <option value="en" data-i18n="langEnglish">English</option>
-                      <option value="de" data-i18n="langGerman">German</option>
-                    </select>
-                  </div>
-          <div class="setting-row">
-                    <i class="setting-icon fas fa-brush"></i>
-                    <div class="setting-info">
-                      <div class="setting-label" data-i18n="labelUiTheme">UI Theme</div>
-                      <div class="setting-description" data-i18n="descUiTheme">Choose your preferred style</div>
-                    </div>
-                    <select id="uiTheme" class="select-input">
-                      <option value="aniworld" data-i18n="themeAniworld">AniWorld</option>
-                      <option value="classic" data-i18n="themeClassic">Classic</option>
-                    </select>
-                  </div>
-        </div>
-      </div>
+			<div class="tab-panel" id="panel-styles" data-panel="styles" role="tabpanel" aria-labelledby="tab-styles">
+				<div class="section">
+					<div class="section-header">
+						<i class="fas fa-paint-brush"></i>
+						<div class="section-icon"><i class="fas fa-paint-brush"></i></div>
+						<div class="section-title" data-i18n="sectionAppearance">Appearance</div>
+					</div>
+					<div class="settings-card">
+						<div class="setting-row">
+							<i class="setting-icon fas fa-globe"></i>
+							<div class="setting-info">
+								<div class="setting-label" data-i18n="labelLanguage">Language</div>
+								<div class="setting-description" data-i18n="descLanguage">Choose your preferred language</div>
+							</div>
+							<select id="language" class="select-input">
+								<option value="en" data-i18n="langEnglish">English</option>
+								<option value="de" data-i18n="langGerman">German</option>
+							</select>
+						</div>
+						<div class="setting-row">
+							<i class="setting-icon fas fa-brush"></i>
+							<div class="setting-info">
+								<div class="setting-label" data-i18n="labelUiTheme">UI Theme</div>
+								<div class="setting-description" data-i18n="descUiTheme">Choose your preferred style</div>
+							</div>
+							<select id="uiTheme" class="select-input">
+								<option value="aniworld" data-i18n="themeAniworld">AniWorld</option>
+								<option value="classic" data-i18n="themeClassic">Classic</option>
+							</select>
+						</div>
+					</div>
+				</div>
 
-      <div class="section">
-        <div class="section-header">
-          <i class="fas fa-palette"></i>
-          <div class="section-icon"><i class="fas fa-palette"></i></div>
-          <div class="section-title" data-i18n="sectionColors">Progress Bar Colors</div>
-        </div>
-        <div class="settings-card">
-          <div class="setting-row">
-                    <i class="setting-icon fas fa-pen"></i>
-                    <div class="setting-info">
-                      <div class="setting-label" data-i18n="labelOpeningMarker">Opening Marker</div>
-                      <div class="setting-description" data-i18n="descOpeningMarker">Intro segment color</div>
-                    </div>
-                    <div class="color-picker-wrapper">
-                      <button type="button" class="color-button" id="markerColorOpBtn" data-target="markerColorOp">
-                        <span class="color-preview" id="markerColorOpPreview"></span>
-                      </button>
-                      <input type="text" id="markerColorOp" class="color-text-input" maxlength="7">
-                    </div>
-                  </div>
-          <div class="setting-row">
-                    <i class="setting-icon fas fa-pen"></i>
-                    <div class="setting-info">
-                      <div class="setting-label" data-i18n="labelEndingMarker">Ending Marker</div>
-                      <div class="setting-description" data-i18n="descEndingMarker">Outro segment color</div>
-                    </div>
-                    <div class="color-picker-wrapper">
-                      <button type="button" class="color-button" id="markerColorEdBtn" data-target="markerColorEd">
-                        <span class="color-preview" id="markerColorEdPreview"></span>
-                      </button>
-                      <input type="text" id="markerColorEd" class="color-text-input" maxlength="7">
-                    </div>
-                  </div>
-          <div class="setting-row">
-                    <i class="setting-icon fas fa-pen"></i>
-                    <div class="setting-info">
-                      <div class="setting-label" data-i18n="labelRecapMarker">Recap Marker</div>
-                      <div class="setting-description" data-i18n="descRecapMarker">Recap segment color</div>
-                    </div>
-                    <div class="color-picker-wrapper">
-                      <button type="button" class="color-button" id="markerColorRecapBtn" data-target="markerColorRecap">
-                        <span class="color-preview" id="markerColorRecapPreview"></span>
-                      </button>
-                      <input type="text" id="markerColorRecap" class="color-text-input" maxlength="7">
-                    </div>
-                  </div>
-          <div class="setting-row">
-                    <i class="setting-icon fas fa-eye-dropper"></i>
-                    <div class="setting-info">
-                      <div class="setting-label" data-i18n="labelMarkerOpacity">Marker Opacity</div>
-                      <div class="setting-description" data-i18n="descMarkerOpacity">Transparency (0.1 - 1.0)</div>
-                    </div>
-                    <input type="number" id="markerOpacity" class="number-input" min="0.1" max="1" step="0.1">
-                  </div>
-        </div>
-      </div>
-    </div>
+				<div class="section">
+					<div class="section-header">
+						<i class="fas fa-palette"></i>
+						<div class="section-icon"><i class="fas fa-palette"></i></div>
+						<div class="section-title" data-i18n="sectionColors">Progress Bar Colors</div>
+					</div>
+					<div class="settings-card">
+						<div class="setting-row">
+							<i class="setting-icon fas fa-pen"></i>
+							<div class="setting-info">
+								<div class="setting-label" data-i18n="labelOpeningMarker">Opening Marker</div>
+								<div class="setting-description" data-i18n="descOpeningMarker">Intro segment color</div>
+							</div>
+							<div class="color-picker-wrapper">
+								<button type="button" class="color-button" id="markerColorOpBtn" data-target="markerColorOp">
+									<span class="color-preview" id="markerColorOpPreview"></span>
+								</button>
+								<input type="text" id="markerColorOp" class="color-text-input" maxlength="7" />
+							</div>
+						</div>
+						<div class="setting-row">
+							<i class="setting-icon fas fa-pen"></i>
+							<div class="setting-info">
+								<div class="setting-label" data-i18n="labelEndingMarker">Ending Marker</div>
+								<div class="setting-description" data-i18n="descEndingMarker">Outro segment color</div>
+							</div>
+							<div class="color-picker-wrapper">
+								<button type="button" class="color-button" id="markerColorEdBtn" data-target="markerColorEd">
+									<span class="color-preview" id="markerColorEdPreview"></span>
+								</button>
+								<input type="text" id="markerColorEd" class="color-text-input" maxlength="7" />
+							</div>
+						</div>
+						<div class="setting-row">
+							<i class="setting-icon fas fa-pen"></i>
+							<div class="setting-info">
+								<div class="setting-label" data-i18n="labelRecapMarker">Recap Marker</div>
+								<div class="setting-description" data-i18n="descRecapMarker">Recap segment color</div>
+							</div>
+							<div class="color-picker-wrapper">
+								<button type="button" class="color-button" id="markerColorRecapBtn" data-target="markerColorRecap">
+									<span class="color-preview" id="markerColorRecapPreview"></span>
+								</button>
+								<input type="text" id="markerColorRecap" class="color-text-input" maxlength="7" />
+							</div>
+						</div>
+						<div class="setting-row">
+							<i class="setting-icon fas fa-eye-dropper"></i>
+							<div class="setting-info">
+								<div class="setting-label" data-i18n="labelMarkerOpacity">Marker Opacity</div>
+								<div class="setting-description" data-i18n="descMarkerOpacity">Transparency (0.1 - 1.0)</div>
+							</div>
+							<input type="number" id="markerOpacity" class="number-input" min="0.1" max="1" step="0.1" />
+						</div>
+					</div>
+				</div>
+			</div>
 
-    <div class="tab-panel" id="panel-advanced" data-panel="advanced" role="tabpanel" aria-labelledby="tab-advanced">
-      <div class="section">
-        <div class="section-header">
-          <i class="fas fa-clock"></i>
-          <div class="section-icon"><i class="fas fa-clock"></i></div>
-          <div class="section-title" data-i18n="sectionPlayback">Playback</div>
-        </div>
-        <div class="settings-card">
-          <div class="setting-row">
-                    <i class="setting-icon fas fa-arrows-left-right"></i>
-                    <div class="setting-info">
-                      <div class="setting-label" data-i18n="labelSkipOffset">Skip Offset</div>
-                      <div class="setting-description" data-i18n="descSkipOffset">Seconds to add after skip</div>
-                    </div>
-                    <input type="number" id="skipOffset" class="number-input" min="-5" max="5" step="0.5">
-                  </div>
-          <div class="setting-row">
-                    <i class="setting-icon fas fa-volume-high"></i>
-                    <div class="setting-info">
-                      <div class="setting-label" data-i18n="labelRememberVolume">Remember Volume</div>
-                      <div class="setting-description" data-i18n="descRememberVolume">Persist volume across episodes</div>
-                    </div>
-                    <label class="toggle">
-                      <input type="checkbox" id="persistentVolume">
-                      <span class="toggle-track"></span>
-                    </label>
-                  </div>
-          <div class="setting-row">
-                    <i class="setting-icon fas fa-location-dot"></i>
-                    <div class="setting-info">
-                      <div class="setting-label" data-i18n="labelRememberPosition">Remember Position</div>
-                      <div class="setting-description" data-i18n="descRememberPosition">Resume where you left off</div>
-                    </div>
-                    <label class="toggle">
-                      <input type="checkbox" id="persistentPlaybackPosition">
-                      <span class="toggle-track"></span>
-                    </label>
-                  </div>
-          <div class="setting-row">
-                    <i class="setting-icon fas fa-calendar-days"></i>
-                    <div class="setting-info">
-                      <div class="setting-label" data-i18n="labelPositionExpiry">Position Expiry</div>
-                      <div class="setting-description" data-i18n="descPositionExpiry">Days until position resets</div>
-                    </div>
-                    <input type="number" id="playbackPositionExpirationDays" class="number-input" min="1" max="30" step="1">
-                  </div>
-        </div>
-      </div>
-    </div>
-  </div>
+			<div class="tab-panel" id="panel-advanced" data-panel="advanced" role="tabpanel" aria-labelledby="tab-advanced">
+				<div class="section">
+					<div class="section-header">
+						<i class="fas fa-clock"></i>
+						<div class="section-icon"><i class="fas fa-clock"></i></div>
+						<div class="section-title" data-i18n="sectionPlayback">Playback</div>
+					</div>
+					<div class="settings-card">
+						<div class="setting-row">
+							<i class="setting-icon fas fa-arrows-left-right"></i>
+							<div class="setting-info">
+								<div class="setting-label" data-i18n="labelSkipOffset">Skip Offset</div>
+								<div class="setting-description" data-i18n="descSkipOffset">Seconds to add after skip</div>
+							</div>
+							<input type="number" id="skipOffset" class="number-input" min="-5" max="5" step="0.5" />
+						</div>
+						<div class="setting-row">
+							<i class="setting-icon fas fa-volume-high"></i>
+							<div class="setting-info">
+								<div class="setting-label" data-i18n="labelRememberVolume">Remember Volume</div>
+								<div class="setting-description" data-i18n="descRememberVolume">Persist volume across episodes</div>
+							</div>
+							<label class="toggle">
+								<input type="checkbox" id="persistentVolume" />
+								<span class="toggle-track"></span>
+							</label>
+						</div>
+						<div class="setting-row">
+							<i class="setting-icon fas fa-location-dot"></i>
+							<div class="setting-info">
+								<div class="setting-label" data-i18n="labelRememberPosition">Remember Position</div>
+								<div class="setting-description" data-i18n="descRememberPosition">Resume where you left off</div>
+							</div>
+							<label class="toggle">
+								<input type="checkbox" id="persistentPlaybackPosition" />
+								<span class="toggle-track"></span>
+							</label>
+						</div>
+						<div class="setting-row">
+							<i class="setting-icon fas fa-calendar-days"></i>
+							<div class="setting-info">
+								<div class="setting-label" data-i18n="labelPositionExpiry">Position Expiry</div>
+								<div class="setting-description" data-i18n="descPositionExpiry">Days until position resets</div>
+							</div>
+							<input type="number" id="playbackPositionExpirationDays" class="number-input" min="1" max="30" step="1" />
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
 
-  <div class="footer">
-    <a href="https://github.com/sioXD/Aniworld-AP" target="_blank" class="footer-link">
-      <i class="fab fa-github"></i>
-      AniWorld AP [fork]
-    </a>
-    <div class="footer-right">
-      <span class="save-indicator" id="saveIndicator">
-        <i class="fas fa-check"></i>
-        <span data-i18n="footerSaved">Saved</span>
-      </span>
-      <span id="version" class="version">v1.7.0 - 29.10.26</span>
-    </div>
-  </div>
+		<div class="footer">
+			<a href="https://github.com/sioXD/Aniworld-AP" target="_blank" class="footer-link">
+				<i class="fab fa-github"></i>
+				AniWorld AP [fork]
+			</a>
+			<div class="footer-right">
+				<span class="save-indicator" id="saveIndicator">
+					<i class="fas fa-check"></i>
+					<span data-i18n="footerSaved">Saved</span>
+				</span>
+				<span id="version" class="version">v1.7.0 - 29.10.26</span>
+			</div>
+		</div>
 
-  <!-- Color Picker Modal -->
-  <div class="color-picker-modal" id="colorPickerModal">
-    <div class="color-picker-content">
-      <div class="color-picker-header">
-        <span class="color-picker-title" data-i18n="colorPickerTitle">Choose Color</span>
-        <button type="button" class="color-picker-close" id="colorPickerClose">
-          <i class="fas fa-times"></i>
-        </button>
-      </div>
-      <div class="color-presets" id="colorPresets"></div>
-      <div class="color-picker-custom">
-        <input type="text" class="color-picker-custom-input" id="colorPickerCustomInput" placeholder="#000000" maxlength="7">
-        <div class="color-picker-custom-preview" id="colorPickerCustomPreview"></div>
-      </div>
-      <div class="color-picker-actions">
-        <button type="button" class="color-picker-btn color-picker-btn-cancel" id="colorPickerCancel" data-i18n="colorPickerCancel">Cancel</button>
-        <button type="button" class="color-picker-btn color-picker-btn-apply" id="colorPickerApply" data-i18n="colorPickerApply">Apply</button>
-      </div>
-    </div>
-  </div>
+		<!-- Color Picker Modal -->
+		<div class="color-picker-modal" id="colorPickerModal">
+			<div class="color-picker-content">
+				<div class="color-picker-header">
+					<span class="color-picker-title" data-i18n="colorPickerTitle">Choose Color</span>
+					<button type="button" class="color-picker-close" id="colorPickerClose">
+						<i class="fas fa-times"></i>
+					</button>
+				</div>
+				<div class="color-presets" id="colorPresets"></div>
+				<div class="color-picker-custom">
+					<input
+						type="text"
+						class="color-picker-custom-input"
+						id="colorPickerCustomInput"
+						placeholder="#000000"
+						maxlength="7"
+					/>
+					<div class="color-picker-custom-preview" id="colorPickerCustomPreview"></div>
+				</div>
+				<div class="color-picker-actions">
+					<button
+						type="button"
+						class="color-picker-btn color-picker-btn-cancel"
+						id="colorPickerCancel"
+						data-i18n="colorPickerCancel"
+					>
+						Cancel
+					</button>
+					<button
+						type="button"
+						class="color-picker-btn color-picker-btn-apply"
+						id="colorPickerApply"
+						data-i18n="colorPickerApply"
+					>
+						Apply
+					</button>
+				</div>
+			</div>
+		</div>
 
-  <script src="defaults.js"></script>
-  <script src="popup.js"></script>
-</body>
+		<script src="defaults.js"></script>
+		<script src="popup.js"></script>
+	</body>
 </html>

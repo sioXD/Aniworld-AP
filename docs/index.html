@@ -1,1719 +1,1907 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="AniWorld AP [fork] — a Firefox extension that skips openings, endings and recaps on aniworld.to. Documentation, settings reference, install and development guide.">
-    <meta name="keywords" content="aniworld, aniskip, anime, skip opening, skip ending, firefox extension, fork">
-    <meta name="color-scheme" content="dark">
-    <title>AniWorld AP [fork] — Documentation</title>
-    <link rel="icon" href="icon.png">
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <style>
-        *,
-        *::before,
-        *::after {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        /* Palette taken from the extension's default "AniWorld" UI theme. */
-        :root {
-            --bg: #0d1519;
-            --bg-elev: #121c22;
-            --bg-elev-2: #1a2a33;
-            --bg-elev-3: #243743;
-            --accent: #637cf9;
-            --accent-soft: rgba(99, 124, 249, 0.13);
-            --accent-glow: rgba(99, 124, 249, 0.28);
-            --green: #63d02b;
-            --green-soft: rgba(99, 208, 43, 0.13);
-            --marker-op: #ff00fb;
-            --marker-ed: #22c55e;
-            --marker-recap: #ffdd00;
-            --text: #e8e8e8;
-            --text-2: #b0c4ce;
-            --muted: #7a9aa8;
-            --border: #2d444f;
-            --border-strong: #3a5565;
-            --radius: 14px;
-            --font: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-            --topbar-h: 60px;
-        }
-
-        html {
-            scroll-behavior: smooth;
-            scroll-padding-top: calc(var(--topbar-h) + 24px);
-        }
-
-        body {
-            font-family: var(--font);
-            background: var(--bg);
-            color: var(--text);
-            line-height: 1.65;
-            overflow-x: hidden;
-            -webkit-font-smoothing: antialiased;
-        }
-
-        body::before {
-            content: '';
-            position: fixed;
-            inset: 0;
-            background:
-                radial-gradient(900px 500px at 80% -10%, rgba(99, 124, 249, 0.14), transparent 70%),
-                radial-gradient(700px 420px at 0% 0%, rgba(99, 208, 43, 0.07), transparent 70%);
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        body::after {
-            content: '';
-            position: fixed;
-            inset: 0;
-            background-image: linear-gradient(rgba(176, 196, 206, 0.035) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(176, 196, 206, 0.035) 1px, transparent 1px);
-            background-size: 64px 64px;
-            mask-image: radial-gradient(700px 400px at 70% 0%, #000 20%, transparent 80%);
-            -webkit-mask-image: radial-gradient(700px 400px at 70% 0%, #000 20%, transparent 80%);
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        a {
-            color: var(--accent);
-            text-decoration: none;
-        }
-
-        a:hover {
-            text-decoration: underline;
-            text-underline-offset: 3px;
-        }
-
-        .wrap {
-            width: 100%;
-            max-width: 1180px;
-            margin: 0 auto;
-            padding: 0 24px;
-        }
-
-        /* ---------- Top bar ---------- */
-
-        .topbar {
-            position: sticky;
-            top: 0;
-            z-index: 20;
-            height: var(--topbar-h);
-            background: rgba(13, 21, 25, 0.82);
-            backdrop-filter: blur(14px);
-            border-bottom: 1px solid var(--border);
-        }
-
-        .topbar-inner {
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 20px;
-        }
-
-        .brand {
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            color: var(--text);
-            font-weight: 600;
-            font-size: 1rem;
-            letter-spacing: -0.01em;
-        }
-
-        .brand:hover {
-            text-decoration: none;
-        }
-
-        .brand img {
-            width: 26px;
-            height: 26px;
-            border-radius: 7px;
-            display: block;
-        }
-
-        .brand-tag,
-        .chip {
-            font-family: var(--mono);
-            font-size: 0.68rem;
-            font-weight: 500;
-            letter-spacing: 0.06em;
-            text-transform: uppercase;
-            padding: 2px 7px;
-            border-radius: 5px;
-            border: 1px solid var(--border-strong);
-            color: var(--text-2);
-            background: var(--bg-elev-2);
-        }
-
-        .brand-tag {
-            color: var(--green);
-            border-color: rgba(99, 208, 43, 0.4);
-            background: var(--green-soft);
-        }
-
-        .topnav {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .topnav .version {
-            margin-right: 6px;
-            text-transform: none;
-            letter-spacing: 0.02em;
-            color: var(--green);
-            border-color: rgba(99, 208, 43, 0.4);
-            background: var(--green-soft);
-        }
-
-        /* ---------- Buttons ---------- */
-
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 9px;
-            padding: 12px 20px;
-            border-radius: 10px;
-            border: 1px solid transparent;
-            font: inherit;
-            font-weight: 600;
-            font-size: 0.95rem;
-            text-decoration: none;
-            cursor: pointer;
-            transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background-color 0.18s ease;
-            white-space: nowrap;
-        }
-
-        .btn:hover {
-            text-decoration: none;
-        }
-
-        .btn svg {
-            width: 17px;
-            height: 17px;
-            flex: none;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #637cf9, #4b5fd6);
-            color: #fff;
-            box-shadow: 0 6px 20px var(--accent-glow);
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 10px 26px var(--accent-glow);
-        }
-
-        .btn-ghost {
-            background: var(--bg-elev-2);
-            border-color: var(--border-strong);
-            color: var(--text);
-        }
-
-        .btn-ghost:hover {
-            border-color: var(--accent);
-            background: var(--bg-elev-3);
-            transform: translateY(-1px);
-        }
-
-        .btn-sm {
-            padding: 8px 14px;
-            font-size: 0.86rem;
-            border-radius: 8px;
-        }
-
-        /* ---------- Hero ---------- */
-
-        .hero {
-            position: relative;
-            z-index: 1;
-            padding: 64px 0 40px;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .eyebrow {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            font-family: var(--mono);
-            font-size: 0.72rem;
-            letter-spacing: 0.14em;
-            text-transform: uppercase;
-            color: var(--muted);
-            margin-bottom: 18px;
-        }
-
-        .eyebrow::before {
-            content: '';
-            width: 26px;
-            height: 1px;
-            background: var(--border-strong);
-        }
-
-        h1 {
-            font-size: clamp(2.4rem, 6vw, 3.9rem);
-            line-height: 1.05;
-            letter-spacing: -0.03em;
-            font-weight: 700;
-            margin-bottom: 18px;
-        }
-
-        h1 .grad {
-            background: linear-gradient(100deg, #8f9bff 0%, var(--accent) 45%, var(--green) 100%);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .hero p.lede {
-            max-width: 62ch;
-            font-size: clamp(1rem, 2vw, 1.16rem);
-            color: var(--text-2);
-        }
-
-        .hero p.lede strong {
-            color: var(--text);
-            font-weight: 600;
-        }
-
-        .hero-actions {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-            margin: 30px 0 26px;
-        }
-
-        .facts {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        .fact {
-            font-family: var(--mono);
-            font-size: 0.74rem;
-            color: var(--text-2);
-            background: var(--bg-elev);
-            border: 1px solid var(--border);
-            border-radius: 999px;
-            padding: 5px 12px;
-            display: inline-flex;
-            align-items: center;
-            gap: 7px;
-        }
-
-        .fact .dot {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background: var(--accent);
-        }
-
-        .fact.green .dot {
-            background: var(--green);
-        }
-
-        /* ---------- Docs layout ---------- */
-
-        .docs {
-            position: relative;
-            z-index: 1;
-            display: grid;
-            grid-template-columns: 216px minmax(0, 1fr);
-            gap: 56px;
-            padding: 48px 24px 0;
-            align-items: start;
-        }
-
-        .toc {
-            position: sticky;
-            top: calc(var(--topbar-h) + 32px);
-            min-width: 0;
-        }
-
-        .toc-title {
-            font-family: var(--mono);
-            font-size: 0.68rem;
-            letter-spacing: 0.16em;
-            text-transform: uppercase;
-            color: var(--muted);
-            margin-bottom: 14px;
-        }
-
-        .toc ul {
-            list-style: none;
-            border-left: 1px solid var(--border);
-        }
-
-        .toc a {
-            display: block;
-            padding: 7px 0 7px 16px;
-            margin-left: -1px;
-            border-left: 2px solid transparent;
-            font-size: 0.9rem;
-            color: var(--text-2);
-            transition: color 0.15s ease, border-color 0.15s ease;
-        }
-
-        .toc a:hover {
-            color: var(--text);
-            text-decoration: none;
-        }
-
-        .toc a.active {
-            color: var(--accent);
-            border-left-color: var(--accent);
-            font-weight: 600;
-        }
-
-        .content {
-            min-width: 0;
-            padding-bottom: 72px;
-        }
-
-        section.doc {
-            padding-bottom: 56px;
-            scroll-margin-top: calc(var(--topbar-h) + 24px);
-        }
-
-        .section-label {
-            font-family: var(--mono);
-            font-size: 0.7rem;
-            letter-spacing: 0.16em;
-            text-transform: uppercase;
-            color: var(--accent);
-            margin-bottom: 8px;
-        }
-
-        h2 {
-            font-size: clamp(1.55rem, 3.2vw, 2rem);
-            letter-spacing: -0.02em;
-            line-height: 1.2;
-            margin-bottom: 12px;
-        }
-
-        .lede {
-            color: var(--text-2);
-            max-width: 74ch;
-            margin-bottom: 28px;
-        }
-
-        h3 {
-            font-size: 1.05rem;
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
-
-        p + p {
-            margin-top: 14px;
-        }
-
-        /* ---------- Cards & grids ---------- */
-
-        .grid {
-            display: grid;
-            gap: 16px;
-        }
-
-        .grid-2 {
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-        }
-
-        .grid-3 {
-            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-        }
-
-        .card {
-            background: var(--bg-elev);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 22px;
-        }
-
-        .card p {
-            color: var(--text-2);
-            font-size: 0.93rem;
-        }
-
-        .card.plain {
-            background: transparent;
-        }
-
-        .feature {
-            transition: border-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
-        }
-
-        .feature:hover {
-            border-color: var(--border-strong);
-            transform: translateY(-2px);
-            box-shadow: 0 10px 26px rgba(0, 0, 0, 0.28);
-        }
-
-        .feature .icon {
-            width: 34px;
-            height: 34px;
-            display: grid;
-            place-items: center;
-            border-radius: 9px;
-            background: var(--accent-soft);
-            color: var(--accent);
-            margin-bottom: 14px;
-        }
-
-        .feature .icon svg {
-            width: 18px;
-            height: 18px;
-        }
-
-        .feature .icon.green {
-            background: var(--green-soft);
-            color: var(--green);
-        }
-
-        .tag {
-            display: inline-block;
-            font-family: var(--mono);
-            font-size: 0.66rem;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-            color: var(--muted);
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            padding: 1px 6px;
-            margin-bottom: 10px;
-        }
-
-        .note {
-            display: flex;
-            gap: 12px;
-            background: var(--accent-soft);
-            border: 1px solid rgba(99, 124, 249, 0.28);
-            border-radius: 12px;
-            padding: 16px 18px;
-            margin-top: 20px;
-            font-size: 0.92rem;
-            color: var(--text-2);
-        }
-
-        .note strong {
-            color: var(--text);
-        }
-
-        .note .note-mark {
-            font-family: var(--mono);
-            color: var(--accent);
-            font-weight: 600;
-            flex: none;
-        }
-
-        /* ---------- Player mockup ---------- */
-
-        .player {
-            border: 1px solid var(--border-strong);
-            border-radius: 16px;
-            overflow: hidden;
-            background: #0a1114;
-            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
-            margin-top: 8px;
-        }
-
-        .player-stage {
-            position: relative;
-            aspect-ratio: 16 / 6.6;
-            background:
-                radial-gradient(70% 90% at 22% 20%, rgba(99, 124, 249, 0.36), transparent 60%),
-                radial-gradient(60% 80% at 84% 76%, rgba(99, 208, 43, 0.22), transparent 62%),
-                linear-gradient(160deg, #16242c, #0b1216 70%);
-            display: grid;
-            place-items: center;
-        }
-
-        .player-stage::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background-image: repeating-linear-gradient(115deg, rgba(255, 255, 255, 0.028) 0 1px, transparent 1px 26px);
-        }
-
-        .stage-title {
-            position: relative;
-            z-index: 1;
-            text-align: center;
-        }
-
-        .stage-title .ep {
-            font-family: var(--mono);
-            font-size: 0.7rem;
-            letter-spacing: 0.18em;
-            text-transform: uppercase;
-            color: var(--muted);
-        }
-
-        .stage-title .name {
-            font-size: clamp(0.95rem, 2vw, 1.2rem);
-            font-weight: 600;
-            color: rgba(232, 232, 232, 0.78);
-            margin-top: 6px;
-        }
-
-        .p-info {
-            position: absolute;
-            top: 12px;
-            right: 12px;
-            z-index: 2;
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            border: 1px solid var(--border-strong);
-            background: rgba(18, 28, 34, 0.75);
-            backdrop-filter: blur(6px);
-            color: var(--text-2);
-            display: grid;
-            place-items: center;
-            font-family: var(--mono);
-            font-size: 0.78rem;
-            font-weight: 600;
-            line-height: 1;
-        }
-
-        .p-info::after {
-            content: 'i';
-        }
-
-        .p-bottom {
-            padding: 10px 14px 14px;
-            border-top: 1px solid rgba(45, 68, 79, 0.7);
-            background: linear-gradient(180deg, rgba(18, 28, 34, 0.4), rgba(10, 17, 20, 0.92));
-        }
-
-        .p-timeline {
-            position: relative;
-            height: 6px;
-            border-radius: 999px;
-            background: rgba(176, 196, 206, 0.16);
-            margin-bottom: 14px;
-        }
-
-        .p-fill {
-            position: absolute;
-            inset: 0 auto 0 0;
-            width: 34%;
-            border-radius: 999px;
-            background: rgba(99, 124, 249, 0.4);
-        }
-
-        .p-marker {
-            position: absolute;
-            top: 0;
-            bottom: 0;
-            border-radius: 3px;
-            opacity: 0.8;
-            z-index: 1;
-        }
-
-        .p-marker.op {
-            background: var(--marker-op);
-        }
-
-        .p-marker.recap {
-            background: var(--marker-recap);
-        }
-
-        .p-marker.ed {
-            background: var(--marker-ed);
-        }
-
-        .p-controls {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-
-        .p-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 7px;
-            font-size: 0.78rem;
-            font-weight: 600;
-            border-radius: 7px;
-            padding: 6px 11px;
-            border: 1px solid var(--border-strong);
-            background: var(--bg-elev-2);
-            color: var(--text);
-        }
-
-        .p-btn .badge {
-            font-family: var(--mono);
-            font-size: 0.6rem;
-            letter-spacing: 0.08em;
-            padding: 1px 5px;
-            border-radius: 4px;
-            background: linear-gradient(135deg, var(--marker-op), #ff5ce0);
-            color: #14050f;
-        }
-
-        .p-speed {
-            display: inline-flex;
-            align-items: center;
-            border: 1px solid var(--border-strong);
-            border-radius: 7px;
-            background: var(--bg-elev-2);
-            overflow: hidden;
-            font-size: 0.78rem;
-        }
-
-        .p-speed span {
-            padding: 6px 9px;
-            color: var(--text-2);
-            display: inline-flex;
-            align-items: center;
-        }
-
-        .p-speed .val {
-            font-family: var(--mono);
-            color: var(--text);
-            border-left: 1px solid var(--border);
-            border-right: 1px solid var(--border);
-        }
-
-        .p-spacer {
-            flex: 1;
-        }
-
-        .p-next {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 30px;
-            height: 30px;
-            border-radius: 7px;
-            background: var(--bg-elev-2);
-            border: 1px solid var(--border-strong);
-            color: var(--text-2);
-        }
-
-        .p-next svg {
-            width: 14px;
-            height: 14px;
-        }
-
-        .legend {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-            gap: 10px 20px;
-            list-style: none;
-            margin-top: 18px;
-            font-size: 0.87rem;
-            color: var(--text-2);
-        }
-
-        .legend li {
-            display: flex;
-            align-items: center;
-            gap: 9px;
-        }
-
-        .legend i {
-            width: 10px;
-            height: 10px;
-            border-radius: 3px;
-            flex: none;
-        }
-
-        /* ---------- Tables ---------- */
-
-        .table-wrap {
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            overflow: hidden;
-            background: var(--bg-elev);
-        }
-
-        .table-scroll {
-            overflow-x: auto;
-        }
-
-        table {
-            width: 100%;
-            min-width: 620px;
-            border-collapse: collapse;
-            font-size: 0.9rem;
-        }
-
-        thead th {
-            text-align: left;
-            font-family: var(--mono);
-            font-size: 0.68rem;
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-            color: var(--muted);
-            font-weight: 500;
-            padding: 12px 16px;
-            background: var(--bg-elev-2);
-            border-bottom: 1px solid var(--border);
-            white-space: nowrap;
-        }
-
-        tbody th {
-            text-align: left;
-            padding: 12px 16px;
-            vertical-align: top;
-            border-top: 1px solid var(--border);
-            font-weight: 500;
-            color: var(--text);
-        }
-
-        tbody td {
-            padding: 12px 16px;
-            vertical-align: top;
-            border-top: 1px solid var(--border);
-            color: var(--text-2);
-        }
-
-        tbody tr:first-child th,
-        tbody tr:first-child td {
-            border-top: none;
-        }
-
-        tr.group th {
-            background: rgba(36, 55, 67, 0.42);
-            font-family: var(--mono);
-            font-size: 0.68rem;
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-            color: var(--text-2);
-            font-weight: 500;
-            padding: 8px 16px;
-        }
-
-        tbody th .key {
-            display: block;
-            font-family: var(--mono);
-            font-size: 0.72rem;
-            color: var(--muted);
-            margin-top: 2px;
-            font-weight: 400;
-        }
-
-        td.default {
-            white-space: nowrap;
-        }
-
-        /* ---------- Pills & code ---------- */
-
-        .pill {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            font-family: var(--mono);
-            font-size: 0.72rem;
-            padding: 2px 8px;
-            border-radius: 999px;
-            border: 1px solid var(--border-strong);
-            color: var(--text-2);
-            background: var(--bg-elev-2);
-        }
-
-        .pill.on {
-            color: var(--green);
-            border-color: rgba(99, 208, 43, 0.42);
-            background: var(--green-soft);
-        }
-
-        .pill.off {
-            color: var(--muted);
-        }
-
-        code {
-            font-family: var(--mono);
-            font-size: 0.86em;
-            background: var(--bg-elev-3);
-            border: 1px solid var(--border);
-            border-radius: 5px;
-            padding: 1px 6px;
-            color: #b9c4ff;
-        }
-
-        .code {
-            position: relative;
-            background: #0b1216;
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 16px 18px;
-            overflow-x: auto;
-            margin-top: 14px;
-        }
-
-        .code pre {
-            font-family: var(--mono);
-            font-size: 0.82rem;
-            line-height: 1.7;
-            color: var(--text-2);
-            white-space: pre;
-        }
-
-        .code .c {
-            color: var(--muted);
-        }
-
-        .code .p {
-            color: var(--green);
-        }
-
-        /* ---------- Steps ---------- */
-
-        .steps {
-            list-style: none;
-            counter-reset: step;
-            display: grid;
-            gap: 12px;
-        }
-
-        .steps li {
-            counter-increment: step;
-            display: grid;
-            grid-template-columns: 28px 1fr;
-            gap: 14px;
-            background: var(--bg-elev);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 14px 18px;
-            color: var(--text-2);
-            font-size: 0.92rem;
-        }
-
-        .steps li::before {
-            content: counter(step);
-            font-family: var(--mono);
-            font-size: 0.74rem;
-            color: var(--accent);
-            border: 1px solid rgba(99, 124, 249, 0.35);
-            background: var(--accent-soft);
-            border-radius: 6px;
-            width: 24px;
-            height: 24px;
-            display: grid;
-            place-items: center;
-            margin-top: 2px;
-        }
-
-        .steps li strong {
-            color: var(--text);
-            font-weight: 600;
-        }
-
-        /* ---------- Inline links / lists ---------- */
-
-        ul.plain-list {
-            list-style: none;
-            display: grid;
-            gap: 8px;
-            color: var(--text-2);
-            font-size: 0.93rem;
-        }
-
-        ul.plain-list li {
-            display: flex;
-            gap: 10px;
-        }
-
-        ul.plain-list li::before {
-            content: '';
-            width: 5px;
-            height: 5px;
-            border-radius: 50%;
-            background: var(--border-strong);
-            margin-top: 10px;
-            flex: none;
-        }
-
-        /* ---------- Footer ---------- */
-
-        footer {
-            position: relative;
-            z-index: 1;
-            border-top: 1px solid var(--border);
-            padding: 34px 0 44px;
-            font-size: 0.86rem;
-            color: var(--muted);
-        }
-
-        .footer-inner {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            gap: 20px;
-        }
-
-        .footer-links {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px 20px;
-        }
-
-        .footer-links a {
-            color: var(--text-2);
-        }
-
-        .footer-links a:hover {
-            color: var(--accent);
-        }
-
-        .disclaimer {
-            max-width: 46ch;
-        }
-
-        /* ---------- Responsive ---------- */
-
-        @media (max-width: 960px) {
-            .docs {
-                grid-template-columns: 1fr;
-                gap: 28px;
-                padding-top: 32px;
-            }
-
-            .toc {
-                position: static;
-                border-bottom: 1px solid var(--border);
-                padding-bottom: 14px;
-            }
-
-            .toc-title {
-                display: none;
-            }
-
-            .toc ul {
-                display: flex;
-                gap: 8px;
-                overflow-x: auto;
-                max-width: 100%;
-                border-left: none;
-                padding-bottom: 2px;
-                scrollbar-width: none;
-            }
-
-            .toc ul::-webkit-scrollbar {
-                display: none;
-            }
-
-            .toc a {
-                white-space: nowrap;
-                padding: 6px 12px;
-                margin: 0;
-                border-left: none;
-                border: 1px solid var(--border);
-                border-radius: 999px;
-                font-size: 0.82rem;
-            }
-
-            .toc a.active {
-                border-color: rgba(99, 124, 249, 0.5);
-                background: var(--accent-soft);
-            }
-        }
-
-        @media (max-width: 720px) {
-            .topnav .version {
-                display: none;
-            }
-
-            table {
-                min-width: 520px;
-                font-size: 0.86rem;
-            }
-
-            .hero {
-                padding: 44px 0 32px;
-            }
-
-            .hero-actions .btn {
-                flex: 1 1 100%;
-            }
-
-            .brand-name {
-                display: none;
-            }
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-            html {
-                scroll-behavior: auto;
-            }
-
-            *,
-            *::before,
-            *::after {
-                transition: none !important;
-                transform: none !important;
-            }
-        }
-    </style>
-</head>
-<body id="top">
-    <header class="topbar">
-        <div class="wrap topbar-inner">
-            <a class="brand" href="#top">
-                <img src="icon.png" alt="AniWorld AP icon" width="26" height="26">
-                <span class="brand-name">AniWorld AP</span>
-                <span class="brand-tag">fork</span>
-            </a>
-            <nav class="topnav">
-                <span class="chip version">v1.7.0</span>
-                <a class="btn btn-ghost btn-sm" href="https://github.com/sioXD/Aniworld-AP">
-                    <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
-                    GitHub
-                </a>
-                <a class="btn btn-primary btn-sm" href="https://addons.mozilla.org/en-US/firefox/addon/aniworld-autoplay-fork/">
-                    <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0Zm3.3 6.1-3.9 6.2a.7.7 0 0 1-1.2 0L4.1 8.9a.7.7 0 1 1 1.2-.7l1.5 2.4 3.3-5.2a.7.7 0 1 1 1.2.7Z"/></svg>
-                    Install
-                </a>
-            </nav>
-        </div>
-    </header>
-
-    <section class="hero">
-        <div class="wrap">
-            <span class="eyebrow">Firefox extension · documentation</span>
-            <h1>AniWorld AP <span class="grad">[fork]</span></h1>
-            <p class="lede">
-                Skips openings, endings and recaps on <strong>aniworld.to</strong> using community timestamps from the
-                AniSkip API — plus speed control, a next-episode button and a reworked player overlay. This page documents
-                what the fork changes, every setting, and how to build and release it.
-            </p>
-            <div class="hero-actions">
-                <a class="btn btn-primary" href="https://addons.mozilla.org/en-US/firefox/addon/aniworld-autoplay-fork/">
-                    <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0Zm3.3 6.1-3.9 6.2a.7.7 0 0 1-1.2 0L4.1 8.9a.7.7 0 1 1 1.2-.7l1.5 2.4 3.3-5.2a.7.7 0 1 1 1.2.7Z"/></svg>
-                    Add to Firefox
-                </a>
-                <a class="btn btn-ghost" href="#install">
-                    Installation guide
-                </a>
-                <a class="btn btn-ghost" href="https://github.com/sioXD/Aniworld-AP/releases">
-                    <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M7.5 1.8v7.6L5.1 7l-1 1 3.9 3.9 3.9-3.9-1-1-2.4 2.4V1.8h-1ZM2 12.2v1.9h12v-1.9h-1.4v.5H3.4v-.5H2Z"/></svg>
-                    Releases
-                </a>
-            </div>
-            <div class="facts">
-                <span class="fact green"><span class="dot"></span>v1.7.0 · current</span>
-                <span class="fact"><span class="dot"></span>Firefox 142+ · desktop &amp; Android</span>
-                <span class="fact"><span class="dot"></span>Runs inside the VOE player</span>
-                <span class="fact"><span class="dot"></span>MIT licensed</span>
-            </div>
-        </div>
-    </section>
-
-    <div class="wrap docs">
-        <aside class="toc">
-            <div class="toc-title">Contents</div>
-            <nav aria-label="Table of contents">
-                <ul>
-                    <li><a href="#overview">Overview</a></li>
-                    <li><a href="#fork-changes">Fork changes</a></li>
-                    <li><a href="#overlay">Player overlay</a></li>
-                    <li><a href="#settings">Settings reference</a></li>
-                    <li><a href="#how-it-works">How it works</a></li>
-                    <li><a href="#permissions">Permissions</a></li>
-                    <li><a href="#install">Installation</a></li>
-                    <li><a href="#development">Development</a></li>
-                </ul>
-            </nav>
-        </aside>
-
-        <main class="content">
-            <section class="doc" id="overview">
-                <div class="section-label">01 · Overview</div>
-                <h2>What this extension does</h2>
-                <p class="lede">
-                    AniWorld AP is a fork of <a href="https://github.com/Ziegel8171/Aniworld-AP">Ziegel8171's extension</a>.
-                    It parses the anime, season and episode from the aniworld.to page, asks the AniSkip API for the
-                    segment timestamps of that episode, and renders them as skip controls on the VOE player — in this
-                    fork with playback speed, a next-episode shortcut and a redesigned control set.
-                </p>
-
-                <div class="table-wrap">
-                    <div class="table-scroll">
-                        <table>
-                            <tbody>
-                                <tr>
-                                    <th>Version</th>
-                                    <td><code>1.7.0</code> — see <a href="https://github.com/sioXD/Aniworld-AP/releases">releases</a></td>
-                                </tr>
-                                <tr>
-                                    <th>Platform</th>
-                                    <td>Firefox 142 or newer, desktop and Android. Firefox only — it uses the <code>browser.*</code> API.</td>
-                                </tr>
-                                <tr>
-                                    <th>Runs on</th>
-                                    <td><code>aniworld.to</code> and the VOE player iframe it embeds</td>
-                                </tr>
-                                <tr>
-                                    <th>Data sources</th>
-                                    <td><a href="https://api.aniskip.com">AniSkip</a> for skip segments, AniList (with a Kitsu fallback) for MyAnimeList matching</td>
-                                </tr>
-                                <tr>
-                                    <th>Storage</th>
-                                    <td><code>browser.storage.local</code> only — settings and cached lookups, nothing leaves the browser</td>
-                                </tr>
-                                <tr>
-                                    <th>License</th>
-                                    <td>MIT</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
-
-            <section class="doc" id="fork-changes">
-                <div class="section-label">02 · Fork changes</div>
-                <h2>What the fork adds</h2>
-                <p class="lede">
-                    Everything below is specific to this fork. The base skipping logic and the AniSkip panel come from
-                    upstream; the player controls, speed handling and defaults were reworked here.
-                </p>
-
-                <div class="grid grid-2">
-                    <article class="card feature">
-                        <div class="icon">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
-                        </div>
-                        <span class="tag">added</span>
-                        <h3>Speed control</h3>
-                        <p>
-                            Playback speed from 0.25× to 5× with −/+ buttons next to the skip control. Click the
-                            readout to jump back to 1×. Speed can persist across episodes.
-                        </p>
-                    </article>
-
-                    <article class="card feature">
-                        <div class="icon">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5l9 7-9 7V5Z"/><path d="M17 5v14"/></svg>
-                        </div>
-                        <span class="tag">added</span>
-                        <h3>Next episode</h3>
-                        <p>
-                            A next-episode button inside the player bar, plus automatic navigation when an episode
-                            ends. Both are on by default; auto-navigation can be switched off on its own.
-                        </p>
-                    </article>
-
-                    <article class="card feature">
-                        <div class="icon green">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg>
-                        </div>
-                        <span class="tag">added</span>
-                        <h3>Always-visible skip button</h3>
-                        <p>
-                            The skip button stays visible for the whole episode. When no opening or ending is playing,
-                            it jumps 90 seconds ahead instead of disappearing.
-                        </p>
-                    </article>
-
-                    <article class="card feature">
-                        <div class="icon">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h6l3 3h7v9H4V6Z"/></svg>
-                        </div>
-                        <span class="tag">added</span>
-                        <h3>Recap segments &amp; skip offset</h3>
-                        <p>
-                            Recap detection on top of OP/ED, with its own timeline colour, and a skip offset
-                            (−5 s to +5 s) so the skip can land slightly before or after the segment end.
-                        </p>
-                    </article>
-
-                    <article class="card feature">
-                        <div class="icon">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 4v5"/></svg>
-                        </div>
-                        <span class="tag">changed</span>
-                        <h3>Redesigned overlay</h3>
-                        <p>
-                            Info toggle at the top right opens the AniSkip panel; skip, speed and next-episode controls
-                            sit together at the bottom. The skip button now carries the segment type as a badge.
-                        </p>
-                    </article>
-
-                    <article class="card feature">
-                        <div class="icon">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Z"/><path d="M12 3v9h9"/></svg>
-                        </div>
-                        <span class="tag">changed</span>
-                        <h3>Two themes, AniWorld first</h3>
-                        <p>
-                            The AniWorld theme (petrol background, blue accent) is the default. Classic keeps the
-                            original pink/violet look. Progress-bar marker colours are configurable per segment type.
-                        </p>
-                    </article>
-                </div>
-
-                <div class="note">
-                    <span class="note-mark">!</span>
-                    <span>
-                        <strong>Defaults are conservative.</strong> Auto-skip for OP, ED and recaps is off until you
-                        enable it, and so are volume/position memory — VOE already remembers those. The fork only
-                        adds what the player does not do itself.
-                    </span>
-                </div>
-            </section>
-
-            <section class="doc" id="overlay">
-                <div class="section-label">03 · Player overlay</div>
-                <h2>What you see in the player</h2>
-                <p class="lede">
-                    Everything is injected into the VOE player container, so the controls survive fullscreen. Colours
-                    below use the default markers: opening <code>#FF00FB</code>, ending <code>#22C55E</code>,
-                    recap <code>#FFDD00</code> at 50% opacity.
-                </p>
-
-                <div class="player" role="img" aria-label="Schematic of the overlay: info button top right, timeline with opening, recap and ending markers, skip button with segment badge, speed control and next-episode button at the bottom.">
-                    <div class="player-stage">
-                        <div class="stage-title">
-                            <div class="ep">Season 2 · Episode 12</div>
-                            <div class="name">Player frame</div>
-                        </div>
-                        <span class="p-info" aria-hidden="true"></span>
-                    </div>
-                    <div class="p-bottom">
-                        <div class="p-timeline">
-                            <span class="p-fill"></span>
-                            <span class="p-marker op" style="left: 5%; width: 13%;"></span>
-                            <span class="p-marker recap" style="left: 21%; width: 4.5%;"></span>
-                            <span class="p-marker ed" style="left: 86%; width: 9%;"></span>
-                        </div>
-                        <div class="p-controls">
-                            <span class="p-btn">Skip <span class="badge">OP</span></span>
-                            <span class="p-speed">
-                                <span aria-hidden="true">−</span>
-                                <span class="val">1.0×</span>
-                                <span aria-hidden="true">+</span>
-                            </span>
-                            <span class="p-spacer"></span>
-                            <span class="p-next" aria-hidden="true">
-                                <svg viewBox="0 0 240 240" fill="currentColor"><path d="M40 45 L160 120 L40 195 Z"/><rect x="176" y="45" width="28" height="150"/></svg>
-                            </span>
-                        </div>
-                    </div>
-                </div>
-
-                <ul class="legend">
-                    <li><i style="background: #637cf9;"></i> Info toggle → AniSkip panel (segments, anime search, submit)</li>
-                    <li><i style="background: #b0c4ce;"></i> Skip button with segment badge and confirm prompt</li>
-                    <li><i style="background: #ff00fb;"></i> Opening marker</li>
-                    <li><i style="background: #ffdd00;"></i> Recap marker</li>
-                    <li><i style="background: #22c55e;"></i> Ending marker</li>
-                    <li><i style="background: #7a9aa8;"></i> Speed control · next episode</li>
-                </ul>
-
-                <div class="grid grid-2" style="margin-top: 28px;">
-                    <div class="card">
-                        <h3>Skip panel</h3>
-                        <p>
-                            Shows the detected anime, season, episode and MAL ID, lists every segment for the episode,
-                            and lets you search another anime or submit your own timestamps to AniSkip.
-                        </p>
-                    </div>
-                    <div class="card">
-                        <h3>Fullscreen safe</h3>
-                        <p>
-                            The overlay is appended to the JW player wrapper when one exists, so it stays visible in
-                            fullscreen instead of being left behind on the page body.
-                        </p>
-                    </div>
-                </div>
-            </section>
-
-            <section class="doc" id="settings">
-                <div class="section-label">04 · Settings reference</div>
-                <h2>Every option and its default</h2>
-                <p class="lede">
-                    Defaults live in <code>src/defaults.js</code> as a single object — the popup, background script and
-                    content script all read from it. Keys below match the storage keys.
-                </p>
-
-                <div class="table-wrap">
-                    <div class="table-scroll">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Setting</th>
-                                    <th class="default">Default</th>
-                                    <th>What it does</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr class="group"><th colspan="3">Interface</th></tr>
-                                <tr>
-                                    <th>Language<span class="key">language</span></th>
-                                    <td class="default"><span class="pill off">en</span></td>
-                                    <td>Language of the popup <em>and</em> the player overlay: English or German.</td>
-                                </tr>
-                                <tr>
-                                    <th>UI theme<span class="key">uiTheme</span></th>
-                                    <td class="default"><span class="pill off">aniworld</span></td>
-                                    <td><code>aniworld</code> (petrol/blue) or <code>classic</code> (pink/violet), applied to popup and overlay.</td>
-                                </tr>
-                                <tr>
-                                    <th>Show skip buttons<span class="key">showButtons</span></th>
-                                    <td class="default"><span class="pill on">on</span></td>
-                                    <td>Renders the manual skip button in the player.</td>
-                                </tr>
-                                <tr>
-                                    <th>Always show skip button<span class="key">alwaysShowButton</span></th>
-                                    <td class="default"><span class="pill on">on</span></td>
-                                    <td>Keeps the button visible even when no segment is playing; it then skips 90 s.</td>
-                                </tr>
-                                <tr>
-                                    <th>Show speed control<span class="key">showSpeedControl</span></th>
-                                    <td class="default"><span class="pill on">on</span></td>
-                                    <td>Shows the −/+ speed buttons and the speed readout.</td>
-                                </tr>
-                                <tr>
-                                    <th>Persistent speed<span class="key">persistentSpeed</span></th>
-                                    <td class="default"><span class="pill on">on</span></td>
-                                    <td>Keeps the chosen speed when the next episode starts.</td>
-                                </tr>
-
-                                <tr class="group"><th colspan="3">Skipping</th></tr>
-                                <tr>
-                                    <th>Skip opening<span class="key">autoSkipOp</span></th>
-                                    <td class="default"><span class="pill off">off</span></td>
-                                    <td>Automatically skip the opening segment without a click.</td>
-                                </tr>
-                                <tr>
-                                    <th>Skip ending<span class="key">autoSkipEd</span></th>
-                                    <td class="default"><span class="pill off">off</span></td>
-                                    <td>Automatically skip the ending segment.</td>
-                                </tr>
-                                <tr>
-                                    <th>Skip recap<span class="key">autoSkipRecap</span></th>
-                                    <td class="default"><span class="pill off">off</span></td>
-                                    <td>Automatically skip recap segments.</td>
-                                </tr>
-                                <tr>
-                                    <th>Skip offset<span class="key">skipOffset</span></th>
-                                    <td class="default"><span class="pill off">−5 s</span></td>
-                                    <td>Seconds added to the segment end after skipping. Range −5 s to +5 s in 0.5 s steps.</td>
-                                </tr>
-
-                                <tr class="group"><th colspan="3">Playback</th></tr>
-                                <tr>
-                                    <th>Next episode<span class="key">nextEpisode</span></th>
-                                    <td class="default"><span class="pill on">on</span></td>
-                                    <td>Navigates to the next episode at the end of the current one.</td>
-                                </tr>
-                                <tr>
-                                    <th>Next episode button<span class="key">showNextEpisodeButton</span></th>
-                                    <td class="default"><span class="pill on">on</span></td>
-                                    <td>Shows the next-episode button in the player bar.</td>
-                                </tr>
-                                <tr>
-                                    <th>Remember volume<span class="key">persistentVolume</span></th>
-                                    <td class="default"><span class="pill off">off</span></td>
-                                    <td>Carries the volume over to the next episode. Off by default: VOE already does this.</td>
-                                </tr>
-                                <tr>
-                                    <th>Remember position<span class="key">persistentPlaybackPosition</span></th>
-                                    <td class="default"><span class="pill off">off</span></td>
-                                    <td>Resumes where you left off. Off by default for the same reason.</td>
-                                </tr>
-                                <tr>
-                                    <th>Position expiry<span class="key">playbackPositionExpirationDays</span></th>
-                                    <td class="default"><span class="pill off">7 days</span></td>
-                                    <td>How long a saved position stays valid. Range 1–30 days.</td>
-                                </tr>
-
-                                <tr class="group"><th colspan="3">Progress bar</th></tr>
-                                <tr>
-                                    <th>Opening marker<span class="key">markerColorOp</span></th>
-                                    <td class="default"><code>#FF00FB</code></td>
-                                    <td>Colour of opening segments on the timeline.</td>
-                                </tr>
-                                <tr>
-                                    <th>Ending marker<span class="key">markerColorEd</span></th>
-                                    <td class="default"><code>#22C55E</code></td>
-                                    <td>Colour of ending segments.</td>
-                                </tr>
-                                <tr>
-                                    <th>Recap marker<span class="key">markerColorRecap</span></th>
-                                    <td class="default"><code>#FFDD00</code></td>
-                                    <td>Colour of recap segments.</td>
-                                </tr>
-                                <tr>
-                                    <th>Marker opacity<span class="key">markerOpacity</span></th>
-                                    <td class="default"><span class="pill off">0.5</span></td>
-                                    <td>Transparency of the markers, 0.1–1.0.</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div class="note">
-                    <span class="note-mark">i</span>
-                    <span>
-                        <strong>Outside of these keys:</strong> the audio/subtitle language you pick on aniworld.to is
-                        remembered separately as <code>preferredLanguage</code> and re-applied to the next episode.
-                    </span>
-                </div>
-            </section>
-
-            <section class="doc" id="how-it-works">
-                <div class="section-label">05 · How it works</div>
-                <h2>From page load to skipped intro</h2>
-                <p class="lede">
-                    The extension is split into a page script on aniworld.to, a persistent background script that owns
-                    all network access, and a player script inside the VOE iframe.
-                </p>
-
-                <ol class="steps">
-                    <li><span><strong>Detect the episode.</strong> <code>aniworld.js</code> reads anime, season and episode number from the breadcrumbs and URL, and applies your saved language preference.</span></li>
-                    <li><span><strong>Resolve the MAL ID.</strong> The background script looks the title up on AniList (with Kitsu as a fallback), keeps only entries that map to MyAnimeList, and caches the match — the same anime is only searched once.</span></li>
-                    <li><span><strong>Fetch skip times.</strong> Skip segments for the episode are requested from the AniSkip API through the background script — the content script never talks to the network directly.</span></li>
-                    <li><span><strong>Inject the overlay.</strong> When the VOE frame loads, <code>content.js</code> and <code>styles.css</code> are injected into it and the controls, markers and panel are built.</span></li>
-                    <li><span><strong>Skip and continue.</strong> Segments are skipped on time or on click; at the end of an episode a <code>postMessage</code> asks the page script for the next one.</span></li>
-                </ol>
-
-                <div class="grid grid-2" style="margin-top: 20px;">
-                    <div class="card">
-                        <h3>Files</h3>
-                        <ul class="plain-list" style="margin-top: 10px;">
-                            <li><code>src/defaults.js</code> — the single source of truth for settings</li>
-                            <li><code>src/background.js</code> — API proxy and iframe injection</li>
-                            <li><code>src/aniworld.js</code> — page parsing, navigation, language</li>
-                            <li><code>src/content.js</code> — player overlay and skip logic</li>
-                            <li><code>src/popup.*</code> — settings UI and translations</li>
-                        </ul>
-                    </div>
-                    <div class="card">
-                        <h3>Privacy</h3>
-                        <p>
-                            Settings, cached lookups and playback state stay in <code>browser.storage.local</code>,
-                            including a random installation ID that is only sent along when you submit skip times
-                            yourself. There is no analytics, no account and no server of our own — just requests to the
-                            public AniSkip, AniList and Kitsu APIs.
-                        </p>
-                    </div>
-                </div>
-            </section>
-
-            <section class="doc" id="permissions">
-                <div class="section-label">06 · Permissions</div>
-                <h2>Why the extension asks for this</h2>
-                <p class="lede">
-                    Everything is requested up front in the manifest, so Firefox shows the full list on install.
-                </p>
-
-                <div class="table-wrap">
-                    <div class="table-scroll">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Permission</th>
-                                    <th>Reason</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <th><code>storage</code></th>
-                                    <td>Save settings, cached anime lookups, volume and playback position.</td>
-                                </tr>
-                                <tr>
-                                    <th><code>activeTab</code></th>
-                                    <td>Let the popup push changed settings into the tab you are watching, without a reload.</td>
-                                </tr>
-                                <tr>
-                                    <th><code>webNavigation</code></th>
-                                    <td>Notice when the VOE player iframe finishes loading, so the overlay can be injected.</td>
-                                </tr>
-                                <tr>
-                                    <th><code>&lt;all_urls&gt;</code></th>
-                                    <td>Inject into the player subframe — its hostname changes between mirrors.</td>
-                                </tr>
-                                <tr>
-                                    <th><code>https://api.aniskip.com/*</code></th>
-                                    <td>Fetch skip segments and submit timestamps.</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
-
-            <section class="doc" id="install">
-                <div class="section-label">07 · Installation</div>
-                <h2>Install it</h2>
-                <p class="lede">
-                    The signed build is published on addons.mozilla.org and updates itself. Temporary installs are only
-                    for testing and disappear when Firefox restarts.
-                </p>
-
-                <div class="grid grid-2">
-                    <div class="card">
-                        <span class="tag">recommended</span>
-                        <h3>From Mozilla Add-ons</h3>
-                        <p style="margin-bottom: 18px;">
-                            Signed build for Firefox desktop and Android, with automatic updates.
-                        </p>
-                        <a class="btn btn-primary" href="https://addons.mozilla.org/en-US/firefox/addon/aniworld-autoplay-fork/">
-                            <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0Zm3.3 6.1-3.9 6.2a.7.7 0 0 1-1.2 0L4.1 8.9a.7.7 0 1 1 1.2-.7l1.5 2.4 3.3-5.2a.7.7 0 1 1 1.2.7Z"/></svg>
-                            Open the listing
-                        </a>
-                        <p style="margin-top: 14px; font-size: 0.84rem; color: var(--muted);">
-                            Make sure you land on <code>aniworld-autoplay-fork</code> — the upstream
-                            <code>aniworld-autoplay</code> is a different add-on.
-                        </p>
-                    </div>
-
-                    <div class="card">
-                        <span class="tag">testing</span>
-                        <h3>From a release ZIP</h3>
-                        <p style="margin-bottom: 14px;">Temporary add-on, removes itself on restart.</p>
-                        <ol class="steps" style="gap: 8px;">
-                            <li><span>Download and extract the <code>.zip</code> from the <a href="https://github.com/sioXD/Aniworld-AP/releases/latest">latest release</a>.</span></li>
-                            <li><span>Open <code>about:debugging#/runtime/this-firefox</code>.</span></li>
-                            <li><span>Click <strong>Load Temporary Add-on</strong> and pick the extracted <code>manifest.json</code>.</span></li>
-                        </ol>
-                    </div>
-                </div>
-
-                <div class="note">
-                    <span class="note-mark">i</span>
-                    <span>
-                        <strong>Requirements:</strong> Firefox 142+ and access to <code>aniworld.to</code>. The extension
-                        only activates inside the VOE player iframe — on other sites it does nothing.
-                    </span>
-                </div>
-            </section>
-
-            <section class="doc" id="development">
-                <div class="section-label">08 · Development</div>
-                <h2>Build and release</h2>
-                <p class="lede">
-                    No bundler, no TypeScript, no test runner: vanilla JavaScript, loaded straight from
-                    <code>manifest.json</code>. Node is only needed for packaging.
-                </p>
-
-                <h3 style="margin-top: 4px;">Local development</h3>
-                <ol class="steps" style="margin-top: 10px;">
-                    <li><span>Edit the files under <code>src/</code>.</span></li>
-                    <li><span>Open <code>about:debugging#/runtime/this-firefox</code> → <strong>Load Temporary Add-on</strong> → <code>manifest.json</code>.</span></li>
-                    <li><span>Reload the add-on after every change and refresh the aniworld.to page.</span></li>
-                </ol>
-
-                <h3 style="margin-top: 28px;">Packaging</h3>
-                <div class="code">
-                    <pre><span class="c"># web-ext must be installed globally: npm install --global web-ext</span>
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<meta
+			name="description"
+			content="AniWorld AP [fork] — a Firefox extension that skips openings, endings and recaps on aniworld.to. Documentation, settings reference, install and development guide."
+		/>
+		<meta name="keywords" content="aniworld, aniskip, anime, skip opening, skip ending, firefox extension, fork" />
+		<meta name="color-scheme" content="dark" />
+		<title>AniWorld AP [fork] — Documentation</title>
+		<link rel="icon" href="icon.png" />
+		<link
+			href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+			rel="stylesheet"
+		/>
+		<style>
+			*,
+			*::before,
+			*::after {
+				margin: 0;
+				padding: 0;
+				box-sizing: border-box;
+			}
+
+			/* Palette taken from the extension's default "AniWorld" UI theme. */
+			:root {
+				--bg: #0d1519;
+				--bg-elev: #121c22;
+				--bg-elev-2: #1a2a33;
+				--bg-elev-3: #243743;
+				--accent: #637cf9;
+				--accent-soft: rgba(99, 124, 249, 0.13);
+				--accent-glow: rgba(99, 124, 249, 0.28);
+				--green: #63d02b;
+				--green-soft: rgba(99, 208, 43, 0.13);
+				--marker-op: #ff00fb;
+				--marker-ed: #22c55e;
+				--marker-recap: #ffdd00;
+				--text: #e8e8e8;
+				--text-2: #b0c4ce;
+				--muted: #7a9aa8;
+				--border: #2d444f;
+				--border-strong: #3a5565;
+				--radius: 14px;
+				--font: "Space Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+				--mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+				--topbar-h: 60px;
+			}
+
+			html {
+				scroll-behavior: smooth;
+				scroll-padding-top: calc(var(--topbar-h) + 24px);
+			}
+
+			body {
+				font-family: var(--font);
+				background: var(--bg);
+				color: var(--text);
+				line-height: 1.65;
+				overflow-x: hidden;
+				-webkit-font-smoothing: antialiased;
+			}
+
+			body::before {
+				content: "";
+				position: fixed;
+				inset: 0;
+				background:
+					radial-gradient(900px 500px at 80% -10%, rgba(99, 124, 249, 0.14), transparent 70%),
+					radial-gradient(700px 420px at 0% 0%, rgba(99, 208, 43, 0.07), transparent 70%);
+				pointer-events: none;
+				z-index: 0;
+			}
+
+			body::after {
+				content: "";
+				position: fixed;
+				inset: 0;
+				background-image:
+					linear-gradient(rgba(176, 196, 206, 0.035) 1px, transparent 1px),
+					linear-gradient(90deg, rgba(176, 196, 206, 0.035) 1px, transparent 1px);
+				background-size: 64px 64px;
+				mask-image: radial-gradient(700px 400px at 70% 0%, #000 20%, transparent 80%);
+				-webkit-mask-image: radial-gradient(700px 400px at 70% 0%, #000 20%, transparent 80%);
+				pointer-events: none;
+				z-index: 0;
+			}
+
+			a {
+				color: var(--accent);
+				text-decoration: none;
+			}
+
+			a:hover {
+				text-decoration: underline;
+				text-underline-offset: 3px;
+			}
+
+			.wrap {
+				width: 100%;
+				max-width: 1180px;
+				margin: 0 auto;
+				padding: 0 24px;
+			}
+
+			/* ---------- Top bar ---------- */
+
+			.topbar {
+				position: sticky;
+				top: 0;
+				z-index: 20;
+				height: var(--topbar-h);
+				background: rgba(13, 21, 25, 0.82);
+				backdrop-filter: blur(14px);
+				border-bottom: 1px solid var(--border);
+			}
+
+			.topbar-inner {
+				height: 100%;
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				gap: 20px;
+			}
+
+			.brand {
+				display: inline-flex;
+				align-items: center;
+				gap: 10px;
+				color: var(--text);
+				font-weight: 600;
+				font-size: 1rem;
+				letter-spacing: -0.01em;
+			}
+
+			.brand:hover {
+				text-decoration: none;
+			}
+
+			.brand img {
+				width: 26px;
+				height: 26px;
+				border-radius: 7px;
+				display: block;
+			}
+
+			.brand-tag,
+			.chip {
+				font-family: var(--mono);
+				font-size: 0.68rem;
+				font-weight: 500;
+				letter-spacing: 0.06em;
+				text-transform: uppercase;
+				padding: 2px 7px;
+				border-radius: 5px;
+				border: 1px solid var(--border-strong);
+				color: var(--text-2);
+				background: var(--bg-elev-2);
+			}
+
+			.brand-tag {
+				color: var(--green);
+				border-color: rgba(99, 208, 43, 0.4);
+				background: var(--green-soft);
+			}
+
+			.topnav {
+				display: flex;
+				align-items: center;
+				gap: 10px;
+			}
+
+			.topnav .version {
+				margin-right: 6px;
+				text-transform: none;
+				letter-spacing: 0.02em;
+				color: var(--green);
+				border-color: rgba(99, 208, 43, 0.4);
+				background: var(--green-soft);
+			}
+
+			/* ---------- Buttons ---------- */
+
+			.btn {
+				display: inline-flex;
+				align-items: center;
+				justify-content: center;
+				gap: 9px;
+				padding: 12px 20px;
+				border-radius: 10px;
+				border: 1px solid transparent;
+				font: inherit;
+				font-weight: 600;
+				font-size: 0.95rem;
+				text-decoration: none;
+				cursor: pointer;
+				transition:
+					transform 0.18s ease,
+					box-shadow 0.18s ease,
+					border-color 0.18s ease,
+					background-color 0.18s ease;
+				white-space: nowrap;
+			}
+
+			.btn:hover {
+				text-decoration: none;
+			}
+
+			.btn svg {
+				width: 17px;
+				height: 17px;
+				flex: none;
+			}
+
+			.btn-primary {
+				background: linear-gradient(135deg, #637cf9, #4b5fd6);
+				color: #fff;
+				box-shadow: 0 6px 20px var(--accent-glow);
+			}
+
+			.btn-primary:hover {
+				transform: translateY(-1px);
+				box-shadow: 0 10px 26px var(--accent-glow);
+			}
+
+			.btn-ghost {
+				background: var(--bg-elev-2);
+				border-color: var(--border-strong);
+				color: var(--text);
+			}
+
+			.btn-ghost:hover {
+				border-color: var(--accent);
+				background: var(--bg-elev-3);
+				transform: translateY(-1px);
+			}
+
+			.btn-sm {
+				padding: 8px 14px;
+				font-size: 0.86rem;
+				border-radius: 8px;
+			}
+
+			/* ---------- Hero ---------- */
+
+			.hero {
+				position: relative;
+				z-index: 1;
+				padding: 64px 0 40px;
+				border-bottom: 1px solid var(--border);
+			}
+
+			.eyebrow {
+				display: inline-flex;
+				align-items: center;
+				gap: 8px;
+				font-family: var(--mono);
+				font-size: 0.72rem;
+				letter-spacing: 0.14em;
+				text-transform: uppercase;
+				color: var(--muted);
+				margin-bottom: 18px;
+			}
+
+			.eyebrow::before {
+				content: "";
+				width: 26px;
+				height: 1px;
+				background: var(--border-strong);
+			}
+
+			h1 {
+				font-size: clamp(2.4rem, 6vw, 3.9rem);
+				line-height: 1.05;
+				letter-spacing: -0.03em;
+				font-weight: 700;
+				margin-bottom: 18px;
+			}
+
+			h1 .grad {
+				background: linear-gradient(100deg, #8f9bff 0%, var(--accent) 45%, var(--green) 100%);
+				-webkit-background-clip: text;
+				background-clip: text;
+				-webkit-text-fill-color: transparent;
+			}
+
+			.hero p.lede {
+				max-width: 62ch;
+				font-size: clamp(1rem, 2vw, 1.16rem);
+				color: var(--text-2);
+			}
+
+			.hero p.lede strong {
+				color: var(--text);
+				font-weight: 600;
+			}
+
+			.hero-actions {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 12px;
+				margin: 30px 0 26px;
+			}
+
+			.facts {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 8px;
+			}
+
+			.fact {
+				font-family: var(--mono);
+				font-size: 0.74rem;
+				color: var(--text-2);
+				background: var(--bg-elev);
+				border: 1px solid var(--border);
+				border-radius: 999px;
+				padding: 5px 12px;
+				display: inline-flex;
+				align-items: center;
+				gap: 7px;
+			}
+
+			.fact .dot {
+				width: 6px;
+				height: 6px;
+				border-radius: 50%;
+				background: var(--accent);
+			}
+
+			.fact.green .dot {
+				background: var(--green);
+			}
+
+			/* ---------- Docs layout ---------- */
+
+			.docs {
+				position: relative;
+				z-index: 1;
+				display: grid;
+				grid-template-columns: 216px minmax(0, 1fr);
+				gap: 56px;
+				padding: 48px 24px 0;
+				align-items: start;
+			}
+
+			.toc {
+				position: sticky;
+				top: calc(var(--topbar-h) + 32px);
+				min-width: 0;
+			}
+
+			.toc-title {
+				font-family: var(--mono);
+				font-size: 0.68rem;
+				letter-spacing: 0.16em;
+				text-transform: uppercase;
+				color: var(--muted);
+				margin-bottom: 14px;
+			}
+
+			.toc ul {
+				list-style: none;
+				border-left: 1px solid var(--border);
+			}
+
+			.toc a {
+				display: block;
+				padding: 7px 0 7px 16px;
+				margin-left: -1px;
+				border-left: 2px solid transparent;
+				font-size: 0.9rem;
+				color: var(--text-2);
+				transition:
+					color 0.15s ease,
+					border-color 0.15s ease;
+			}
+
+			.toc a:hover {
+				color: var(--text);
+				text-decoration: none;
+			}
+
+			.toc a.active {
+				color: var(--accent);
+				border-left-color: var(--accent);
+				font-weight: 600;
+			}
+
+			.content {
+				min-width: 0;
+				padding-bottom: 72px;
+			}
+
+			section.doc {
+				padding-bottom: 56px;
+				scroll-margin-top: calc(var(--topbar-h) + 24px);
+			}
+
+			.section-label {
+				font-family: var(--mono);
+				font-size: 0.7rem;
+				letter-spacing: 0.16em;
+				text-transform: uppercase;
+				color: var(--accent);
+				margin-bottom: 8px;
+			}
+
+			h2 {
+				font-size: clamp(1.55rem, 3.2vw, 2rem);
+				letter-spacing: -0.02em;
+				line-height: 1.2;
+				margin-bottom: 12px;
+			}
+
+			.lede {
+				color: var(--text-2);
+				max-width: 74ch;
+				margin-bottom: 28px;
+			}
+
+			h3 {
+				font-size: 1.05rem;
+				font-weight: 600;
+				margin-bottom: 8px;
+			}
+
+			p + p {
+				margin-top: 14px;
+			}
+
+			/* ---------- Cards & grids ---------- */
+
+			.grid {
+				display: grid;
+				gap: 16px;
+			}
+
+			.grid-2 {
+				grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+			}
+
+			.grid-3 {
+				grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+			}
+
+			.card {
+				background: var(--bg-elev);
+				border: 1px solid var(--border);
+				border-radius: var(--radius);
+				padding: 22px;
+			}
+
+			.card p {
+				color: var(--text-2);
+				font-size: 0.93rem;
+			}
+
+			.card.plain {
+				background: transparent;
+			}
+
+			.feature {
+				transition:
+					border-color 0.18s ease,
+					transform 0.18s ease,
+					box-shadow 0.18s ease;
+			}
+
+			.feature:hover {
+				border-color: var(--border-strong);
+				transform: translateY(-2px);
+				box-shadow: 0 10px 26px rgba(0, 0, 0, 0.28);
+			}
+
+			.feature .icon {
+				width: 34px;
+				height: 34px;
+				display: grid;
+				place-items: center;
+				border-radius: 9px;
+				background: var(--accent-soft);
+				color: var(--accent);
+				margin-bottom: 14px;
+			}
+
+			.feature .icon svg {
+				width: 18px;
+				height: 18px;
+			}
+
+			.feature .icon.green {
+				background: var(--green-soft);
+				color: var(--green);
+			}
+
+			.tag {
+				display: inline-block;
+				font-family: var(--mono);
+				font-size: 0.66rem;
+				letter-spacing: 0.08em;
+				text-transform: uppercase;
+				color: var(--muted);
+				border: 1px solid var(--border);
+				border-radius: 4px;
+				padding: 1px 6px;
+				margin-bottom: 10px;
+			}
+
+			.note {
+				display: flex;
+				gap: 12px;
+				background: var(--accent-soft);
+				border: 1px solid rgba(99, 124, 249, 0.28);
+				border-radius: 12px;
+				padding: 16px 18px;
+				margin-top: 20px;
+				font-size: 0.92rem;
+				color: var(--text-2);
+			}
+
+			.note strong {
+				color: var(--text);
+			}
+
+			.note .note-mark {
+				font-family: var(--mono);
+				color: var(--accent);
+				font-weight: 600;
+				flex: none;
+			}
+
+			/* ---------- Player mockup ---------- */
+
+			.player {
+				border: 1px solid var(--border-strong);
+				border-radius: 16px;
+				overflow: hidden;
+				background: #0a1114;
+				box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+				margin-top: 8px;
+			}
+
+			.player-stage {
+				position: relative;
+				aspect-ratio: 16 / 6.6;
+				background:
+					radial-gradient(70% 90% at 22% 20%, rgba(99, 124, 249, 0.36), transparent 60%),
+					radial-gradient(60% 80% at 84% 76%, rgba(99, 208, 43, 0.22), transparent 62%),
+					linear-gradient(160deg, #16242c, #0b1216 70%);
+				display: grid;
+				place-items: center;
+			}
+
+			.player-stage::after {
+				content: "";
+				position: absolute;
+				inset: 0;
+				background-image: repeating-linear-gradient(115deg, rgba(255, 255, 255, 0.028) 0 1px, transparent 1px 26px);
+			}
+
+			.stage-title {
+				position: relative;
+				z-index: 1;
+				text-align: center;
+			}
+
+			.stage-title .ep {
+				font-family: var(--mono);
+				font-size: 0.7rem;
+				letter-spacing: 0.18em;
+				text-transform: uppercase;
+				color: var(--muted);
+			}
+
+			.stage-title .name {
+				font-size: clamp(0.95rem, 2vw, 1.2rem);
+				font-weight: 600;
+				color: rgba(232, 232, 232, 0.78);
+				margin-top: 6px;
+			}
+
+			.p-info {
+				position: absolute;
+				top: 12px;
+				right: 12px;
+				z-index: 2;
+				width: 28px;
+				height: 28px;
+				border-radius: 50%;
+				border: 1px solid var(--border-strong);
+				background: rgba(18, 28, 34, 0.75);
+				backdrop-filter: blur(6px);
+				color: var(--text-2);
+				display: grid;
+				place-items: center;
+				font-family: var(--mono);
+				font-size: 0.78rem;
+				font-weight: 600;
+				line-height: 1;
+			}
+
+			.p-info::after {
+				content: "i";
+			}
+
+			.p-bottom {
+				padding: 10px 14px 14px;
+				border-top: 1px solid rgba(45, 68, 79, 0.7);
+				background: linear-gradient(180deg, rgba(18, 28, 34, 0.4), rgba(10, 17, 20, 0.92));
+			}
+
+			.p-timeline {
+				position: relative;
+				height: 6px;
+				border-radius: 999px;
+				background: rgba(176, 196, 206, 0.16);
+				margin-bottom: 14px;
+			}
+
+			.p-fill {
+				position: absolute;
+				inset: 0 auto 0 0;
+				width: 34%;
+				border-radius: 999px;
+				background: rgba(99, 124, 249, 0.4);
+			}
+
+			.p-marker {
+				position: absolute;
+				top: 0;
+				bottom: 0;
+				border-radius: 3px;
+				opacity: 0.8;
+				z-index: 1;
+			}
+
+			.p-marker.op {
+				background: var(--marker-op);
+			}
+
+			.p-marker.recap {
+				background: var(--marker-recap);
+			}
+
+			.p-marker.ed {
+				background: var(--marker-ed);
+			}
+
+			.p-controls {
+				display: flex;
+				align-items: center;
+				gap: 8px;
+				flex-wrap: wrap;
+			}
+
+			.p-btn {
+				display: inline-flex;
+				align-items: center;
+				gap: 7px;
+				font-size: 0.78rem;
+				font-weight: 600;
+				border-radius: 7px;
+				padding: 6px 11px;
+				border: 1px solid var(--border-strong);
+				background: var(--bg-elev-2);
+				color: var(--text);
+			}
+
+			.p-btn .badge {
+				font-family: var(--mono);
+				font-size: 0.6rem;
+				letter-spacing: 0.08em;
+				padding: 1px 5px;
+				border-radius: 4px;
+				background: linear-gradient(135deg, var(--marker-op), #ff5ce0);
+				color: #14050f;
+			}
+
+			.p-speed {
+				display: inline-flex;
+				align-items: center;
+				border: 1px solid var(--border-strong);
+				border-radius: 7px;
+				background: var(--bg-elev-2);
+				overflow: hidden;
+				font-size: 0.78rem;
+			}
+
+			.p-speed span {
+				padding: 6px 9px;
+				color: var(--text-2);
+				display: inline-flex;
+				align-items: center;
+			}
+
+			.p-speed .val {
+				font-family: var(--mono);
+				color: var(--text);
+				border-left: 1px solid var(--border);
+				border-right: 1px solid var(--border);
+			}
+
+			.p-spacer {
+				flex: 1;
+			}
+
+			.p-next {
+				display: inline-flex;
+				align-items: center;
+				justify-content: center;
+				width: 30px;
+				height: 30px;
+				border-radius: 7px;
+				background: var(--bg-elev-2);
+				border: 1px solid var(--border-strong);
+				color: var(--text-2);
+			}
+
+			.p-next svg {
+				width: 14px;
+				height: 14px;
+			}
+
+			.legend {
+				display: grid;
+				grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+				gap: 10px 20px;
+				list-style: none;
+				margin-top: 18px;
+				font-size: 0.87rem;
+				color: var(--text-2);
+			}
+
+			.legend li {
+				display: flex;
+				align-items: center;
+				gap: 9px;
+			}
+
+			.legend i {
+				width: 10px;
+				height: 10px;
+				border-radius: 3px;
+				flex: none;
+			}
+
+			/* ---------- Tables ---------- */
+
+			.table-wrap {
+				border: 1px solid var(--border);
+				border-radius: var(--radius);
+				overflow: hidden;
+				background: var(--bg-elev);
+			}
+
+			.table-scroll {
+				overflow-x: auto;
+			}
+
+			table {
+				width: 100%;
+				min-width: 620px;
+				border-collapse: collapse;
+				font-size: 0.9rem;
+			}
+
+			thead th {
+				text-align: left;
+				font-family: var(--mono);
+				font-size: 0.68rem;
+				letter-spacing: 0.1em;
+				text-transform: uppercase;
+				color: var(--muted);
+				font-weight: 500;
+				padding: 12px 16px;
+				background: var(--bg-elev-2);
+				border-bottom: 1px solid var(--border);
+				white-space: nowrap;
+			}
+
+			tbody th {
+				text-align: left;
+				padding: 12px 16px;
+				vertical-align: top;
+				border-top: 1px solid var(--border);
+				font-weight: 500;
+				color: var(--text);
+			}
+
+			tbody td {
+				padding: 12px 16px;
+				vertical-align: top;
+				border-top: 1px solid var(--border);
+				color: var(--text-2);
+			}
+
+			tbody tr:first-child th,
+			tbody tr:first-child td {
+				border-top: none;
+			}
+
+			tr.group th {
+				background: rgba(36, 55, 67, 0.42);
+				font-family: var(--mono);
+				font-size: 0.68rem;
+				letter-spacing: 0.1em;
+				text-transform: uppercase;
+				color: var(--text-2);
+				font-weight: 500;
+				padding: 8px 16px;
+			}
+
+			tbody th .key {
+				display: block;
+				font-family: var(--mono);
+				font-size: 0.72rem;
+				color: var(--muted);
+				margin-top: 2px;
+				font-weight: 400;
+			}
+
+			td.default {
+				white-space: nowrap;
+			}
+
+			/* ---------- Pills & code ---------- */
+
+			.pill {
+				display: inline-flex;
+				align-items: center;
+				gap: 5px;
+				font-family: var(--mono);
+				font-size: 0.72rem;
+				padding: 2px 8px;
+				border-radius: 999px;
+				border: 1px solid var(--border-strong);
+				color: var(--text-2);
+				background: var(--bg-elev-2);
+			}
+
+			.pill.on {
+				color: var(--green);
+				border-color: rgba(99, 208, 43, 0.42);
+				background: var(--green-soft);
+			}
+
+			.pill.off {
+				color: var(--muted);
+			}
+
+			code {
+				font-family: var(--mono);
+				font-size: 0.86em;
+				background: var(--bg-elev-3);
+				border: 1px solid var(--border);
+				border-radius: 5px;
+				padding: 1px 6px;
+				color: #b9c4ff;
+			}
+
+			.code {
+				position: relative;
+				background: #0b1216;
+				border: 1px solid var(--border);
+				border-radius: 12px;
+				padding: 16px 18px;
+				overflow-x: auto;
+				margin-top: 14px;
+			}
+
+			.code pre {
+				font-family: var(--mono);
+				font-size: 0.82rem;
+				line-height: 1.7;
+				color: var(--text-2);
+				white-space: pre;
+			}
+
+			.code .c {
+				color: var(--muted);
+			}
+
+			.code .p {
+				color: var(--green);
+			}
+
+			/* ---------- Steps ---------- */
+
+			.steps {
+				list-style: none;
+				counter-reset: step;
+				display: grid;
+				gap: 12px;
+			}
+
+			.steps li {
+				counter-increment: step;
+				display: grid;
+				grid-template-columns: 28px 1fr;
+				gap: 14px;
+				background: var(--bg-elev);
+				border: 1px solid var(--border);
+				border-radius: 12px;
+				padding: 14px 18px;
+				color: var(--text-2);
+				font-size: 0.92rem;
+			}
+
+			.steps li::before {
+				content: counter(step);
+				font-family: var(--mono);
+				font-size: 0.74rem;
+				color: var(--accent);
+				border: 1px solid rgba(99, 124, 249, 0.35);
+				background: var(--accent-soft);
+				border-radius: 6px;
+				width: 24px;
+				height: 24px;
+				display: grid;
+				place-items: center;
+				margin-top: 2px;
+			}
+
+			.steps li strong {
+				color: var(--text);
+				font-weight: 600;
+			}
+
+			/* ---------- Inline links / lists ---------- */
+
+			ul.plain-list {
+				list-style: none;
+				display: grid;
+				gap: 8px;
+				color: var(--text-2);
+				font-size: 0.93rem;
+			}
+
+			ul.plain-list li {
+				display: flex;
+				gap: 10px;
+			}
+
+			ul.plain-list li::before {
+				content: "";
+				width: 5px;
+				height: 5px;
+				border-radius: 50%;
+				background: var(--border-strong);
+				margin-top: 10px;
+				flex: none;
+			}
+
+			/* ---------- Footer ---------- */
+
+			footer {
+				position: relative;
+				z-index: 1;
+				border-top: 1px solid var(--border);
+				padding: 34px 0 44px;
+				font-size: 0.86rem;
+				color: var(--muted);
+			}
+
+			.footer-inner {
+				display: flex;
+				flex-wrap: wrap;
+				justify-content: space-between;
+				gap: 20px;
+			}
+
+			.footer-links {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 8px 20px;
+			}
+
+			.footer-links a {
+				color: var(--text-2);
+			}
+
+			.footer-links a:hover {
+				color: var(--accent);
+			}
+
+			.disclaimer {
+				max-width: 46ch;
+			}
+
+			/* ---------- Responsive ---------- */
+
+			@media (max-width: 960px) {
+				.docs {
+					grid-template-columns: 1fr;
+					gap: 28px;
+					padding-top: 32px;
+				}
+
+				.toc {
+					position: static;
+					border-bottom: 1px solid var(--border);
+					padding-bottom: 14px;
+				}
+
+				.toc-title {
+					display: none;
+				}
+
+				.toc ul {
+					display: flex;
+					gap: 8px;
+					overflow-x: auto;
+					max-width: 100%;
+					border-left: none;
+					padding-bottom: 2px;
+					scrollbar-width: none;
+				}
+
+				.toc ul::-webkit-scrollbar {
+					display: none;
+				}
+
+				.toc a {
+					white-space: nowrap;
+					padding: 6px 12px;
+					margin: 0;
+					border-left: none;
+					border: 1px solid var(--border);
+					border-radius: 999px;
+					font-size: 0.82rem;
+				}
+
+				.toc a.active {
+					border-color: rgba(99, 124, 249, 0.5);
+					background: var(--accent-soft);
+				}
+			}
+
+			@media (max-width: 720px) {
+				.topnav .version {
+					display: none;
+				}
+
+				table {
+					min-width: 520px;
+					font-size: 0.86rem;
+				}
+
+				.hero {
+					padding: 44px 0 32px;
+				}
+
+				.hero-actions .btn {
+					flex: 1 1 100%;
+				}
+
+				.brand-name {
+					display: none;
+				}
+			}
+
+			@media (prefers-reduced-motion: reduce) {
+				html {
+					scroll-behavior: auto;
+				}
+
+				*,
+				*::before,
+				*::after {
+					transition: none !important;
+					transform: none !important;
+				}
+			}
+		</style>
+	</head>
+	<body id="top">
+		<header class="topbar">
+			<div class="wrap topbar-inner">
+				<a class="brand" href="#top">
+					<img src="icon.png" alt="AniWorld AP icon" width="26" height="26" />
+					<span class="brand-name">AniWorld AP</span>
+					<span class="brand-tag">fork</span>
+				</a>
+				<nav class="topnav">
+					<span class="chip version">v1.7.0</span>
+					<a class="btn btn-ghost btn-sm" href="https://github.com/sioXD/Aniworld-AP">
+						<svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+							<path
+								d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"
+							/>
+						</svg>
+						GitHub
+					</a>
+					<a
+						class="btn btn-primary btn-sm"
+						href="https://addons.mozilla.org/en-US/firefox/addon/aniworld-autoplay-fork/"
+					>
+						<svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+							<path
+								d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0Zm3.3 6.1-3.9 6.2a.7.7 0 0 1-1.2 0L4.1 8.9a.7.7 0 1 1 1.2-.7l1.5 2.4 3.3-5.2a.7.7 0 1 1 1.2.7Z"
+							/>
+						</svg>
+						Install
+					</a>
+				</nav>
+			</div>
+		</header>
+
+		<section class="hero">
+			<div class="wrap">
+				<span class="eyebrow">Firefox extension · documentation</span>
+				<h1>AniWorld AP <span class="grad">[fork]</span></h1>
+				<p class="lede">
+					Skips openings, endings and recaps on <strong>aniworld.to</strong> using community timestamps from the AniSkip
+					API — plus speed control, a next-episode button and a reworked player overlay. This page documents what the
+					fork changes, every setting, and how to build and release it.
+				</p>
+				<div class="hero-actions">
+					<a class="btn btn-primary" href="https://addons.mozilla.org/en-US/firefox/addon/aniworld-autoplay-fork/">
+						<svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+							<path
+								d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0Zm3.3 6.1-3.9 6.2a.7.7 0 0 1-1.2 0L4.1 8.9a.7.7 0 1 1 1.2-.7l1.5 2.4 3.3-5.2a.7.7 0 1 1 1.2.7Z"
+							/>
+						</svg>
+						Add to Firefox
+					</a>
+					<a class="btn btn-ghost" href="#install"> Installation guide </a>
+					<a class="btn btn-ghost" href="https://github.com/sioXD/Aniworld-AP/releases">
+						<svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+							<path
+								d="M7.5 1.8v7.6L5.1 7l-1 1 3.9 3.9 3.9-3.9-1-1-2.4 2.4V1.8h-1ZM2 12.2v1.9h12v-1.9h-1.4v.5H3.4v-.5H2Z"
+							/>
+						</svg>
+						Releases
+					</a>
+				</div>
+				<div class="facts">
+					<span class="fact green"><span class="dot"></span>v1.7.0 · current</span>
+					<span class="fact"><span class="dot"></span>Firefox 142+ · desktop &amp; Android</span>
+					<span class="fact"><span class="dot"></span>Runs inside the VOE player</span>
+					<span class="fact"><span class="dot"></span>MIT licensed</span>
+				</div>
+			</div>
+		</section>
+
+		<div class="wrap docs">
+			<aside class="toc">
+				<div class="toc-title">Contents</div>
+				<nav aria-label="Table of contents">
+					<ul>
+						<li><a href="#overview">Overview</a></li>
+						<li><a href="#fork-changes">Fork changes</a></li>
+						<li><a href="#overlay">Player overlay</a></li>
+						<li><a href="#settings">Settings reference</a></li>
+						<li><a href="#how-it-works">How it works</a></li>
+						<li><a href="#permissions">Permissions</a></li>
+						<li><a href="#install">Installation</a></li>
+						<li><a href="#development">Development</a></li>
+					</ul>
+				</nav>
+			</aside>
+
+			<main class="content">
+				<section class="doc" id="overview">
+					<div class="section-label">01 · Overview</div>
+					<h2>What this extension does</h2>
+					<p class="lede">
+						AniWorld AP is a fork of <a href="https://github.com/Ziegel8171/Aniworld-AP">Ziegel8171's extension</a>. It
+						parses the anime, season and episode from the aniworld.to page, asks the AniSkip API for the segment
+						timestamps of that episode, and renders them as skip controls on the VOE player — in this fork with playback
+						speed, a next-episode shortcut and a redesigned control set.
+					</p>
+
+					<div class="table-wrap">
+						<div class="table-scroll">
+							<table>
+								<tbody>
+									<tr>
+										<th>Version</th>
+										<td>
+											<code>1.7.0</code> — see <a href="https://github.com/sioXD/Aniworld-AP/releases">releases</a>
+										</td>
+									</tr>
+									<tr>
+										<th>Platform</th>
+										<td>
+											Firefox 142 or newer, desktop and Android. Firefox only — it uses the <code>browser.*</code> API.
+										</td>
+									</tr>
+									<tr>
+										<th>Runs on</th>
+										<td><code>aniworld.to</code> and the VOE player iframe it embeds</td>
+									</tr>
+									<tr>
+										<th>Data sources</th>
+										<td>
+											<a href="https://api.aniskip.com">AniSkip</a> for skip segments, AniList (with a Kitsu fallback)
+											for MyAnimeList matching
+										</td>
+									</tr>
+									<tr>
+										<th>Storage</th>
+										<td>
+											<code>browser.storage.local</code> only — settings and cached lookups, nothing leaves the browser
+										</td>
+									</tr>
+									<tr>
+										<th>License</th>
+										<td>MIT</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</section>
+
+				<section class="doc" id="fork-changes">
+					<div class="section-label">02 · Fork changes</div>
+					<h2>What the fork adds</h2>
+					<p class="lede">
+						Everything below is specific to this fork. The base skipping logic and the AniSkip panel come from upstream;
+						the player controls, speed handling and defaults were reworked here.
+					</p>
+
+					<div class="grid grid-2">
+						<article class="card feature">
+							<div class="icon">
+								<svg
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									stroke-width="2"
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									aria-hidden="true"
+								>
+									<circle cx="12" cy="12" r="9" />
+									<path d="M12 7v5l3 2" />
+								</svg>
+							</div>
+							<span class="tag">added</span>
+							<h3>Speed control</h3>
+							<p>
+								Playback speed from 0.25× to 5× with −/+ buttons next to the skip control. Click the readout to jump
+								back to 1×. Speed can persist across episodes.
+							</p>
+						</article>
+
+						<article class="card feature">
+							<div class="icon">
+								<svg
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									stroke-width="2"
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									aria-hidden="true"
+								>
+									<path d="M4 5l9 7-9 7V5Z" />
+									<path d="M17 5v14" />
+								</svg>
+							</div>
+							<span class="tag">added</span>
+							<h3>Next episode</h3>
+							<p>
+								A next-episode button inside the player bar, plus automatic navigation when an episode ends. Both are on
+								by default; auto-navigation can be switched off on its own.
+							</p>
+						</article>
+
+						<article class="card feature">
+							<div class="icon green">
+								<svg
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									stroke-width="2"
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									aria-hidden="true"
+								>
+									<path d="M5 12h14" />
+									<path d="M13 6l6 6-6 6" />
+								</svg>
+							</div>
+							<span class="tag">added</span>
+							<h3>Always-visible skip button</h3>
+							<p>
+								The skip button stays visible for the whole episode. When no opening or ending is playing, it jumps 90
+								seconds ahead instead of disappearing.
+							</p>
+						</article>
+
+						<article class="card feature">
+							<div class="icon">
+								<svg
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									stroke-width="2"
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									aria-hidden="true"
+								>
+									<path d="M4 6h6l3 3h7v9H4V6Z" />
+								</svg>
+							</div>
+							<span class="tag">added</span>
+							<h3>Recap segments &amp; skip offset</h3>
+							<p>
+								Recap detection on top of OP/ED, with its own timeline colour, and a skip offset (−5 s to +5 s) so the
+								skip can land slightly before or after the segment end.
+							</p>
+						</article>
+
+						<article class="card feature">
+							<div class="icon">
+								<svg
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									stroke-width="2"
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									aria-hidden="true"
+								>
+									<rect x="3" y="4" width="18" height="16" rx="2" />
+									<path d="M3 9h18M8 4v5" />
+								</svg>
+							</div>
+							<span class="tag">changed</span>
+							<h3>Redesigned overlay</h3>
+							<p>
+								Info toggle at the top right opens the AniSkip panel; skip, speed and next-episode controls sit together
+								at the bottom. The skip button now carries the segment type as a badge.
+							</p>
+						</article>
+
+						<article class="card feature">
+							<div class="icon">
+								<svg
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									stroke-width="2"
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									aria-hidden="true"
+								>
+									<path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Z" />
+									<path d="M12 3v9h9" />
+								</svg>
+							</div>
+							<span class="tag">changed</span>
+							<h3>Two themes, AniWorld first</h3>
+							<p>
+								The AniWorld theme (petrol background, blue accent) is the default. Classic keeps the original
+								pink/violet look. Progress-bar marker colours are configurable per segment type.
+							</p>
+						</article>
+					</div>
+
+					<div class="note">
+						<span class="note-mark">!</span>
+						<span>
+							<strong>Defaults are conservative.</strong> Auto-skip for OP, ED and recaps is off until you enable it,
+							and so are volume/position memory — VOE already remembers those. The fork only adds what the player does
+							not do itself.
+						</span>
+					</div>
+				</section>
+
+				<section class="doc" id="overlay">
+					<div class="section-label">03 · Player overlay</div>
+					<h2>What you see in the player</h2>
+					<p class="lede">
+						Everything is injected into the VOE player container, so the controls survive fullscreen. Colours below use
+						the default markers: opening <code>#FF00FB</code>, ending <code>#22C55E</code>, recap
+						<code>#FFDD00</code> at 50% opacity.
+					</p>
+
+					<div
+						class="player"
+						role="img"
+						aria-label="Schematic of the overlay: info button top right, timeline with opening, recap and ending markers, skip button with segment badge, speed control and next-episode button at the bottom."
+					>
+						<div class="player-stage">
+							<div class="stage-title">
+								<div class="ep">Season 2 · Episode 12</div>
+								<div class="name">Player frame</div>
+							</div>
+							<span class="p-info" aria-hidden="true"></span>
+						</div>
+						<div class="p-bottom">
+							<div class="p-timeline">
+								<span class="p-fill"></span>
+								<span class="p-marker op" style="left: 5%; width: 13%"></span>
+								<span class="p-marker recap" style="left: 21%; width: 4.5%"></span>
+								<span class="p-marker ed" style="left: 86%; width: 9%"></span>
+							</div>
+							<div class="p-controls">
+								<span class="p-btn">Skip <span class="badge">OP</span></span>
+								<span class="p-speed">
+									<span aria-hidden="true">−</span>
+									<span class="val">1.0×</span>
+									<span aria-hidden="true">+</span>
+								</span>
+								<span class="p-spacer"></span>
+								<span class="p-next" aria-hidden="true">
+									<svg viewBox="0 0 240 240" fill="currentColor">
+										<path d="M40 45 L160 120 L40 195 Z" />
+										<rect x="176" y="45" width="28" height="150" />
+									</svg>
+								</span>
+							</div>
+						</div>
+					</div>
+
+					<ul class="legend">
+						<li><i style="background: #637cf9"></i> Info toggle → AniSkip panel (segments, anime search, submit)</li>
+						<li><i style="background: #b0c4ce"></i> Skip button with segment badge and confirm prompt</li>
+						<li><i style="background: #ff00fb"></i> Opening marker</li>
+						<li><i style="background: #ffdd00"></i> Recap marker</li>
+						<li><i style="background: #22c55e"></i> Ending marker</li>
+						<li><i style="background: #7a9aa8"></i> Speed control · next episode</li>
+					</ul>
+
+					<div class="grid grid-2" style="margin-top: 28px">
+						<div class="card">
+							<h3>Skip panel</h3>
+							<p>
+								Shows the detected anime, season, episode and MAL ID, lists every segment for the episode, and lets you
+								search another anime or submit your own timestamps to AniSkip.
+							</p>
+						</div>
+						<div class="card">
+							<h3>Fullscreen safe</h3>
+							<p>
+								The overlay is appended to the JW player wrapper when one exists, so it stays visible in fullscreen
+								instead of being left behind on the page body.
+							</p>
+						</div>
+					</div>
+				</section>
+
+				<section class="doc" id="settings">
+					<div class="section-label">04 · Settings reference</div>
+					<h2>Every option and its default</h2>
+					<p class="lede">
+						Defaults live in <code>src/defaults.js</code> as a single object — the popup, background script and content
+						script all read from it. Keys below match the storage keys.
+					</p>
+
+					<div class="table-wrap">
+						<div class="table-scroll">
+							<table>
+								<thead>
+									<tr>
+										<th>Setting</th>
+										<th class="default">Default</th>
+										<th>What it does</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr class="group">
+										<th colspan="3">Interface</th>
+									</tr>
+									<tr>
+										<th>Language<span class="key">language</span></th>
+										<td class="default"><span class="pill off">en</span></td>
+										<td>Language of the popup <em>and</em> the player overlay: English or German.</td>
+									</tr>
+									<tr>
+										<th>UI theme<span class="key">uiTheme</span></th>
+										<td class="default"><span class="pill off">aniworld</span></td>
+										<td>
+											<code>aniworld</code> (petrol/blue) or <code>classic</code> (pink/violet), applied to popup and
+											overlay.
+										</td>
+									</tr>
+									<tr>
+										<th>Show skip buttons<span class="key">showButtons</span></th>
+										<td class="default"><span class="pill on">on</span></td>
+										<td>Renders the manual skip button in the player.</td>
+									</tr>
+									<tr>
+										<th>Always show skip button<span class="key">alwaysShowButton</span></th>
+										<td class="default"><span class="pill on">on</span></td>
+										<td>Keeps the button visible even when no segment is playing; it then skips 90 s.</td>
+									</tr>
+									<tr>
+										<th>Show speed control<span class="key">showSpeedControl</span></th>
+										<td class="default"><span class="pill on">on</span></td>
+										<td>Shows the −/+ speed buttons and the speed readout.</td>
+									</tr>
+									<tr>
+										<th>Persistent speed<span class="key">persistentSpeed</span></th>
+										<td class="default"><span class="pill on">on</span></td>
+										<td>Keeps the chosen speed when the next episode starts.</td>
+									</tr>
+
+									<tr class="group">
+										<th colspan="3">Skipping</th>
+									</tr>
+									<tr>
+										<th>Skip opening<span class="key">autoSkipOp</span></th>
+										<td class="default"><span class="pill off">off</span></td>
+										<td>Automatically skip the opening segment without a click.</td>
+									</tr>
+									<tr>
+										<th>Skip ending<span class="key">autoSkipEd</span></th>
+										<td class="default"><span class="pill off">off</span></td>
+										<td>Automatically skip the ending segment.</td>
+									</tr>
+									<tr>
+										<th>Skip recap<span class="key">autoSkipRecap</span></th>
+										<td class="default"><span class="pill off">off</span></td>
+										<td>Automatically skip recap segments.</td>
+									</tr>
+									<tr>
+										<th>Skip offset<span class="key">skipOffset</span></th>
+										<td class="default"><span class="pill off">−5 s</span></td>
+										<td>Seconds added to the segment end after skipping. Range −5 s to +5 s in 0.5 s steps.</td>
+									</tr>
+
+									<tr class="group">
+										<th colspan="3">Playback</th>
+									</tr>
+									<tr>
+										<th>Next episode<span class="key">nextEpisode</span></th>
+										<td class="default"><span class="pill on">on</span></td>
+										<td>Navigates to the next episode at the end of the current one.</td>
+									</tr>
+									<tr>
+										<th>Next episode button<span class="key">showNextEpisodeButton</span></th>
+										<td class="default"><span class="pill on">on</span></td>
+										<td>Shows the next-episode button in the player bar.</td>
+									</tr>
+									<tr>
+										<th>Remember volume<span class="key">persistentVolume</span></th>
+										<td class="default"><span class="pill off">off</span></td>
+										<td>Carries the volume over to the next episode. Off by default: VOE already does this.</td>
+									</tr>
+									<tr>
+										<th>Remember position<span class="key">persistentPlaybackPosition</span></th>
+										<td class="default"><span class="pill off">off</span></td>
+										<td>Resumes where you left off. Off by default for the same reason.</td>
+									</tr>
+									<tr>
+										<th>Position expiry<span class="key">playbackPositionExpirationDays</span></th>
+										<td class="default"><span class="pill off">7 days</span></td>
+										<td>How long a saved position stays valid. Range 1–30 days.</td>
+									</tr>
+
+									<tr class="group">
+										<th colspan="3">Progress bar</th>
+									</tr>
+									<tr>
+										<th>Opening marker<span class="key">markerColorOp</span></th>
+										<td class="default"><code>#FF00FB</code></td>
+										<td>Colour of opening segments on the timeline.</td>
+									</tr>
+									<tr>
+										<th>Ending marker<span class="key">markerColorEd</span></th>
+										<td class="default"><code>#22C55E</code></td>
+										<td>Colour of ending segments.</td>
+									</tr>
+									<tr>
+										<th>Recap marker<span class="key">markerColorRecap</span></th>
+										<td class="default"><code>#FFDD00</code></td>
+										<td>Colour of recap segments.</td>
+									</tr>
+									<tr>
+										<th>Marker opacity<span class="key">markerOpacity</span></th>
+										<td class="default"><span class="pill off">0.5</span></td>
+										<td>Transparency of the markers, 0.1–1.0.</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+
+					<div class="note">
+						<span class="note-mark">i</span>
+						<span>
+							<strong>Outside of these keys:</strong> the audio/subtitle language you pick on aniworld.to is remembered
+							separately as <code>preferredLanguage</code> and re-applied to the next episode.
+						</span>
+					</div>
+				</section>
+
+				<section class="doc" id="how-it-works">
+					<div class="section-label">05 · How it works</div>
+					<h2>From page load to skipped intro</h2>
+					<p class="lede">
+						The extension is split into a page script on aniworld.to, a persistent background script that owns all
+						network access, and a player script inside the VOE iframe.
+					</p>
+
+					<ol class="steps">
+						<li>
+							<span
+								><strong>Detect the episode.</strong> <code>aniworld.js</code> reads anime, season and episode number
+								from the breadcrumbs and URL, and applies your saved language preference.</span
+							>
+						</li>
+						<li>
+							<span
+								><strong>Resolve the MAL ID.</strong> The background script looks the title up on AniList (with Kitsu as
+								a fallback), keeps only entries that map to MyAnimeList, and caches the match — the same anime is only
+								searched once.</span
+							>
+						</li>
+						<li>
+							<span
+								><strong>Fetch skip times.</strong> Skip segments for the episode are requested from the AniSkip API
+								through the background script — the content script never talks to the network directly.</span
+							>
+						</li>
+						<li>
+							<span
+								><strong>Inject the overlay.</strong> When the VOE frame loads, <code>content.js</code> and
+								<code>styles.css</code> are injected into it and the controls, markers and panel are built.</span
+							>
+						</li>
+						<li>
+							<span
+								><strong>Skip and continue.</strong> Segments are skipped on time or on click; at the end of an episode
+								a <code>postMessage</code> asks the page script for the next one.</span
+							>
+						</li>
+					</ol>
+
+					<div class="grid grid-2" style="margin-top: 20px">
+						<div class="card">
+							<h3>Files</h3>
+							<ul class="plain-list" style="margin-top: 10px">
+								<li><code>src/defaults.js</code> — the single source of truth for settings</li>
+								<li><code>src/background.js</code> — API proxy and iframe injection</li>
+								<li><code>src/aniworld.js</code> — page parsing, navigation, language</li>
+								<li><code>src/content.js</code> — player overlay and skip logic</li>
+								<li><code>src/popup.*</code> — settings UI and translations</li>
+							</ul>
+						</div>
+						<div class="card">
+							<h3>Privacy</h3>
+							<p>
+								Settings, cached lookups and playback state stay in <code>browser.storage.local</code>, including a
+								random installation ID that is only sent along when you submit skip times yourself. There is no
+								analytics, no account and no server of our own — just requests to the public AniSkip, AniList and Kitsu
+								APIs.
+							</p>
+						</div>
+					</div>
+				</section>
+
+				<section class="doc" id="permissions">
+					<div class="section-label">06 · Permissions</div>
+					<h2>Why the extension asks for this</h2>
+					<p class="lede">
+						Everything is requested up front in the manifest, so Firefox shows the full list on install.
+					</p>
+
+					<div class="table-wrap">
+						<div class="table-scroll">
+							<table>
+								<thead>
+									<tr>
+										<th>Permission</th>
+										<th>Reason</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr>
+										<th><code>storage</code></th>
+										<td>Save settings, cached anime lookups, volume and playback position.</td>
+									</tr>
+									<tr>
+										<th><code>activeTab</code></th>
+										<td>Let the popup push changed settings into the tab you are watching, without a reload.</td>
+									</tr>
+									<tr>
+										<th><code>webNavigation</code></th>
+										<td>Notice when the VOE player iframe finishes loading, so the overlay can be injected.</td>
+									</tr>
+									<tr>
+										<th><code>&lt;all_urls&gt;</code></th>
+										<td>Inject into the player subframe — its hostname changes between mirrors.</td>
+									</tr>
+									<tr>
+										<th><code>https://api.aniskip.com/*</code></th>
+										<td>Fetch skip segments and submit timestamps.</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</section>
+
+				<section class="doc" id="install">
+					<div class="section-label">07 · Installation</div>
+					<h2>Install it</h2>
+					<p class="lede">
+						The signed build is published on addons.mozilla.org and updates itself. Temporary installs are only for
+						testing and disappear when Firefox restarts.
+					</p>
+
+					<div class="grid grid-2">
+						<div class="card">
+							<span class="tag">recommended</span>
+							<h3>From Mozilla Add-ons</h3>
+							<p style="margin-bottom: 18px">Signed build for Firefox desktop and Android, with automatic updates.</p>
+							<a class="btn btn-primary" href="https://addons.mozilla.org/en-US/firefox/addon/aniworld-autoplay-fork/">
+								<svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+									<path
+										d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0Zm3.3 6.1-3.9 6.2a.7.7 0 0 1-1.2 0L4.1 8.9a.7.7 0 1 1 1.2-.7l1.5 2.4 3.3-5.2a.7.7 0 1 1 1.2.7Z"
+									/>
+								</svg>
+								Open the listing
+							</a>
+							<p style="margin-top: 14px; font-size: 0.84rem; color: var(--muted)">
+								Make sure you land on <code>aniworld-autoplay-fork</code> — the upstream
+								<code>aniworld-autoplay</code> is a different add-on.
+							</p>
+						</div>
+
+						<div class="card">
+							<span class="tag">testing</span>
+							<h3>From a release ZIP</h3>
+							<p style="margin-bottom: 14px">Temporary add-on, removes itself on restart.</p>
+							<ol class="steps" style="gap: 8px">
+								<li>
+									<span
+										>Download and extract the <code>.zip</code> from the
+										<a href="https://github.com/sioXD/Aniworld-AP/releases/latest">latest release</a>.</span
+									>
+								</li>
+								<li>
+									<span>Open <code>about:debugging#/runtime/this-firefox</code>.</span>
+								</li>
+								<li>
+									<span
+										>Click <strong>Load Temporary Add-on</strong> and pick the extracted
+										<code>manifest.json</code>.</span
+									>
+								</li>
+							</ol>
+						</div>
+					</div>
+
+					<div class="note">
+						<span class="note-mark">i</span>
+						<span>
+							<strong>Requirements:</strong> Firefox 142+ and access to <code>aniworld.to</code>. The extension only
+							activates inside the VOE player iframe — on other sites it does nothing.
+						</span>
+					</div>
+				</section>
+
+				<section class="doc" id="development">
+					<div class="section-label">08 · Development</div>
+					<h2>Build and release</h2>
+					<p class="lede">
+						No bundler, no TypeScript, no test runner: vanilla JavaScript, loaded straight from
+						<code>manifest.json</code>. Node is only needed for packaging.
+					</p>
+
+					<h3 style="margin-top: 4px">Local development</h3>
+					<ol class="steps" style="margin-top: 10px">
+						<li>
+							<span>Edit the files under <code>src/</code>.</span>
+						</li>
+						<li>
+							<span
+								>Open <code>about:debugging#/runtime/this-firefox</code> → <strong>Load Temporary Add-on</strong> →
+								<code>manifest.json</code>.</span
+							>
+						</li>
+						<li><span>Reload the add-on after every change and refresh the aniworld.to page.</span></li>
+					</ol>
+
+					<h3 style="margin-top: 28px">Packaging</h3>
+					<div class="code">
+						<pre><span class="c"># web-ext must be installed globally: npm install --global web-ext</span>
 <span class="c"># Windows</span>
 <span class="p">powershell</span> -File pack.ps1
 
 <span class="c"># Linux / macOS</span>
 <span class="p">./pack.sh</span></pre>
-                </div>
-                <p style="margin-top: 12px; color: var(--text-2); font-size: 0.93rem;">
-                    Both scripts stamp the current version and date into <code>src/popup.html</code>, build a ZIP into
-                    <code>web-ext-artifacts/</code> and skip <code>docs/</code>.
-                </p>
+					</div>
+					<p style="margin-top: 12px; color: var(--text-2); font-size: 0.93rem">
+						Both scripts stamp the current version and date into <code>src/popup.html</code>, build a ZIP into
+						<code>web-ext-artifacts/</code> and skip <code>docs/</code>.
+					</p>
 
-                <h3 style="margin-top: 28px;">Releases</h3>
-                <p style="color: var(--text-2); font-size: 0.93rem;">
-                    Bump <code>version</code> in <code>manifest.json</code> and push to <code>main</code>. The workflow
-                    compares the previous and current version and — when it changed — creates the matching
-                    <code>v&lt;version&gt;</code> tag and a GitHub Release with the built ZIP. If
-                    <code>AMO_ENABLED</code> and the AMO secrets are configured, the signed build is published as well.
-                </p>
-                <div class="code">
-                    <pre><span class="c"># manifest.json → "version": "1.7.1"</span>
+					<h3 style="margin-top: 28px">Releases</h3>
+					<p style="color: var(--text-2); font-size: 0.93rem">
+						Bump <code>version</code> in <code>manifest.json</code> and push to <code>main</code>. The workflow compares
+						the previous and current version and — when it changed — creates the matching
+						<code>v&lt;version&gt;</code> tag and a GitHub Release with the built ZIP. If <code>AMO_ENABLED</code> and
+						the AMO secrets are configured, the signed build is published as well.
+					</p>
+					<div class="code">
+						<pre><span class="c"># manifest.json → "version": "1.7.1"</span>
 <span class="p">git</span> add manifest.json
 <span class="p">git</span> commit -m <span style="color:#b9c4ff">"bump version to 1.7.1"</span>
 <span class="p">git</span> push origin main</pre>
-                </div>
+					</div>
 
-                <h3 style="margin-top: 28px;">Repository layout</h3>
-                <div class="table-wrap">
-                    <div class="table-scroll">
-                        <table>
-                            <tbody>
-                                <tr><th><code>src/</code></th><td>Extension source: defaults, background, page script, player script, popup</td></tr>
-                                <tr><th><code>icons/</code></th><td>Add-on icons, including the per-theme variants</td></tr>
-                                <tr><th><code>docs/</code></th><td>This page, served by GitHub Pages</td></tr>
-                                <tr><th><code>pack.ps1</code> / <code>pack.sh</code></th><td>Version stamping and <code>web-ext build</code></td></tr>
-                                <tr><th><code>.github/workflows/</code></th><td>Release pipeline triggered by a version bump</td></tr>
-                                <tr><th><code>AGENTS.md</code></th><td>Conventions and gotchas for agents working on the repo</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
-        </main>
-    </div>
+					<h3 style="margin-top: 28px">Repository layout</h3>
+					<div class="table-wrap">
+						<div class="table-scroll">
+							<table>
+								<tbody>
+									<tr>
+										<th><code>src/</code></th>
+										<td>Extension source: defaults, background, page script, player script, popup</td>
+									</tr>
+									<tr>
+										<th><code>icons/</code></th>
+										<td>Add-on icons, including the per-theme variants</td>
+									</tr>
+									<tr>
+										<th><code>docs/</code></th>
+										<td>This page, served by GitHub Pages</td>
+									</tr>
+									<tr>
+										<th><code>pack.ps1</code> / <code>pack.sh</code></th>
+										<td>Version stamping and <code>web-ext build</code></td>
+									</tr>
+									<tr>
+										<th><code>.github/workflows/</code></th>
+										<td>Release pipeline triggered by a version bump</td>
+									</tr>
+									<tr>
+										<th><code>AGENTS.md</code></th>
+										<td>Conventions and gotchas for agents working on the repo</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</section>
+			</main>
+		</div>
 
-    <footer>
-        <div class="wrap footer-inner">
-            <div>
-                <div class="footer-links">
-                    <a href="https://github.com/sioXD/Aniworld-AP">Repository</a>
-                    <a href="https://github.com/sioXD/Aniworld-AP/issues">Issues</a>
-                    <a href="https://github.com/sioXD/Aniworld-AP/releases">Releases</a>
-                    <a href="https://github.com/sioXD/Aniworld-AP/blob/main/README.md">README</a>
-                    <a href="https://github.com/sioXD/Aniworld-AP/blob/main/LICENSE">MIT License</a>
-                </div>
-                <p style="margin-top: 10px;">
-                    Fork of <a href="https://github.com/Ziegel8171/Aniworld-AP">Ziegel8171/Aniworld-AP</a>.
-                </p>
-            </div>
-            <p class="disclaimer">
-                Not affiliated with aniworld.to, VOE or AniSkip. Timestamps come from the AniSkip community database.
-            </p>
-        </div>
-    </footer>
+		<footer>
+			<div class="wrap footer-inner">
+				<div>
+					<div class="footer-links">
+						<a href="https://github.com/sioXD/Aniworld-AP">Repository</a>
+						<a href="https://github.com/sioXD/Aniworld-AP/issues">Issues</a>
+						<a href="https://github.com/sioXD/Aniworld-AP/releases">Releases</a>
+						<a href="https://github.com/sioXD/Aniworld-AP/blob/main/README.md">README</a>
+						<a href="https://github.com/sioXD/Aniworld-AP/blob/main/LICENSE">MIT License</a>
+					</div>
+					<p style="margin-top: 10px">
+						Fork of <a href="https://github.com/Ziegel8171/Aniworld-AP">Ziegel8171/Aniworld-AP</a>.
+					</p>
+				</div>
+				<p class="disclaimer">
+					Not affiliated with aniworld.to, VOE or AniSkip. Timestamps come from the AniSkip community database.
+				</p>
+			</div>
+		</footer>
 
-    <script>
-        // Keep the section list in sync with the scroll position.
-        const links = Array.from(document.querySelectorAll('.toc a'));
-        const sections = links
-            .map((link) => document.querySelector(link.getAttribute('href')))
-            .filter(Boolean);
-        const OFFSET = 96;
+		<script>
+			// Keep the section list in sync with the scroll position.
+			const links = Array.from(document.querySelectorAll(".toc a"));
+			const sections = links.map((link) => document.querySelector(link.getAttribute("href"))).filter(Boolean);
+			const OFFSET = 96;
 
-        const syncToc = () => {
-            const y = window.scrollY + OFFSET;
-            let current = null;
+			const syncToc = () => {
+				const y = window.scrollY + OFFSET;
+				let current = null;
 
-            for (const section of sections) {
-                if (section.offsetTop <= y) current = section;
-            }
+				for (const section of sections) {
+					if (section.offsetTop <= y) current = section;
+				}
 
-            links.forEach((link) => {
-                link.classList.toggle('active', !!current && link.getAttribute('href') === '#' + current.id);
-            });
-        };
+				links.forEach((link) => {
+					link.classList.toggle("active", !!current && link.getAttribute("href") === "#" + current.id);
+				});
+			};
 
-        let ticking = false;
-        window.addEventListener(
-            'scroll',
-            () => {
-                if (ticking) return;
-                ticking = true;
-                requestAnimationFrame(() => {
-                    ticking = false;
-                    syncToc();
-                });
-            },
-            { passive: true }
-        );
-        window.addEventListener('resize', syncToc);
-        syncToc();
-    </script>
-</body>
+			let ticking = false;
+			window.addEventListener(
+				"scroll",
+				() => {
+					if (ticking) return;
+					ticking = true;
+					requestAnimationFrame(() => {
+						ticking = false;
+						syncToc();
+					});
+				},
+				{ passive: true },
+			);
+			window.addEventListener("resize", syncToc);
+			syncToc();
+		</script>
+	</body>
 </html>
