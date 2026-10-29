@@ -40,7 +40,6 @@ This fork adds the following features to enhance the viewing experience on AniWo
 - **Redesigned Skip Button** - design matching the speed control, gradient moved to the type badge
 - **Layout** - Controls rearranged: info toggle at top-right, skip/speed/panel at bottom
 - **Info Toggle** - Info icon (top-right) replaces double-arrow, opens the AniSkip panel
-- **Play After Skip**, **Remember Volume** and **Remember Position** are disabled by default (because Voe already supports all of it)
 
 ## Development
 

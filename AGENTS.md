@@ -17,14 +17,14 @@ Firefox WebExtension (Manifest V2) that auto-skips anime openings/endings on ani
 
 - `background.js` proxies AniSkip/Jikan API calls, injects `content.js` + `styles.css` into VOE iframes via `webNavigation.onCompleted`.
 - `aniworld.js` parses anime/episode/season from breadcrumbs/DOM, handles next-episode navigation and language selection.
-- `content.js` runs inside the VOE player iframe, manages skip logic, progress bar markers, volume/position persistence.
+- `content.js` runs inside the VOE player iframe, manages skip logic, progress bar markers and speed control.
 - Cross-frame messaging via `postMessage` (`ANISKIP_NEXT_EPISODE`, `ANISKIP_MARK_SEEN`, `ANISKIP_AUTO_PLAY`, etc.).
 - Settings stored in `browser.storage.local`; cached anime lookups stored same way.
 
 ## Conventions
 
 - i18n: inline translation objects in `content.js` (en/de) and `popup.js` (en/de). `data-i18n` attributes on HTML elements. There is no `_locales/` and no `browser.i18n.getMessage()` — the add-on name and description are hardcoded in `manifest.json`, because the UI language follows the popup setting and `browser.i18n` cannot be switched at runtime.
-- Theming: CSS custom properties with `.theme-classic` / `.theme-aniworld` selectors. Both in `styles.css` (injected) and `popup.html` (inline `<style>`).
+- Theming: CSS custom properties. The injected overlay (`styles.css`) selects on `.theme-classic` / `.theme-aniworld`, which `content.js` sets as a class on `#aniskip-container`; the popup (`popup.html` inline `<style>`) selects on `body[data-theme="classic"]` / `body[data-theme="aniworld"]`, set by `applyTheme()` in `popup.js`.
 - Always use `browser.storage.local.get()` with default values (not bare key access). The defaults live in `src/defaults.js` as `DEFAULT_SETTINGS` — never inline a literal that exists there.
 - Adding a setting = one entry in `DEFAULT_SETTINGS`, one `.setting-row` in the matching tab panel of `popup.html` (id must match the key, no `checked`/`value` attributes), and two i18n entries in `popup.js`. `popup.js` collects controls from the DOM and derives load/save from the element type, so no list needs updating.
 - The popup has three tabs (General / Styles / Advanced) built from `.tab` buttons + `.tab-panel` divs, with a sliding `.tab-indicator`. Inside a panel, rows are grouped in `.section` blocks with `.section-header` / `.section-title`. A row with `data-depends-on` must sit in the same panel as its parent control, otherwise the disabled state points at a switch the user cannot see.

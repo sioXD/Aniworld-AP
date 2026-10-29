@@ -1,6 +1,6 @@
 // VOE AniSkip Content Script
 // Integrates AniSkip with VOE.sx's JWPlayer
-// Enhanced with persistent volume, playback position, language, auto-play after skip
+// Enhanced with language selection, speed control and auto-play
 
 (function () {
 	"use strict";
@@ -68,7 +68,6 @@
 			pendingSkipConfirm: null,
 			skipConfirmTimeout: null,
 			initialized: false,
-			playbackPositionRestored: false,
 		};
 
 		// Translations object for content script
@@ -100,7 +99,7 @@
 				panelCancel: "Cancel",
 				voteUpvote: "Upvote",
 				voteDownvote: "Downvote",
-				skipConfirmSave: "Save to AniSkip?",
+				skipConfirmSave: "Save as $1 with AniSkip?",
 				skipConfirmSaving: "Saving...",
 				skipConfirmSaved: "Saved!",
 				skipConfirmFailed: "Save failed",
@@ -123,6 +122,7 @@
 				statusInvalidTime: "Invalid time format",
 				statusStartBeforeEnd: "Start time must be before end time",
 				statusFailedToFetch: "Failed to fetch skip times",
+				statusSubmitError: "Failed to submit skip time",
 				statusFailedToFind: "Failed to find video player: $1",
 				searchLoading: "Searching...",
 				searchNoResults: "No results found",
@@ -134,7 +134,7 @@
 				typeMixedOpening: "Gemischtes Intro",
 				typeMixedEnding: "Gemischtes Outro",
 				typeRecap: "Zusammenfassung",
-				skipButtonText: "Überspringen",
+				skipButtonText: "Skip",
 				nextEpisodeButton: "Nächste Folge",
 				panelInitializing: "Initialisierung...",
 				panelAnime: "Anime:",
@@ -145,17 +145,17 @@
 				panelSkipSegments: "Skip-Segmente:",
 				panelSearchPlaceholder: "Anime suchen...",
 				panelSearchButton: "Suchen",
-				panelSubmitSkipTime: "Überspringzeiten einreichen:",
+				panelSubmitSkipTime: "Skip-Zeit einreichen:",
 				panelType: "Typ:",
 				panelStart: "Start:",
 				panelEnd: "Ende:",
 				panelSet: "Setzen",
-				panelSubmit: "Hinzufügen",
+				panelSubmit: "Einreichen",
 				panelRefresh: "Aktualisieren",
 				panelCancel: "Abbrechen",
 				voteUpvote: "Positiv bewerten",
 				voteDownvote: "Negativ bewerten",
-				skipConfirmSave: "Bei AniSkip speichern?",
+				skipConfirmSave: "$1 bei AniSkip speichern?",
 				skipConfirmSaving: "Speichern...",
 				skipConfirmSaved: "Gespeichert!",
 				skipConfirmFailed: "Speichern fehlgeschlagen",
@@ -178,6 +178,7 @@
 				statusInvalidTime: "Ungültiges Zeitformat",
 				statusStartBeforeEnd: "Startzeit muss vor Endzeit liegen",
 				statusFailedToFetch: "Skip-Zeiten konnten nicht abgerufen werden",
+				statusSubmitError: "Einreichen der Skip-Zeit fehlgeschlagen",
 				statusFailedToFind: "Video-Player nicht gefunden: $1",
 				searchLoading: "Suche...",
 				searchNoResults: "Keine Ergebnisse gefunden",
@@ -187,24 +188,39 @@
 
 		// Get current language from settings
 		function getCurrentLanguage() {
-			return state.settings?.language || "en";
+			return state.settings?.language || DEFAULT_SETTINGS.language;
 		}
 
 		// i18n helper function - uses stored language setting
 		function getMessage(key, fallback) {
-			const lang = getCurrentLanguage();
-			const t = translations[lang] || translations.en;
-			return t[key] || fallback;
+			const t = translations[getCurrentLanguage()] || translations.en;
+			return t[key] || translations.en[key] || fallback || key;
+		}
+
+		// Translate the injected UI. `data-i18n` sets the text, `data-i18n-title`
+		// and `data-i18n-placeholder` cover attributes. The English text in the
+		// markup doubles as the fallback, so a missing key never blanks an element.
+		function applyPanelTranslations(root) {
+			if (!root) return;
+			root.querySelectorAll("[data-i18n]").forEach((el) => {
+				el.textContent = getMessage(el.dataset.i18n, el.textContent);
+			});
+			root.querySelectorAll("[data-i18n-title]").forEach((el) => {
+				el.title = getMessage(el.dataset.i18nTitle, el.title);
+			});
+			root.querySelectorAll("[data-i18n-placeholder]").forEach((el) => {
+				el.placeholder = getMessage(el.dataset.i18nPlaceholder, el.placeholder);
+			});
 		}
 
 		// Get SKIP_TYPE_LABELS dynamically based on current language
 		function getSkipTypeLabels() {
 			return {
-				op: getMessage("typeOpening", "Opening"),
-				ed: getMessage("typeEnding", "Ending"),
-				"mixed-op": getMessage("typeMixedOpening", "Mixed Opening"),
-				"mixed-ed": getMessage("typeMixedEnding", "Mixed Ending"),
-				recap: getMessage("typeRecap", "Recap"),
+				op: getMessage("typeOpening"),
+				ed: getMessage("typeEnding"),
+				"mixed-op": getMessage("typeMixedOpening"),
+				"mixed-ed": getMessage("typeMixedEnding"),
+				recap: getMessage("typeRecap"),
 			};
 		}
 
@@ -331,18 +347,6 @@
 				getPosition() {
 					return videoEl.currentTime || 0;
 				},
-				getVolume() {
-					return Math.round(videoEl.volume * 100);
-				},
-				getMute() {
-					return videoEl.muted;
-				},
-				setVolume(vol) {
-					videoEl.volume = vol / 100;
-				},
-				setMute(muted) {
-					videoEl.muted = muted;
-				},
 				seek(time) {
 					videoEl.currentTime = time;
 				},
@@ -359,7 +363,6 @@
 						seeked: "seeked",
 						meta: "loadedmetadata",
 						complete: "ended",
-						volume: "volumechange",
 					};
 					videoEl.addEventListener(eventMap[event] || event, callback);
 				},
@@ -368,98 +371,6 @@
 				},
 				isNativeWrapper: true,
 			};
-		}
-
-		// Persistent Volume
-		async function loadPersistentVolume() {
-			if (!state.settings.persistentVolume || !state.player) return;
-			try {
-				const result = await browser.storage.local.get(["persistentVolume", "persistentMuted"]);
-				if (result.persistentVolume !== undefined) state.player.setVolume(result.persistentVolume);
-				if (result.persistentMuted !== undefined) state.player.setMute(result.persistentMuted);
-			} catch (e) {
-				console.error("VOE AniSkip: Error loading volume:", e);
-			}
-		}
-
-		async function savePersistentVolume() {
-			if (!state.settings.persistentVolume || !state.player) return;
-			try {
-				await browser.storage.local.set({
-					persistentVolume: state.player.getVolume(),
-					persistentMuted: state.player.getMute(),
-				});
-			} catch (e) {}
-		}
-
-		function setupPersistentVolume() {
-			if (!state.settings.persistentVolume || !state.player) return;
-			loadPersistentVolume();
-			state.player.on("volume", savePersistentVolume);
-			const video = document.querySelector("video");
-			if (video) video.addEventListener("volumechange", savePersistentVolume);
-		}
-
-		// Persistent Playback Position
-		function getPlaybackPositionKey() {
-			return state.currentVideoId ? `playbackPosition_${state.currentVideoId}` : null;
-		}
-
-		async function loadPlaybackPosition() {
-			if (!state.settings.persistentPlaybackPosition || !state.player || state.playbackPositionRestored) return;
-			const key = getPlaybackPositionKey();
-			if (!key) return;
-			try {
-				const result = await browser.storage.local.get(key);
-				const data = result[key];
-				if (data && data.position) {
-					const expirationMs = state.settings.playbackPositionExpirationDays * 24 * 60 * 60 * 1000;
-					if (Date.now() - data.timestamp < expirationMs) {
-						const duration = state.player.getDuration();
-						if (duration && data.position < duration - 30) {
-							console.log("VOE AniSkip: Restoring position to", data.position);
-							state.player.seek(data.position);
-							state.playbackPositionRestored = true;
-						}
-					} else {
-						await browser.storage.local.remove(key);
-					}
-				}
-			} catch (e) {}
-		}
-
-		async function savePlaybackPosition() {
-			if (!state.settings.persistentPlaybackPosition || !state.player) return;
-			const key = getPlaybackPositionKey();
-			if (!key) return;
-			try {
-				const position = state.player.getPosition();
-				const duration = state.player.getDuration();
-				if (position < 10 || (duration && position > duration - 30)) return;
-				await browser.storage.local.set({ [key]: { position, timestamp: Date.now() } });
-			} catch (e) {}
-		}
-
-		function setupPlaybackPositionMemory() {
-			if (!state.settings.persistentPlaybackPosition || !state.player) return;
-			const waitForDuration = () => {
-				if (state.player.getDuration() > 0) loadPlaybackPosition();
-				else setTimeout(waitForDuration, 500);
-			};
-			setTimeout(waitForDuration, 1000);
-			let lastSavedPosition = 0;
-			setInterval(() => {
-				const currentPosition = state.player.getPosition();
-				if (Math.abs(currentPosition - lastSavedPosition) >= 5) {
-					savePlaybackPosition();
-					lastSavedPosition = currentPosition;
-				}
-			}, 5000);
-		}
-
-		async function clearPlaybackPosition() {
-			const key = getPlaybackPositionKey();
-			if (key) await browser.storage.local.remove(key).catch(() => {});
 		}
 
 		// Speed Control
@@ -516,7 +427,7 @@
 			const button = state.ui.nextEpisodeButton;
 			if (!button) return;
 
-			const label = getMessage("nextEpisodeButton", "Next episode");
+			const label = getMessage("nextEpisodeButton");
 			button.setAttribute("aria-label", label);
 
 			const tooltip = button.querySelector(".jw-text");
@@ -584,17 +495,17 @@
 			container.id = "aniskip-container";
 
 			// Apply theme class based on settings
-			const theme = state.settings?.uiTheme || "aniworld";
+			const theme = state.settings?.uiTheme || DEFAULT_SETTINGS.uiTheme;
 			container.className = `theme-${theme}`;
 
 			container.innerHTML = `
       <div id="aniskip-skip-button" class="aniskip-button aniskip-hidden">
-        <span class="aniskip-skip-text">Skip</span>
+        <span class="aniskip-skip-text" data-i18n="skipButtonText">Skip</span>
         <span class="aniskip-skip-type"></span>
         <span id="aniskip-skip-confirm" class="aniskip-skip-confirm aniskip-hidden">
-          <button id="aniskip-confirm-yes" class="aniskip-confirm-btn" title="Save">&#10003;</button>
+          <button id="aniskip-confirm-yes" class="aniskip-confirm-btn" title="Save" data-i18n-title="skipConfirmYes">&#10003;</button>
           <span class="aniskip-skip-confirm-text"></span>
-          <button id="aniskip-confirm-no" class="aniskip-confirm-btn" title="Dismiss">&#10007;</button>
+          <button id="aniskip-confirm-no" class="aniskip-confirm-btn" title="Dismiss" data-i18n-title="skipConfirmNo">&#10007;</button>
           <span class="aniskip-skip-confirm-bar">
             <span class="aniskip-skip-confirm-bar-fill"></span>
           </span>
@@ -608,31 +519,31 @@
         <div class="aniskip-panel-content">
           <div id="aniskip-status">Initializing...</div>
           <div id="aniskip-anime-info" class="aniskip-hidden">
-            <div class="aniskip-info-row"><span class="aniskip-label">Anime:</span><span id="aniskip-anime-name">-</span></div>
-            <div class="aniskip-info-row"><span class="aniskip-label">Season:</span><span id="aniskip-season-num">-</span></div>
-            <div class="aniskip-info-row"><span class="aniskip-label">Episode:</span><span id="aniskip-episode-num">-</span></div>
-            <div class="aniskip-info-row"><span class="aniskip-label">MAL ID:</span><span id="aniskip-mal-id">-</span><button id="aniskip-change-anime" class="aniskip-small-btn">Change</button></div>
+            <div class="aniskip-info-row"><span class="aniskip-label" data-i18n="panelAnime">Anime:</span><span id="aniskip-anime-name">-</span></div>
+            <div class="aniskip-info-row"><span class="aniskip-label" data-i18n="panelSeason">Season:</span><span id="aniskip-season-num">-</span></div>
+            <div class="aniskip-info-row"><span class="aniskip-label" data-i18n="panelEpisode">Episode:</span><span id="aniskip-episode-num">-</span></div>
+            <div class="aniskip-info-row"><span class="aniskip-label" data-i18n="panelMalId">MAL ID:</span><span id="aniskip-mal-id">-</span><button id="aniskip-change-anime" class="aniskip-small-btn" data-i18n="panelChange">Change</button></div>
           </div>
           <div id="aniskip-segments" class="aniskip-hidden">
-            <div class="aniskip-label">Skip Segments:</div>
+            <div class="aniskip-label" data-i18n="panelSkipSegments">Skip Segments:</div>
             <div id="aniskip-segments-list"></div>
           </div>
           <div id="aniskip-search-panel" class="aniskip-hidden">
-            <input type="text" id="aniskip-search-input" placeholder="Search anime...">
-            <button id="aniskip-search-btn" class="aniskip-btn">Search</button>
+            <input type="text" id="aniskip-search-input" placeholder="Search anime..." data-i18n-placeholder="panelSearchPlaceholder">
+            <button id="aniskip-search-btn" class="aniskip-btn" data-i18n="panelSearchButton">Search</button>
             <div id="aniskip-search-results"></div>
           </div>
           <div id="aniskip-submit-panel" class="aniskip-hidden">
-            <div class="aniskip-label">Submit Skip Time:</div>
-            <div class="aniskip-form-row"><label>Type:</label><select id="aniskip-submit-type"><option value="op">Opening</option><option value="ed">Ending</option><option value="recap">Recap</option></select></div>
-            <div class="aniskip-form-row"><label>Start:</label><input type="text" id="aniskip-submit-start" placeholder="0:00"><button id="aniskip-set-start" class="aniskip-small-btn">Set</button></div>
-            <div class="aniskip-form-row"><label>End:</label><input type="text" id="aniskip-submit-end" placeholder="1:30"><button id="aniskip-set-end" class="aniskip-small-btn">Set</button></div>
-            <button id="aniskip-submit-btn" class="aniskip-btn">Submit</button>
+            <div class="aniskip-label" data-i18n="panelSubmitSkipTime">Submit Skip Time:</div>
+            <div class="aniskip-form-row"><label data-i18n="panelType">Type:</label><select id="aniskip-submit-type"><option value="op" data-i18n="typeOpening">Opening</option><option value="ed" data-i18n="typeEnding">Ending</option><option value="recap" data-i18n="typeRecap">Recap</option></select></div>
+            <div class="aniskip-form-row"><label data-i18n="panelStart">Start:</label><input type="text" id="aniskip-submit-start" placeholder="0:00"><button id="aniskip-set-start" class="aniskip-small-btn" data-i18n="panelSet">Set</button></div>
+            <div class="aniskip-form-row"><label data-i18n="panelEnd">End:</label><input type="text" id="aniskip-submit-end" placeholder="1:30"><button id="aniskip-set-end" class="aniskip-small-btn" data-i18n="panelSet">Set</button></div>
+            <button id="aniskip-submit-btn" class="aniskip-btn" data-i18n="panelSubmit">Submit</button>
           </div>
         </div>
         <div class="aniskip-panel-footer">
-          <button id="aniskip-toggle-submit" class="aniskip-footer-btn"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Submit</button>
-          <button id="aniskip-refresh" class="aniskip-footer-btn"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg> Refresh</button>
+          <button id="aniskip-toggle-submit" class="aniskip-footer-btn"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> <span data-i18n="panelSubmit">Submit</span></button>
+          <button id="aniskip-refresh" class="aniskip-footer-btn"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg> <span data-i18n="panelRefresh">Refresh</span></button>
         </div>
       </div>
       <div id="aniskip-next-episode-btn" class="jw-icon jw-icon-inline jw-button-color jw-reset aniskip-next-episode-btn aniskip-hidden" role="button" tabindex="0" aria-label="Next episode" aria-hidden="true">
@@ -648,6 +559,11 @@
         <button id="aniskip-speed-plus" class="aniskip-speed-btn">+</button>
       </div>
     `;
+
+			applyPanelTranslations(container);
+			// The status line is owned by updateStatus(), so it is translated here
+			// instead of via data-i18n - otherwise a settings change would wipe it.
+			container.querySelector("#aniskip-status").textContent = getMessage("panelInitializing");
 
 			// Try to append to JWPlayer container first (for fullscreen support), fallback to body
 			const jwContainer = document.querySelector(".jw-wrapper") || document.querySelector(".jwplayer");
@@ -806,8 +722,8 @@
 				submitPanel.classList.toggle("aniskip-hidden");
 
 				// Update button text and style
-				const cancelText = getMessage("panelCancel", "Cancel");
-				const submitText = getMessage("panelSubmit", "Submit");
+				const cancelText = getMessage("panelCancel");
+				const submitText = getMessage("panelSubmit");
 				if (isHidden) {
 					toggleBtn.textContent = "";
 					toggleBtn.insertAdjacentHTML(
@@ -862,7 +778,7 @@
 			resultsEl.textContent = "";
 			const loadingDiv = document.createElement("div");
 			loadingDiv.className = "aniskip-loading";
-			loadingDiv.textContent = getMessage("searchLoading", "Searching...");
+			loadingDiv.textContent = getMessage("searchLoading");
 			resultsEl.appendChild(loadingDiv);
 
 			try {
@@ -871,7 +787,7 @@
 					resultsEl.textContent = "";
 					const noResultsDiv = document.createElement("div");
 					noResultsDiv.className = "aniskip-no-results";
-					noResultsDiv.textContent = getMessage("searchNoResults", "No results found");
+					noResultsDiv.textContent = getMessage("searchNoResults");
 					resultsEl.appendChild(noResultsDiv);
 					return;
 				}
@@ -914,7 +830,7 @@
 				resultsEl.textContent = "";
 				const errorDiv = document.createElement("div");
 				errorDiv.className = "aniskip-error";
-				errorDiv.textContent = getMessage("searchFailed", "Search failed");
+				errorDiv.textContent = getMessage("searchFailed");
 				resultsEl.appendChild(errorDiv);
 			}
 		}
@@ -944,11 +860,11 @@
 
 		async function fetchSkipTimes() {
 			if (!state.currentMalId || !state.currentEpisode) {
-				updateStatus(getMessage("statusMissingInfo", "Missing anime info"));
+				updateStatus(getMessage("statusMissingInfo"));
 				return;
 			}
 
-			updateStatus(getMessage("statusFetching", "Fetching skip times..."));
+			updateStatus(getMessage("statusFetching"));
 
 			try {
 				const response = await browser.runtime.sendMessage({
@@ -964,18 +880,16 @@
 				}
 
 				if (!response.found || !response.results || response.results.length === 0) {
-					updateStatus(getMessage("statusNoSkipTimes", "No skip times found for this episode"));
+					updateStatus(getMessage("statusNoSkipTimes"));
 					state.skipTimes = [];
 				} else {
 					state.skipTimes = response.results;
-					updateStatus(
-						getMessage("statusFoundSegments", "Found $1 skip segment(s)").replace("$1", state.skipTimes.length),
-					);
+					updateStatus(getMessage("statusFoundSegments").replace("$1", state.skipTimes.length));
 					renderSegments();
 					addProgressBarMarkers();
 				}
 			} catch (error) {
-				updateStatus(getMessage("statusFailedToFetch", "Failed to fetch skip times"), true);
+				updateStatus(getMessage("statusFailedToFetch"), true);
 			}
 		}
 
@@ -989,8 +903,8 @@
 			}
 
 			segmentsEl.classList.remove("aniskip-hidden");
-			const upvoteTitle = getMessage("voteUpvote", "Upvote");
-			const downvoteTitle = getMessage("voteDownvote", "Downvote");
+			const upvoteTitle = getMessage("voteUpvote");
+			const downvoteTitle = getMessage("voteDownvote");
 			const skipTypeLabels = getSkipTypeLabels();
 			listEl.textContent = "";
 			const fragment = document.createDocumentFragment();
@@ -1241,7 +1155,6 @@
 							// If it's an ending, mark episode as seen
 							if (segment.skipType === "ed" || segment.skipType === "mixed-ed") {
 								console.log("VOE AniSkip: Auto-skipped ending, marking as seen");
-								clearPlaybackPosition();
 								markCurrentEpisodeAsSeen();
 							}
 
@@ -1260,7 +1173,7 @@
 			if (state.settings.showButtons && state.settings.alwaysShowButton) {
 				const skipButton = state.ui.skipButton;
 				if (skipButton) {
-					const skipAmount = 90 + (state.settings.skipOffset || 0);
+					const skipAmount = 90 + (state.settings.skipOffset ?? DEFAULT_SETTINGS.skipOffset);
 					const typeEl = skipButton.querySelector(".aniskip-skip-type");
 					const expectedText = skipAmount + "s";
 					if (typeEl.textContent !== expectedText) {
@@ -1315,7 +1228,6 @@
 
 				// If it's an ending, mark episode as seen
 				if (skipType === "ed" || skipType === "mixed-ed") {
-					clearPlaybackPosition();
 					markCurrentEpisodeAsSeen();
 				}
 
@@ -1339,7 +1251,7 @@
 
 			const confirm = skipButton.querySelector(".aniskip-skip-confirm");
 			const textEl = skipButton.querySelector(".aniskip-skip-confirm-text");
-			textEl.textContent = getMessage("skipConfirmSave", "Save as $1 with AniSkip?").replace("$1", typeLabel);
+			textEl.textContent = getMessage("skipConfirmSave").replace("$1", typeLabel);
 			textEl.classList.remove("aniskip-confirm-success", "aniskip-confirm-error");
 			textEl.classList.remove("aniskip-hidden");
 			setSkipConfirmBtns(false);
@@ -1455,10 +1367,10 @@
 				return;
 			}
 
-			showSkipFeedback(getMessage("skipConfirmSaving", "Saving..."));
+			showSkipFeedback(getMessage("skipConfirmSaving"));
 			submitManualSkip(pending.startTime, pending.endTime, pending.type).then((ok) => {
 				showSkipFeedback(
-					ok ? getMessage("skipConfirmSaved", "Saved!") : getMessage("skipConfirmFailed", "Save failed"),
+					ok ? getMessage("skipConfirmSaved") : getMessage("skipConfirmFailed"),
 					ok ? "success" : "error",
 				);
 			});
@@ -1466,11 +1378,11 @@
 
 		async function submitManualSkip(startTime, endTime, type) {
 			if (!state.currentMalId || !state.currentEpisode || !state.player) {
-				updateStatus(getMessage("statusCannotSubmit", "Cannot submit: missing anime info"), true);
+				updateStatus(getMessage("statusCannotSubmit"), true);
 				return false;
 			}
 
-			updateStatus(getMessage("statusSubmitting", "Submitting skip time..."));
+			updateStatus(getMessage("statusSubmitting"));
 
 			try {
 				const response = await browser.runtime.sendMessage({
@@ -1486,15 +1398,15 @@
 				});
 
 				if (response.error) {
-					updateStatus(getMessage("statusSubmitFailed", "Submit failed: $1").replace("$1", response.error), true);
+					updateStatus(getMessage("statusSubmitFailed").replace("$1", response.error), true);
 					return false;
 				}
 
-				updateStatus(getMessage("statusSubmitSuccess", "Skip time submitted successfully!"));
+				updateStatus(getMessage("statusSubmitSuccess"));
 				await fetchSkipTimes();
 				return true;
 			} catch (error) {
-				updateStatus(getMessage("statusFailedToFetch", "Failed to submit skip time"), true);
+				updateStatus(getMessage("statusSubmitError"), true);
 				return false;
 			}
 		}
@@ -1651,7 +1563,7 @@
 
 		async function submitSkipTime() {
 			if (!state.currentMalId || !state.currentEpisode || !state.player) {
-				updateStatus(getMessage("statusCannotSubmit", "Cannot submit: missing anime info"), true);
+				updateStatus(getMessage("statusCannotSubmit"), true);
 				return;
 			}
 
@@ -1660,15 +1572,15 @@
 			const endTime = parseTime(document.querySelector("#aniskip-submit-end").value);
 
 			if (startTime === null || endTime === null) {
-				updateStatus(getMessage("statusInvalidTime", "Invalid time format"), true);
+				updateStatus(getMessage("statusInvalidTime"), true);
 				return;
 			}
 			if (startTime >= endTime) {
-				updateStatus(getMessage("statusStartBeforeEnd", "Start time must be before end time"), true);
+				updateStatus(getMessage("statusStartBeforeEnd"), true);
 				return;
 			}
 
-			updateStatus(getMessage("statusSubmitting", "Submitting skip time..."));
+			updateStatus(getMessage("statusSubmitting"));
 
 			try {
 				const response = await browser.runtime.sendMessage({
@@ -1683,15 +1595,14 @@
 					},
 				});
 
-				if (response.error)
-					updateStatus(getMessage("statusSubmitFailed", "Submit failed: $1").replace("$1", response.error), true);
+				if (response.error) updateStatus(getMessage("statusSubmitFailed").replace("$1", response.error), true);
 				else {
-					updateStatus(getMessage("statusSubmitSuccess", "Skip time submitted successfully!"));
+					updateStatus(getMessage("statusSubmitSuccess"));
 					document.querySelector("#aniskip-submit-panel").classList.add("aniskip-hidden");
 					await fetchSkipTimes();
 				}
 			} catch (error) {
-				updateStatus(getMessage("statusFailedToFetch", "Failed to submit skip time"), true);
+				updateStatus(getMessage("statusSubmitError"), true);
 			}
 		}
 
@@ -1739,12 +1650,12 @@
 			createUI();
 			requestNextEpisodeStatus();
 			setTimeout(requestNextEpisodeStatus, 1000);
-			updateStatus(getMessage("statusWaitingForPlayer", "Waiting for video player..."));
+			updateStatus(getMessage("statusWaitingForPlayer"));
 
 			try {
 				state.player = await waitForPlayer();
 				console.log("VOE AniSkip: Player ready");
-				updateStatus(getMessage("statusPlayerFound", "Player found, parsing anime info..."));
+				updateStatus(getMessage("statusPlayerFound"));
 
 				let animeInfo = null;
 				if (isInIframe()) animeInfo = await getAniWorldInfo();
@@ -1768,13 +1679,13 @@
 						state.currentMalId = cached.malId;
 						document.querySelector("#aniskip-anime-name").textContent = cached.title;
 						document.querySelector("#aniskip-mal-id").textContent = cached.malId;
-						updateStatus(getMessage("statusUsingCached", "Using cached anime info"));
+						updateStatus(getMessage("statusUsingCached"));
 						await fetchSkipTimes();
 					} else {
 						console.log("VOE AniSkip: Cache miss for", animeInfo.animeName);
 						document.querySelector("#aniskip-anime-name").textContent = animeInfo.animeName;
 						document.querySelector("#aniskip-search-input").value = animeInfo.animeName;
-						updateStatus(getMessage("statusSearching", "Searching for anime: $1").replace("$1", animeInfo.animeName));
+						updateStatus(getMessage("statusSearching").replace("$1", animeInfo.animeName));
 
 						let searchQuery = animeInfo.animeName;
 						if (animeInfo.season && animeInfo.season > 1) searchQuery += " season " + animeInfo.season;
@@ -1787,12 +1698,12 @@
 							await selectAnime(results[0].mal_id, results[0].title);
 						} else {
 							console.log("VOE AniSkip: No MAL search results, falling back to manual search");
-							updateStatus(getMessage("statusNotFound", 'Anime not found. Click "Change" to search manually.'));
+							updateStatus(getMessage("statusNotFound"));
 							document.querySelector("#aniskip-search-panel").classList.remove("aniskip-hidden");
 						}
 					}
 				} else {
-					updateStatus(getMessage("statusCouldNotParse", "Could not parse anime info from title"));
+					updateStatus(getMessage("statusCouldNotParse"));
 					document.querySelector("#aniskip-search-panel").classList.remove("aniskip-hidden");
 				}
 
@@ -1807,14 +1718,12 @@
 					// If less than 1 second remaining and we haven't already triggered, go to next episode
 					if (duration > 0 && timeRemaining > 0 && timeRemaining < 1 && !markedAsSeen) {
 						console.log("VOE AniSkip: Near end of video, skipping to next episode");
-						clearPlaybackPosition();
 						markCurrentEpisodeAsSeen();
 					}
 				});
 
 				state.player.on("complete", () => {
 					console.log("VOE AniSkip: Video ended");
-					clearPlaybackPosition();
 					markCurrentEpisodeAsSeen();
 				});
 
@@ -1822,7 +1731,6 @@
 				if (video) {
 					video.addEventListener("ended", () => {
 						console.log("VOE AniSkip: Video ended (native)");
-						clearPlaybackPosition();
 						markCurrentEpisodeAsSeen();
 					});
 				}
@@ -1830,17 +1738,12 @@
 				state.player.on("meta", () => setTimeout(addProgressBarMarkers, 500));
 				setTimeout(addProgressBarMarkers, 2000);
 
-				// Set up persistent features
-				setupPersistentVolume();
-				setupPlaybackPositionMemory();
+				// Restore persisted speed and play state
 				loadPersistentSpeed();
 				checkShouldAutoPlay();
 			} catch (error) {
 				console.error("VOE AniSkip: Failed to initialize:", error);
-				updateStatus(
-					getMessage("statusFailedToFind", "Failed to find video player: $1").replace("$1", error.message),
-					true,
-				);
+				updateStatus(getMessage("statusFailedToFind").replace("$1", error.message), true);
 			}
 		}
 
@@ -1851,10 +1754,11 @@
 				updateNextEpisodeButtonLabel();
 				if (state.ui.syncWithPlayerControls) state.ui.syncWithPlayerControls();
 
-				// Update theme class on container
+				// Update theme class and labels on container
 				const container = document.getElementById("aniskip-container");
-				if (container && message.settings.uiTheme) {
-					container.className = `theme-${message.settings.uiTheme}`;
+				if (container) {
+					if (message.settings.uiTheme) container.className = `theme-${message.settings.uiTheme}`;
+					applyPanelTranslations(container);
 				}
 
 				// Update speed control visibility

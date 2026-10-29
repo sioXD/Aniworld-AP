@@ -40,6 +40,7 @@
 				--accent-secondary: #7c3aed;
 				--accent-glow: rgba(255, 51, 102, 0.4);
 				--accent-green: #22c55e;
+				--accent-danger: #ef4444;
 				--text-primary: #f0f0f5;
 				--text-secondary: #8888a0;
 				--text-muted: #5c5c70;
@@ -69,6 +70,8 @@
 			}
 
 			body[data-theme="classic"]::after,
+			body[data-theme="classic"]::after,
+			body[data-theme="classic"]::after,
 			body:not([data-theme="aniworld"])::after {
 				content: "";
 				position: fixed;
@@ -93,6 +96,7 @@
 				--accent-secondary: #637cf9;
 				--accent-glow: rgba(99, 124, 249, 0.3);
 				--accent-green: #63d02b;
+				--accent-danger: #ef4444;
 				--text-primary: #e8e8e8;
 				--text-secondary: #b0c4ce;
 				--text-muted: #7a9aa8;
@@ -225,6 +229,17 @@
 				margin-left: 4px;
 			}
 
+			.header-text h1 .brand-fork {
+				background: linear-gradient(100deg, #9fa8f8 0%, #b7f897 100%);
+				-webkit-background-clip: text;
+				background-clip: text;
+				-webkit-text-fill-color: transparent;
+
+				font-weight: 400;
+				font-size: 14px;
+				margin-left: 4px;
+			}
+
 			.header-text .tagline {
 				font-size: 12px;
 				color: var(--text-secondary);
@@ -245,6 +260,7 @@
 				/* Fixed band of panel colour above the scroll area, so scrolled rows are
          clipped below the concave fillets instead of right at their base. */
 				border-top: 10px solid var(--bg-secondary);
+				border-bottom: 10px solid var(--bg-secondary);
 				padding: 4px 12px 12px;
 				/* Popups are capped at 600px: header + tabs + footer need room */
 				max-height: 360px;
@@ -723,6 +739,62 @@
 			}
 
 			/* ============================================
+       RESET BUTTON
+       ============================================ */
+			/* Only the label is red — the button itself stays neutral like the
+			   other controls, the two-step confirm guards against accidents. */
+			.setting-label-danger {
+				color: var(--accent-danger);
+			}
+
+			.reset-button {
+				padding: 6px 12px;
+				background: var(--bg-tertiary);
+				border: 1px solid var(--border-color);
+				border-radius: 6px;
+				color: var(--text-secondary);
+				font-family: inherit;
+				font-size: 12px;
+				font-weight: 500;
+				white-space: nowrap;
+				cursor: pointer;
+				transition: all 0.2s ease;
+			}
+
+			body[data-theme="classic"] .reset-button {
+				padding: 8px 14px;
+				border-radius: 8px;
+				font-weight: 600;
+			}
+
+			.reset-button:hover {
+				border-color: var(--border-light);
+				color: var(--text-primary);
+			}
+
+			.reset-button:focus-visible {
+				outline: none;
+				border-color: var(--accent-primary);
+				box-shadow: 0 0 0 2px var(--accent-glow);
+			}
+
+			/* Armed state: the next click actually resets */
+			.reset-button.confirming {
+				background: var(--accent-primary);
+				border-color: var(--accent-primary);
+				color: white;
+			}
+
+			body[data-theme="classic"] .reset-button.confirming {
+				background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+			}
+
+			.reset-button.confirming:hover {
+				color: white;
+				opacity: 0.9;
+			}
+
+			/* ============================================
        COLOR PICKER
        ============================================ */
 			.color-picker-wrapper {
@@ -1176,7 +1248,10 @@
 				<div class="logo-icon">AP</div>
 			</div>
 			<div class="header-text">
-				<h1>Ani<span class="brand-world">World</span><span class="brand-ap">AP [fork]</span></h1>
+				<h1>
+					Ani<span class="brand-world">World</span><span class="brand-ap">AP </span>
+					<span class="brand-fork">[fork]</span>
+				</h1>
 				<div class="tagline" data-i18n="tagline">Skip Intros & Outros</div>
 			</div>
 		</div>
@@ -1466,35 +1541,26 @@
 							</div>
 							<input type="number" id="skipOffset" class="number-input" min="-5" max="5" step="0.5" />
 						</div>
+					</div>
+				</div>
+				<div class="section">
+					<div class="section-header">
+						<i class="fas fa-rotate-left"></i>
+						<div class="section-icon"><i class="fas fa-rotate-left"></i></div>
+						<div class="section-title" data-i18n="sectionReset">Reset</div>
+					</div>
+					<div class="settings-card">
 						<div class="setting-row">
-							<i class="setting-icon fas fa-volume-high"></i>
+							<i class="setting-icon fas fa-rotate-left"></i>
 							<div class="setting-info">
-								<div class="setting-label" data-i18n="labelRememberVolume">Remember Volume</div>
-								<div class="setting-description" data-i18n="descRememberVolume">Persist volume across episodes</div>
+								<div class="setting-label setting-label-danger" data-i18n="labelResetSettings">
+									Reset Settings
+								</div>
+								<div class="setting-description" data-i18n="descResetSettings">
+									Restore all settings to their defaults
+								</div>
 							</div>
-							<label class="toggle">
-								<input type="checkbox" id="persistentVolume" />
-								<span class="toggle-track"></span>
-							</label>
-						</div>
-						<div class="setting-row">
-							<i class="setting-icon fas fa-location-dot"></i>
-							<div class="setting-info">
-								<div class="setting-label" data-i18n="labelRememberPosition">Remember Position</div>
-								<div class="setting-description" data-i18n="descRememberPosition">Resume where you left off</div>
-							</div>
-							<label class="toggle">
-								<input type="checkbox" id="persistentPlaybackPosition" />
-								<span class="toggle-track"></span>
-							</label>
-						</div>
-						<div class="setting-row">
-							<i class="setting-icon fas fa-calendar-days"></i>
-							<div class="setting-info">
-								<div class="setting-label" data-i18n="labelPositionExpiry">Position Expiry</div>
-								<div class="setting-description" data-i18n="descPositionExpiry">Days until position resets</div>
-							</div>
-							<input type="number" id="playbackPositionExpirationDays" class="number-input" min="1" max="30" step="1" />
+							<button type="button" id="resetSettings" class="reset-button" data-i18n="resetButton">Reset</button>
 						</div>
 					</div>
 				</div>

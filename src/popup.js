@@ -40,12 +40,6 @@ const translations = {
 		descNextEpisode: "Auto navigate to the next episode",
 		labelShowNextEpisodeButton: "Next Episode Button",
 		descShowNextEpisodeButton: "Show a button in the player to jump to the next episode",
-		labelRememberVolume: "Remember Volume",
-		descRememberVolume: "Persist volume across episodes",
-		labelRememberPosition: "Remember Position",
-		descRememberPosition: "Resume where you left off",
-		labelPositionExpiry: "Position Expiry",
-		descPositionExpiry: "Days until position resets",
 		sectionColors: "Progress Bar Colors",
 		labelOpeningMarker: "Opening Marker",
 		descOpeningMarker: "Intro segment color",
@@ -55,6 +49,11 @@ const translations = {
 		descRecapMarker: "Recap segment color",
 		labelMarkerOpacity: "Marker Opacity",
 		descMarkerOpacity: "Transparency (0.1 - 1.0)",
+		sectionReset: "Reset",
+		labelResetSettings: "Reset Settings",
+		descResetSettings: "Restore all settings to their defaults",
+		resetButton: "Reset",
+		resetConfirm: "Click again",
 		footerSaved: "Saved",
 		colorPickerTitle: "Choose Color",
 		colorPickerCancel: "Cancel",
@@ -98,12 +97,6 @@ const translations = {
 		descNextEpisode: "Automatisch zur nächsten Folge navigieren",
 		labelShowNextEpisodeButton: "Nächste-Folge-Button",
 		descShowNextEpisodeButton: "Button im Player anzeigen, um zur nächsten Folge zu springen",
-		labelRememberVolume: "Lautstärke merken",
-		descRememberVolume: "Lautstärke über Episoden beibehalten",
-		labelRememberPosition: "Position merken",
-		descRememberPosition: "Dort fortsetzen, wo du aufgehört hast",
-		labelPositionExpiry: "Position-Ablauf",
-		descPositionExpiry: "Tage bis Position zurückgesetzt wird",
 		sectionColors: "Fortschrittsbalken-Farben",
 		labelOpeningMarker: "Intro-Markierung",
 		descOpeningMarker: "Intro-Segment Farbe",
@@ -113,6 +106,11 @@ const translations = {
 		descRecapMarker: "Zusammenfassungs-Segment Farbe",
 		labelMarkerOpacity: "Markierungs-Deckkraft",
 		descMarkerOpacity: "Transparenz (0.1 - 1.0)",
+		sectionReset: "Zurücksetzen",
+		labelResetSettings: "Einstellungen zurücksetzen",
+		descResetSettings: "Alle Einstellungen auf die Standardwerte zurücksetzen",
+		resetButton: "Zurücksetzen",
+		resetConfirm: "Erneut klicken",
 		footerSaved: "Gespeichert",
 		colorPickerTitle: "Farbe wählen",
 		colorPickerCancel: "Abbrechen",
@@ -480,6 +478,54 @@ async function saveSettings() {
 	}
 }
 
+// Translate a single key using the language currently selected in the popup
+function translate(key) {
+	const select = document.getElementById("language");
+	const language = select ? select.value : DEFAULT_SETTINGS.language;
+	const t = translations[language] || translations.en;
+	return t[key] || translations.en[key] || key;
+}
+
+// Reset button lives in the Advanced tab. The first click only arms it, so a
+// stray click cannot wipe every setting; the second click within 4s applies
+// DEFAULT_SETTINGS to all controls and persists them in one save.
+function initResetButton() {
+	const button = document.getElementById("resetSettings");
+	if (!button) return;
+
+	let confirmTimer = null;
+
+	function disarm() {
+		clearTimeout(confirmTimer);
+		confirmTimer = null;
+		button.classList.remove("confirming");
+		button.dataset.i18n = "resetButton";
+		button.textContent = translate("resetButton");
+	}
+
+	button.addEventListener("click", () => {
+		if (!confirmTimer) {
+			button.classList.add("confirming");
+			button.dataset.i18n = "resetConfirm";
+			button.textContent = translate("resetConfirm");
+			confirmTimer = setTimeout(disarm, 4000);
+			return;
+		}
+
+		disarm();
+
+		getSettingElements().forEach((element) => {
+			const value = DEFAULT_SETTINGS[element.id];
+			if (value === undefined) return;
+			writeSettingValue(element, value);
+		});
+
+		updateColorPreviews();
+		updateDependentSettings();
+		saveSettings();
+	});
+}
+
 // Add event listeners
 document.addEventListener("DOMContentLoaded", async () => {
 	// Fill the UI from the defaults first, then overwrite with stored settings
@@ -496,6 +542,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 	loadSettings();
 	initColorPicker();
+	initResetButton();
 
 	// Setup dependency listeners
 	const showButtonsEl = document.getElementById("showButtons");

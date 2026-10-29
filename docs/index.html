@@ -1367,9 +1367,8 @@
 					<div class="note">
 						<span class="note-mark">!</span>
 						<span>
-							<strong>Defaults are conservative.</strong> Auto-skip for OP, ED and recaps is off until you enable it,
-							and so are volume/position memory — VOE already remembers those. The fork only adds what the player does
-							not do itself.
+							<strong>Defaults are conservative.</strong> Auto-skip for OP, ED and recaps is off until you enable it.
+							The fork only adds what the player does not do itself — volume and playback position are left to VOE.
 						</span>
 					</div>
 				</section>
@@ -1452,7 +1451,8 @@
 					<h2>Every option and its default</h2>
 					<p class="lede">
 						Defaults live in <code>src/defaults.js</code> as a single object — the popup, background script and content
-						script all read from it. Keys below match the storage keys.
+						script all read from it. Keys below match the storage keys. The reset button in the popup's Advanced tab
+						restores every option to these values (it needs a second click to confirm).
 					</p>
 
 					<div class="table-wrap">
@@ -1539,21 +1539,6 @@
 										<th>Next episode button<span class="key">showNextEpisodeButton</span></th>
 										<td class="default"><span class="pill on">on</span></td>
 										<td>Shows the next-episode button in the player bar.</td>
-									</tr>
-									<tr>
-										<th>Remember volume<span class="key">persistentVolume</span></th>
-										<td class="default"><span class="pill off">off</span></td>
-										<td>Carries the volume over to the next episode. Off by default: VOE already does this.</td>
-									</tr>
-									<tr>
-										<th>Remember position<span class="key">persistentPlaybackPosition</span></th>
-										<td class="default"><span class="pill off">off</span></td>
-										<td>Resumes where you left off. Off by default for the same reason.</td>
-									</tr>
-									<tr>
-										<th>Position expiry<span class="key">playbackPositionExpirationDays</span></th>
-										<td class="default"><span class="pill off">7 days</span></td>
-										<td>How long a saved position stays valid. Range 1–30 days.</td>
 									</tr>
 
 									<tr class="group">
@@ -1677,7 +1662,7 @@
 								<tbody>
 									<tr>
 										<th><code>storage</code></th>
-										<td>Save settings, cached anime lookups, volume and playback position.</td>
+										<td>Save settings and cached anime lookups.</td>
 									</tr>
 									<tr>
 										<th><code>activeTab</code></th>
