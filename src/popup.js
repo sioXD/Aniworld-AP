@@ -5,6 +5,9 @@ const translations = {
   en: {
     settingsTitle: "AniWorld AP [fork] Settings",
     tagline: "Skip Intros & Outros",
+    tabGeneral: "General",
+    tabStyles: "Styles",
+    tabAdvanced: "Advanced",
     sectionAppearance: "Appearance",
     labelLanguage: "Language",
     descLanguage: "Choose your preferred language",
@@ -62,6 +65,9 @@ const translations = {
   de: {
     settingsTitle: "AniWorld AP [fork] Einstellungen",
     tagline: "Intros & Outros überspringen",
+    tabGeneral: "Allgemein",
+    tabStyles: "Design",
+    tabAdvanced: "Erweitert",
     sectionAppearance: "Darstellung",
     labelLanguage: "Sprache",
     descLanguage: "Wähle deine bevorzugte Sprache",
@@ -351,6 +357,45 @@ function updateDependentSettings() {
   });
 }
 
+// Tab navigation: exactly one panel is visible at a time
+function initTabs() {
+  const tabs = Array.from(document.querySelectorAll('.tab'));
+  const panels = Array.from(document.querySelectorAll('.tab-panel'));
+  if (!tabs.length || !panels.length) return;
+
+  function activate(name) {
+    tabs.forEach(tab => {
+      const isActive = tab.dataset.tab === name;
+      tab.classList.toggle('active', isActive);
+      tab.setAttribute('aria-selected', String(isActive));
+      tab.tabIndex = isActive ? 0 : -1;
+    });
+
+    panels.forEach(panel => {
+      panel.classList.toggle('active', panel.dataset.panel === name);
+    });
+  }
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => activate(tab.dataset.tab));
+
+    // Arrow keys move between tabs
+    tab.addEventListener('keydown', event => {
+      if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return;
+      event.preventDefault();
+      const index = tabs.indexOf(tab);
+      const next = event.key === 'ArrowRight'
+        ? (index + 1) % tabs.length
+        : (index - 1 + tabs.length) % tabs.length;
+      tabs[next].focus();
+      activate(tabs[next].dataset.tab);
+    });
+  });
+
+  // Always open on the first tab
+  activate(tabs[0].dataset.tab);
+}
+
 // Load settings on popup open
 async function loadSettings() {
   try {
@@ -416,6 +461,7 @@ async function saveSettings() {
 document.addEventListener('DOMContentLoaded', async () => {
   // Fill the UI from the defaults first, then overwrite with stored settings
   renderDefaultSettings();
+  initTabs();
 
   // Load theme immediately to prevent flash
   try {

@@ -222,15 +222,19 @@
        CONTENT
        ============================================ */
     .content {
-      padding: 14px;
-      max-height: 420px;
+      margin: 0 10px 10px;
+      padding: 12px;
+      /* Popups are capped at 600px: header + tabs + footer need room */
+      max-height: 360px;
       overflow-y: auto;
+      background: var(--bg-secondary);
+      border-radius: 0 0 14px 14px;
       position: relative;
       z-index: 1;
     }
 
     body[data-theme="classic"] .content {
-      padding: 16px 20px 20px;
+      padding: 14px 16px 16px;
     }
 
     /* ============================================
@@ -309,10 +313,120 @@
     }
 
     /* ============================================
+       TABS
+       ============================================ */
+    .tabs {
+      position: relative;
+      display: flex;
+      margin: 10px 10px 0;
+      z-index: 2;
+    }
+
+    .tab {
+      position: relative;
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 9px 6px 10px;
+      background: transparent;
+      border: none;
+      border-radius: 12px 12px 0 0;
+      color: var(--text-secondary);
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: color 0.2s ease, background 0.2s ease;
+    }
+
+    .tab i {
+      font-size: 11px;
+      opacity: 0.85;
+    }
+
+    body[data-theme="classic"] .tab {
+      border-radius: 14px 14px 0 0;
+      font-size: 11px;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+    }
+
+    .tab:hover {
+      color: var(--text-primary);
+    }
+
+    .tab.active {
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    .tab.active i {
+      opacity: 1;
+      color: var(--accent-primary);
+    }
+
+    /* Concave fillets where the active tab flows into the panel below.
+       The helper box sits beside the tab and a radial gradient carves a
+       quarter circle out of its outer top corner, so the tab colour curls
+       down into the panel instead of bulging away from it. The box is 1px
+       wider than the gap it bridges, so it overlaps the tab and the two
+       anti-aliased edges cannot leave a light seam. */
+    .tab.active::before,
+    .tab.active::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      width: 13px;
+      height: 12px;
+      pointer-events: none;
+    }
+
+    .tab.active::before {
+      left: -12px;
+      background: radial-gradient(
+        circle at 0 0,
+        transparent 11.5px,
+        var(--bg-secondary) 12px
+      );
+    }
+
+    .tab.active::after {
+      right: -12px;
+      background: radial-gradient(
+        circle at 100% 0,
+        transparent 11.5px,
+        var(--bg-secondary) 12px
+      );
+    }
+
+    /* The outer edges sit flush with the panel, so they need no fillet */
+    .tab.active:first-child::before,
+    .tab.active:last-child::after {
+      display: none;
+    }
+
+    .tab:focus-visible {
+      outline: 2px solid var(--accent-primary);
+      outline-offset: -2px;
+      border-radius: 12px 12px 0 0;
+    }
+
+    .tab-panel {
+      display: none;
+    }
+
+    .tab-panel.active {
+      display: block;
+    }
+
+    /* ============================================
        SETTINGS CARD
        ============================================ */
     .settings-card {
-      background: var(--bg-secondary);
+      background: var(--bg-primary);
       border-radius: 8px;
       border: 1px solid var(--border-color);
       overflow: hidden;
@@ -998,16 +1112,14 @@
     /* ============================================
        CLASSIC THEME ANIMATIONS
        ============================================ */
-    body[data-theme="classic"] .section {
+    body[data-theme="classic"] .tab-panel.active .section {
       animation: fadeSlideIn 0.4s ease forwards;
       opacity: 0;
     }
 
-    body[data-theme="classic"] .section:nth-child(1) { animation-delay: 0.05s; }
-    body[data-theme="classic"] .section:nth-child(2) { animation-delay: 0.1s; }
-    body[data-theme="classic"] .section:nth-child(3) { animation-delay: 0.15s; }
-    body[data-theme="classic"] .section:nth-child(4) { animation-delay: 0.2s; }
-    body[data-theme="classic"] .section:nth-child(5) { animation-delay: 0.25s; }
+    body[data-theme="classic"] .tab-panel.active .section:nth-child(1) { animation-delay: 0.05s; }
+    body[data-theme="classic"] .tab-panel.active .section:nth-child(2) { animation-delay: 0.1s; }
+    body[data-theme="classic"] .tab-panel.active .section:nth-child(3) { animation-delay: 0.15s; }
 
     @keyframes fadeSlideIn {
       from {
@@ -1033,275 +1145,310 @@
     </div>
   </div>
 
+  <div class="tabs" role="tablist">
+    <button type="button" class="tab active" id="tab-general" role="tab" aria-selected="true" aria-controls="panel-general" data-tab="general">
+      <i class="fas fa-sliders"></i>
+      <span data-i18n="tabGeneral">General</span>
+    </button>
+    <button type="button" class="tab" id="tab-styles" role="tab" aria-selected="false" aria-controls="panel-styles" data-tab="styles">
+      <i class="fas fa-palette"></i>
+      <span data-i18n="tabStyles">Styles</span>
+    </button>
+    <button type="button" class="tab" id="tab-advanced" role="tab" aria-selected="false" aria-controls="panel-advanced" data-tab="advanced">
+      <i class="fas fa-gears"></i>
+      <span data-i18n="tabAdvanced">Advanced</span>
+    </button>
+  </div>
   <div class="content">
-    <!-- Appearance Section -->
-    <div class="section">
-      <div class="section-header">
-        <i class="fas fa-paint-brush"></i>
-        <div class="section-icon"><i class="fas fa-paint-brush"></i></div>
-        <div class="section-title" data-i18n="sectionAppearance">Appearance</div>
-      </div>
-      <div class="settings-card">
-        <div class="setting-row">
-          <i class="setting-icon fas fa-globe"></i>
-          <div class="setting-info">
-            <div class="setting-label" data-i18n="labelLanguage">Language</div>
-            <div class="setting-description" data-i18n="descLanguage">Choose your preferred language</div>
-          </div>
-          <select id="language" class="select-input">
-            <option value="en" data-i18n="langEnglish">English</option>
-            <option value="de" data-i18n="langGerman">German</option>
-          </select>
+    <div class="tab-panel active" id="panel-general" data-panel="general" role="tabpanel" aria-labelledby="tab-general">
+      <div class="section">
+        <div class="section-header">
+          <i class="fas fa-forward"></i>
+          <div class="section-icon"><i class="fas fa-forward"></i></div>
+          <div class="section-title" data-i18n="sectionAutoSkip">Auto Skip</div>
         </div>
-        <div class="setting-row">
-          <i class="setting-icon fas fa-brush"></i>
-          <div class="setting-info">
-            <div class="setting-label" data-i18n="labelUiTheme">UI Theme</div>
-            <div class="setting-description" data-i18n="descUiTheme">Choose your preferred style</div>
-          </div>
-          <select id="uiTheme" class="select-input">
-            <option value="aniworld" data-i18n="themeAniworld">AniWorld</option>
-            <option value="classic" data-i18n="themeClassic">Classic</option>
-          </select>
+        <div class="settings-card">
+          <div class="setting-row">
+                    <i class="setting-icon fas fa-forward"></i>
+                    <div class="setting-info">
+                      <div class="setting-label" data-i18n="labelSkipOpening">Skip Opening</div>
+                      <div class="setting-description" data-i18n="descSkipOpening">Auto-skip anime intros</div>
+                    </div>
+                    <label class="toggle">
+                      <input type="checkbox" id="autoSkipOp">
+                      <span class="toggle-track"></span>
+                    </label>
+                  </div>
+          <div class="setting-row">
+                    <i class="setting-icon fas fa-backward"></i>
+                    <div class="setting-info">
+                      <div class="setting-label" data-i18n="labelSkipEnding">Skip Ending</div>
+                      <div class="setting-description" data-i18n="descSkipEnding">Auto-skip anime outros</div>
+                    </div>
+                    <label class="toggle">
+                      <input type="checkbox" id="autoSkipEd">
+                      <span class="toggle-track"></span>
+                    </label>
+                  </div>
+          <div class="setting-row">
+                    <i class="setting-icon fas fa-rotate-left"></i>
+                    <div class="setting-info">
+                      <div class="setting-label" data-i18n="labelSkipRecap">Skip Recap</div>
+                      <div class="setting-description" data-i18n="descSkipRecap">Auto-skip recap segments</div>
+                    </div>
+                    <label class="toggle">
+                      <input type="checkbox" id="autoSkipRecap">
+                      <span class="toggle-track"></span>
+                    </label>
+                  </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-header">
+          <i class="fas fa-tv"></i>
+          <div class="section-icon"><i class="fas fa-tv"></i></div>
+          <div class="section-title" data-i18n="sectionDisplay">Display</div>
+        </div>
+        <div class="settings-card">
+          <div class="setting-row">
+                    <i class="setting-icon fas fa-eye"></i>
+                    <div class="setting-info">
+                      <div class="setting-label" data-i18n="labelShowButtons">Show Skip Buttons</div>
+                      <div class="setting-description" data-i18n="descShowButtons">Display manual skip buttons</div>
+                    </div>
+                    <label class="toggle">
+                      <input type="checkbox" id="showButtons">
+                      <span class="toggle-track"></span>
+                    </label>
+                  </div>
+          <div class="setting-row" data-depends-on="showButtons">
+                    <i class="setting-icon fas fa-clock"></i>
+                    <div class="setting-info">
+                      <div class="setting-label" data-i18n="labelAlwaysShowButton">Always Show Skip Button</div>
+                      <div class="setting-description" data-i18n="descAlwaysShowButton">Skip 90s if no OP/ED is playing</div>
+                    </div>
+                    <label class="toggle">
+                      <input type="checkbox" id="alwaysShowButton">
+                      <span class="toggle-track"></span>
+                    </label>
+                  </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-header">
+          <i class="fas fa-clock"></i>
+          <div class="section-icon"><i class="fas fa-clock"></i></div>
+          <div class="section-title" data-i18n="sectionPlayback">Playback</div>
+        </div>
+        <div class="settings-card">
+          <div class="setting-row">
+                    <i class="setting-icon fas fa-forward"></i>
+                    <div class="setting-info">
+                      <div class="setting-label" data-i18n="labelNextEpisode">Next Episode</div>
+                      <div class="setting-description" data-i18n="descNextEpisode">Auto navigate to the next episode</div>
+                    </div>
+                    <label class="toggle">
+                      <input type="checkbox" id="nextEpisode">
+                      <span class="toggle-track"></span>
+                    </label>
+                  </div>
+          <div class="setting-row">
+                    <i class="setting-icon fas fa-forward-step"></i>
+                    <div class="setting-info">
+                      <div class="setting-label" data-i18n="labelShowNextEpisodeButton">Next Episode Button</div>
+                      <div class="setting-description" data-i18n="descShowNextEpisodeButton">Show a button in the player to jump to the next episode</div>
+                    </div>
+                    <label class="toggle">
+                      <input type="checkbox" id="showNextEpisodeButton">
+                      <span class="toggle-track"></span>
+                    </label>
+                  </div>
+          <div class="setting-row">
+                    <i class="setting-icon fas fa-play"></i>
+                    <div class="setting-info">
+                      <div class="setting-label" data-i18n="labelPlayAfterSkip">Play After Skip</div>
+                      <div class="setting-description" data-i18n="descPlayAfterSkip">Resume playback after skipping</div>
+                    </div>
+                    <label class="toggle">
+                      <input type="checkbox" id="playAfterSkip">
+                      <span class="toggle-track"></span>
+                    </label>
+                  </div>
         </div>
       </div>
     </div>
 
-    <!-- Auto Skip Section -->
-    <div class="section">
-      <div class="section-header">
-        <i class="fas fa-forward"></i>
-        <div class="section-icon"><i class="fas fa-play"></i></div>
-        <div class="section-title" data-i18n="sectionAutoSkip">Auto Skip</div>
+    <div class="tab-panel" id="panel-styles" data-panel="styles" role="tabpanel" aria-labelledby="tab-styles">
+      <div class="section">
+        <div class="section-header">
+          <i class="fas fa-paint-brush"></i>
+          <div class="section-icon"><i class="fas fa-paint-brush"></i></div>
+          <div class="section-title" data-i18n="sectionAppearance">Appearance</div>
+        </div>
+        <div class="settings-card">
+          <div class="setting-row">
+                    <i class="setting-icon fas fa-globe"></i>
+                    <div class="setting-info">
+                      <div class="setting-label" data-i18n="labelLanguage">Language</div>
+                      <div class="setting-description" data-i18n="descLanguage">Choose your preferred language</div>
+                    </div>
+                    <select id="language" class="select-input">
+                      <option value="en" data-i18n="langEnglish">English</option>
+                      <option value="de" data-i18n="langGerman">German</option>
+                    </select>
+                  </div>
+          <div class="setting-row">
+                    <i class="setting-icon fas fa-brush"></i>
+                    <div class="setting-info">
+                      <div class="setting-label" data-i18n="labelUiTheme">UI Theme</div>
+                      <div class="setting-description" data-i18n="descUiTheme">Choose your preferred style</div>
+                    </div>
+                    <select id="uiTheme" class="select-input">
+                      <option value="aniworld" data-i18n="themeAniworld">AniWorld</option>
+                      <option value="classic" data-i18n="themeClassic">Classic</option>
+                    </select>
+                  </div>
+        </div>
       </div>
-      <div class="settings-card">
-        <div class="setting-row">
-          <i class="setting-icon fas fa-forward"></i>
-          <div class="setting-info">
-            <div class="setting-label" data-i18n="labelSkipOpening">Skip Opening</div>
-            <div class="setting-description" data-i18n="descSkipOpening">Auto-skip anime intros</div>
-          </div>
-          <label class="toggle">
-            <input type="checkbox" id="autoSkipOp">
-            <span class="toggle-track"></span>
-          </label>
+
+      <div class="section">
+        <div class="section-header">
+          <i class="fas fa-palette"></i>
+          <div class="section-icon"><i class="fas fa-palette"></i></div>
+          <div class="section-title" data-i18n="sectionColors">Progress Bar Colors</div>
         </div>
-        <div class="setting-row">
-          <i class="setting-icon fas fa-backward"></i>
-          <div class="setting-info">
-            <div class="setting-label" data-i18n="labelSkipEnding">Skip Ending</div>
-            <div class="setting-description" data-i18n="descSkipEnding">Auto-skip anime outros</div>
-          </div>
-          <label class="toggle">
-            <input type="checkbox" id="autoSkipEd">
-            <span class="toggle-track"></span>
-          </label>
-        </div>
-        <div class="setting-row">
-          <i class="setting-icon fas fa-rotate-left"></i>
-          <div class="setting-info">
-            <div class="setting-label" data-i18n="labelSkipRecap">Skip Recap</div>
-            <div class="setting-description" data-i18n="descSkipRecap">Auto-skip recap segments</div>
-          </div>
-          <label class="toggle">
-            <input type="checkbox" id="autoSkipRecap">
-            <span class="toggle-track"></span>
-          </label>
+        <div class="settings-card">
+          <div class="setting-row">
+                    <i class="setting-icon fas fa-pen"></i>
+                    <div class="setting-info">
+                      <div class="setting-label" data-i18n="labelOpeningMarker">Opening Marker</div>
+                      <div class="setting-description" data-i18n="descOpeningMarker">Intro segment color</div>
+                    </div>
+                    <div class="color-picker-wrapper">
+                      <button type="button" class="color-button" id="markerColorOpBtn" data-target="markerColorOp">
+                        <span class="color-preview" id="markerColorOpPreview"></span>
+                      </button>
+                      <input type="text" id="markerColorOp" class="color-text-input" maxlength="7">
+                    </div>
+                  </div>
+          <div class="setting-row">
+                    <i class="setting-icon fas fa-pen"></i>
+                    <div class="setting-info">
+                      <div class="setting-label" data-i18n="labelEndingMarker">Ending Marker</div>
+                      <div class="setting-description" data-i18n="descEndingMarker">Outro segment color</div>
+                    </div>
+                    <div class="color-picker-wrapper">
+                      <button type="button" class="color-button" id="markerColorEdBtn" data-target="markerColorEd">
+                        <span class="color-preview" id="markerColorEdPreview"></span>
+                      </button>
+                      <input type="text" id="markerColorEd" class="color-text-input" maxlength="7">
+                    </div>
+                  </div>
+          <div class="setting-row">
+                    <i class="setting-icon fas fa-pen"></i>
+                    <div class="setting-info">
+                      <div class="setting-label" data-i18n="labelRecapMarker">Recap Marker</div>
+                      <div class="setting-description" data-i18n="descRecapMarker">Recap segment color</div>
+                    </div>
+                    <div class="color-picker-wrapper">
+                      <button type="button" class="color-button" id="markerColorRecapBtn" data-target="markerColorRecap">
+                        <span class="color-preview" id="markerColorRecapPreview"></span>
+                      </button>
+                      <input type="text" id="markerColorRecap" class="color-text-input" maxlength="7">
+                    </div>
+                  </div>
+          <div class="setting-row">
+                    <i class="setting-icon fas fa-eye-dropper"></i>
+                    <div class="setting-info">
+                      <div class="setting-label" data-i18n="labelMarkerOpacity">Marker Opacity</div>
+                      <div class="setting-description" data-i18n="descMarkerOpacity">Transparency (0.1 - 1.0)</div>
+                    </div>
+                    <input type="number" id="markerOpacity" class="number-input" min="0.1" max="1" step="0.1">
+                  </div>
         </div>
       </div>
     </div>
 
-    <!-- Display Section -->
-    <div class="section">
-      <div class="section-header">
-        <i class="fas fa-tv"></i>
-        <div class="section-icon"><i class="fas fa-tv"></i></div>
-        <div class="section-title" data-i18n="sectionDisplay">Display</div>
-      </div>
-      <div class="settings-card">
-        <div class="setting-row">
-          <i class="setting-icon fas fa-eye"></i>
-          <div class="setting-info">
-            <div class="setting-label" data-i18n="labelShowButtons">Show Skip Buttons</div>
-            <div class="setting-description" data-i18n="descShowButtons">Display manual skip buttons</div>
-          </div>
-          <label class="toggle">
-            <input type="checkbox" id="showButtons">
-            <span class="toggle-track"></span>
-          </label>
+    <div class="tab-panel" id="panel-advanced" data-panel="advanced" role="tabpanel" aria-labelledby="tab-advanced">
+      <div class="section">
+        <div class="section-header">
+          <i class="fas fa-gauge-high"></i>
+          <div class="section-icon"><i class="fas fa-gauge-high"></i></div>
+          <div class="section-title" data-i18n="sectionDisplay">Display</div>
         </div>
-        <div class="setting-row" data-depends-on="showButtons">
-          <i class="setting-icon fas fa-clock"></i>
-          <div class="setting-info">
-            <div class="setting-label" data-i18n="labelAlwaysShowButton">Always Show Skip Button</div>
-            <div class="setting-description" data-i18n="descAlwaysShowButton">Skip 90s if no OP/ED is playing</div>
-          </div>
-          <label class="toggle">
-            <input type="checkbox" id="alwaysShowButton">
-            <span class="toggle-track"></span>
-          </label>
-        </div>
-        <div class="setting-row">
-          <i class="setting-icon fas fa-gauge-high"></i>
-          <div class="setting-info">
-            <div class="setting-label" data-i18n="labelShowSpeedControl">Show Speed Control</div>
-            <div class="setting-description" data-i18n="descShowSpeedControl">Show speed adjustment buttons</div>
-          </div>
-          <label class="toggle">
-            <input type="checkbox" id="showSpeedControl">
-            <span class="toggle-track"></span>
-          </label>
-        </div>
-        <div class="setting-row" data-depends-on="showSpeedControl">
-          <i class="setting-icon fas fa-floppy-disk"></i>
-          <div class="setting-info">
-            <div class="setting-label" data-i18n="labelPersistentSpeed">Persistent Speed</div>
-            <div class="setting-description" data-i18n="descPersistentSpeed">Remember speed across episodes</div>
-          </div>
-          <label class="toggle">
-            <input type="checkbox" id="persistentSpeed">
-            <span class="toggle-track"></span>
-          </label>
-        </div>
-        <div class="setting-row">
-          <i class="setting-icon fas fa-arrows-left-right"></i>
-          <div class="setting-info">
-            <div class="setting-label" data-i18n="labelSkipOffset">Skip Offset</div>
-            <div class="setting-description" data-i18n="descSkipOffset">Seconds to add after skip</div>
-          </div>
-          <input type="number" id="skipOffset" class="number-input" min="-5" max="5" step="0.5">
+        <div class="settings-card">
+          <div class="setting-row">
+                    <i class="setting-icon fas fa-gauge-high"></i>
+                    <div class="setting-info">
+                      <div class="setting-label" data-i18n="labelShowSpeedControl">Show Speed Control</div>
+                      <div class="setting-description" data-i18n="descShowSpeedControl">Show speed adjustment buttons</div>
+                    </div>
+                    <label class="toggle">
+                      <input type="checkbox" id="showSpeedControl">
+                      <span class="toggle-track"></span>
+                    </label>
+                  </div>
+          <div class="setting-row" data-depends-on="showSpeedControl">
+                    <i class="setting-icon fas fa-floppy-disk"></i>
+                    <div class="setting-info">
+                      <div class="setting-label" data-i18n="labelPersistentSpeed">Persistent Speed</div>
+                      <div class="setting-description" data-i18n="descPersistentSpeed">Remember speed across episodes</div>
+                    </div>
+                    <label class="toggle">
+                      <input type="checkbox" id="persistentSpeed">
+                      <span class="toggle-track"></span>
+                    </label>
+                  </div>
         </div>
       </div>
-    </div>
 
-    <!-- Playback Section -->
-    <div class="section">
-      <div class="section-header">
-        <i class="fas fa-clock"></i>
-        <div class="section-icon"><i class="fas fa-clock"></i></div>
-        <div class="section-title" data-i18n="sectionPlayback">Playback</div>
-      </div>
-      <div class="settings-card">
-        <div class="setting-row">
-          <i class="setting-icon fas fa-forward"></i>
-          <div class="setting-info">
-            <div class="setting-label" data-i18n="labelNextEpisode">Next Episode</div>
-            <div class="setting-description" data-i18n="descNextEpisode">Auto navigate to the next episode</div>
-          </div>
-          <label class="toggle">
-            <input type="checkbox" id="nextEpisode">
-            <span class="toggle-track"></span>
-          </label>
+      <div class="section">
+        <div class="section-header">
+          <i class="fas fa-clock"></i>
+          <div class="section-icon"><i class="fas fa-clock"></i></div>
+          <div class="section-title" data-i18n="sectionPlayback">Playback</div>
         </div>
-        <div class="setting-row">
-          <i class="setting-icon fas fa-forward-step"></i>
-          <div class="setting-info">
-            <div class="setting-label" data-i18n="labelShowNextEpisodeButton">Next Episode Button</div>
-            <div class="setting-description" data-i18n="descShowNextEpisodeButton">Show a button in the player to jump to the next episode</div>
-          </div>
-          <label class="toggle">
-            <input type="checkbox" id="showNextEpisodeButton">
-            <span class="toggle-track"></span>
-          </label>
-        </div>
-        <div class="setting-row">
-          <i class="setting-icon fas fa-play"></i>
-          <div class="setting-info">
-            <div class="setting-label" data-i18n="labelPlayAfterSkip">Play After Skip</div>
-            <div class="setting-description" data-i18n="descPlayAfterSkip">Resume playback after skipping</div>
-          </div>
-          <label class="toggle">
-            <input type="checkbox" id="playAfterSkip">
-            <span class="toggle-track"></span>
-          </label>
-        </div>
-        <div class="setting-row">
-          <i class="setting-icon fas fa-volume-high"></i>
-          <div class="setting-info">
-            <div class="setting-label" data-i18n="labelRememberVolume">Remember Volume</div>
-            <div class="setting-description" data-i18n="descRememberVolume">Persist volume across episodes</div>
-          </div>
-          <label class="toggle">
-            <input type="checkbox" id="persistentVolume">
-            <span class="toggle-track"></span>
-          </label>
-        </div>
-        <div class="setting-row">
-          <i class="setting-icon fas fa-location-dot"></i>
-          <div class="setting-info">
-            <div class="setting-label" data-i18n="labelRememberPosition">Remember Position</div>
-            <div class="setting-description" data-i18n="descRememberPosition">Resume where you left off</div>
-          </div>
-          <label class="toggle">
-            <input type="checkbox" id="persistentPlaybackPosition">
-            <span class="toggle-track"></span>
-          </label>
-        </div>
-        <div class="setting-row">
-          <i class="setting-icon fas fa-calendar-days"></i>
-          <div class="setting-info">
-            <div class="setting-label" data-i18n="labelPositionExpiry">Position Expiry</div>
-            <div class="setting-description" data-i18n="descPositionExpiry">Days until position resets</div>
-          </div>
-          <input type="number" id="playbackPositionExpirationDays" class="number-input" min="1" max="30" step="1">
-        </div>
-      </div>
-    </div>
-
-    <!-- Colors Section -->
-    <div class="section">
-      <div class="section-header">
-        <i class="fas fa-palette"></i>
-        <div class="section-icon"><i class="fas fa-palette"></i></div>
-        <div class="section-title" data-i18n="sectionColors">Progress Bar Colors</div>
-      </div>
-      <div class="settings-card">
-        <div class="setting-row">
-          <i class="setting-icon fas fa-pen"></i>
-          <div class="setting-info">
-            <div class="setting-label" data-i18n="labelOpeningMarker">Opening Marker</div>
-            <div class="setting-description" data-i18n="descOpeningMarker">Intro segment color</div>
-          </div>
-          <div class="color-picker-wrapper">
-            <button type="button" class="color-button" id="markerColorOpBtn" data-target="markerColorOp">
-              <span class="color-preview" id="markerColorOpPreview"></span>
-            </button>
-            <input type="text" id="markerColorOp" class="color-text-input" maxlength="7">
-          </div>
-        </div>
-        <div class="setting-row">
-          <i class="setting-icon fas fa-pen"></i>
-          <div class="setting-info">
-            <div class="setting-label" data-i18n="labelEndingMarker">Ending Marker</div>
-            <div class="setting-description" data-i18n="descEndingMarker">Outro segment color</div>
-          </div>
-          <div class="color-picker-wrapper">
-            <button type="button" class="color-button" id="markerColorEdBtn" data-target="markerColorEd">
-              <span class="color-preview" id="markerColorEdPreview"></span>
-            </button>
-            <input type="text" id="markerColorEd" class="color-text-input" maxlength="7">
-          </div>
-        </div>
-        <div class="setting-row">
-          <i class="setting-icon fas fa-pen"></i>
-          <div class="setting-info">
-            <div class="setting-label" data-i18n="labelRecapMarker">Recap Marker</div>
-            <div class="setting-description" data-i18n="descRecapMarker">Recap segment color</div>
-          </div>
-          <div class="color-picker-wrapper">
-            <button type="button" class="color-button" id="markerColorRecapBtn" data-target="markerColorRecap">
-              <span class="color-preview" id="markerColorRecapPreview"></span>
-            </button>
-            <input type="text" id="markerColorRecap" class="color-text-input" maxlength="7">
-          </div>
-        </div>
-        <div class="setting-row">
-          <i class="setting-icon fas fa-eye-dropper"></i>
-          <div class="setting-info">
-            <div class="setting-label" data-i18n="labelMarkerOpacity">Marker Opacity</div>
-            <div class="setting-description" data-i18n="descMarkerOpacity">Transparency (0.1 - 1.0)</div>
-          </div>
-          <input type="number" id="markerOpacity" class="number-input" min="0.1" max="1" step="0.1">
+        <div class="settings-card">
+          <div class="setting-row">
+                    <i class="setting-icon fas fa-arrows-left-right"></i>
+                    <div class="setting-info">
+                      <div class="setting-label" data-i18n="labelSkipOffset">Skip Offset</div>
+                      <div class="setting-description" data-i18n="descSkipOffset">Seconds to add after skip</div>
+                    </div>
+                    <input type="number" id="skipOffset" class="number-input" min="-5" max="5" step="0.5">
+                  </div>
+          <div class="setting-row">
+                    <i class="setting-icon fas fa-volume-high"></i>
+                    <div class="setting-info">
+                      <div class="setting-label" data-i18n="labelRememberVolume">Remember Volume</div>
+                      <div class="setting-description" data-i18n="descRememberVolume">Persist volume across episodes</div>
+                    </div>
+                    <label class="toggle">
+                      <input type="checkbox" id="persistentVolume">
+                      <span class="toggle-track"></span>
+                    </label>
+                  </div>
+          <div class="setting-row">
+                    <i class="setting-icon fas fa-location-dot"></i>
+                    <div class="setting-info">
+                      <div class="setting-label" data-i18n="labelRememberPosition">Remember Position</div>
+                      <div class="setting-description" data-i18n="descRememberPosition">Resume where you left off</div>
+                    </div>
+                    <label class="toggle">
+                      <input type="checkbox" id="persistentPlaybackPosition">
+                      <span class="toggle-track"></span>
+                    </label>
+                  </div>
+          <div class="setting-row">
+                    <i class="setting-icon fas fa-calendar-days"></i>
+                    <div class="setting-info">
+                      <div class="setting-label" data-i18n="labelPositionExpiry">Position Expiry</div>
+                      <div class="setting-description" data-i18n="descPositionExpiry">Days until position resets</div>
+                    </div>
+                    <input type="number" id="playbackPositionExpirationDays" class="number-input" min="1" max="30" step="1">
+                  </div>
         </div>
       </div>
     </div>
@@ -1317,7 +1464,7 @@
         <i class="fas fa-check"></i>
         <span data-i18n="footerSaved">Saved</span>
       </span>
-      <span id="version" class="version">v1.7.0 - 24.10.26</span>
+      <span id="version" class="version">v1.7.0 - 29.10.26</span>
     </div>
   </div>
 

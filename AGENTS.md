@@ -26,7 +26,9 @@ Firefox WebExtension (Manifest V2) that auto-skips anime openings/endings on ani
 - i18n: inline translation objects in `content.js` (en/de) and `popup.js` (en/de). `data-i18n` attributes on HTML elements.
 - Theming: CSS custom properties with `.theme-classic` / `.theme-aniworld` selectors. Both in `styles.css` (injected) and `popup.html` (inline `<style>`).
 - Always use `browser.storage.local.get()` with default values (not bare key access). The defaults live in `src/defaults.js` as `DEFAULT_SETTINGS` — never inline a literal that exists there.
-- Adding a setting = one entry in `DEFAULT_SETTINGS`, one `.setting-row` in `popup.html` (id must match the key, no `checked`/`value` attributes), and two i18n entries in `popup.js`. `popup.js` collects controls from the DOM and derives load/save from the element type, so no list needs updating.
+- Adding a setting = one entry in `DEFAULT_SETTINGS`, one `.setting-row` in the matching tab panel of `popup.html` (id must match the key, no `checked`/`value` attributes), and two i18n entries in `popup.js`. `popup.js` collects controls from the DOM and derives load/save from the element type, so no list needs updating.
+- The popup has three tabs (General / Styles / Advanced) built from `.tab` buttons + `.tab-panel` divs, with a sliding `.tab-indicator`. Inside a panel, rows are grouped in `.section` blocks with `.section-header` / `.section-title`. A row with `data-depends-on` must sit in the same panel as its parent control, otherwise the disabled state points at a switch the user cannot see.
+- Popup height is capped at 600px by Firefox/Chrome: `.content` uses `max-height: 360px`, keep header + tabs + content + footer under that.
 - Manual testing only: load in Firefox, navigate to aniworld.to, test with various anime/episodes.
 
 ## Gotchas
