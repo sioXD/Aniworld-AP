@@ -364,6 +364,9 @@ function initTabs() {
   if (!tabs.length || !panels.length) return;
 
   function activate(name) {
+    // Lets CSS round the panel corners the active tab does not sit on
+    document.body.dataset.activeTab = name;
+
     tabs.forEach(tab => {
       const isActive = tab.dataset.tab === name;
       tab.classList.toggle('active', isActive);

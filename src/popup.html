@@ -223,7 +223,10 @@
        ============================================ */
     .content {
       margin: 0 10px 10px;
-      padding: 12px;
+      /* Fixed band of panel colour above the scroll area, so scrolled rows are
+         clipped below the concave fillets instead of right at their base. */
+      border-top: 10px solid var(--bg-secondary);
+      padding: 4px 12px 12px;
       /* Popups are capped at 600px: header + tabs + footer need room */
       max-height: 360px;
       overflow-y: auto;
@@ -234,7 +237,23 @@
     }
 
     body[data-theme="classic"] .content {
-      padding: 14px 16px 16px;
+      padding: 4px 16px 16px;
+    }
+
+    /* The active tab is flush with one side of the panel, so that top corner
+       stays square; every corner the tab does not occupy is rounded like the
+       bottom ones. `data-active-tab` is set by initTabs(). */
+    body[data-active-tab="general"] .content {
+      border-top-right-radius: 14px;
+    }
+
+    body[data-active-tab="styles"] .content {
+      border-top-left-radius: 14px;
+      border-top-right-radius: 14px;
+    }
+
+    body[data-active-tab="advanced"] .content {
+      border-top-left-radius: 14px;
     }
 
     /* ============================================
