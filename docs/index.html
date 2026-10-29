@@ -10,7 +10,7 @@
 		<meta name="keywords" content="aniworld, aniskip, anime, skip opening, skip ending, firefox extension, fork" />
 		<meta name="color-scheme" content="dark" />
 		<title>AniWorld AP [fork] — Documentation</title>
-		<link rel="icon" href="icon.png" />
+		<link rel="icon" href="img/icon.png" />
 		<link
 			href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
 			rel="stylesheet"
@@ -35,9 +35,6 @@
 				--accent-glow: rgba(99, 124, 249, 0.28);
 				--green: #63d02b;
 				--green-soft: rgba(99, 208, 43, 0.13);
-				--marker-op: #ff00fb;
-				--marker-ed: #22c55e;
-				--marker-recap: #ffdd00;
 				--text: #e8e8e8;
 				--text-2: #b0c4ce;
 				--muted: #7a9aa8;
@@ -532,201 +529,67 @@
 				flex: none;
 			}
 
-			/* ---------- Player mockup ---------- */
+			/* ---------- Screenshots ---------- */
 
-			.player {
+			.shot {
+				margin: 8px 0 0;
+				min-width: 0;
+			}
+
+			.shot img {
+				display: block;
+				width: 100%;
+				height: auto;
 				border: 1px solid var(--border-strong);
-				border-radius: 16px;
-				overflow: hidden;
-				background: #0a1114;
+				border-radius: 14px;
 				box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
-				margin-top: 8px;
 			}
 
-			.player-stage {
-				position: relative;
-				aspect-ratio: 16 / 6.6;
-				background:
-					radial-gradient(70% 90% at 22% 20%, rgba(99, 124, 249, 0.36), transparent 60%),
-					radial-gradient(60% 80% at 84% 76%, rgba(99, 208, 43, 0.22), transparent 62%),
-					linear-gradient(160deg, #16242c, #0b1216 70%);
-				display: grid;
-				place-items: center;
-			}
-
-			.player-stage::after {
-				content: "";
-				position: absolute;
-				inset: 0;
-				background-image: repeating-linear-gradient(115deg, rgba(255, 255, 255, 0.028) 0 1px, transparent 1px 26px);
-			}
-
-			.stage-title {
-				position: relative;
-				z-index: 1;
-				text-align: center;
-			}
-
-			.stage-title .ep {
-				font-family: var(--mono);
-				font-size: 0.7rem;
-				letter-spacing: 0.18em;
-				text-transform: uppercase;
+			.shot figcaption {
+				margin-top: 10px;
+				font-size: 0.82rem;
+				line-height: 1.5;
 				color: var(--muted);
 			}
 
-			.stage-title .name {
-				font-size: clamp(0.95rem, 2vw, 1.2rem);
-				font-weight: 600;
-				color: rgba(232, 232, 232, 0.78);
+			/* Intro text beside the popup screenshot */
+			.split {
+				display: grid;
+				grid-template-columns: minmax(0, 1fr) 240px;
+				gap: 28px;
+				align-items: start;
+			}
+
+			.split .shot {
 				margin-top: 6px;
 			}
 
-			.p-info {
-				position: absolute;
-				top: 12px;
-				right: 12px;
-				z-index: 2;
-				width: 28px;
-				height: 28px;
-				border-radius: 50%;
-				border: 1px solid var(--border-strong);
-				background: rgba(18, 28, 34, 0.75);
-				backdrop-filter: blur(6px);
-				color: var(--text-2);
+			.split + .table-wrap {
+				margin-top: 28px;
+			}
+
+			.tabs-intro {
+				list-style: none;
+				margin-top: 18px;
 				display: grid;
-				place-items: center;
-				font-family: var(--mono);
-				font-size: 0.78rem;
-				font-weight: 600;
-				line-height: 1;
-			}
-
-			.p-info::after {
-				content: "i";
-			}
-
-			.p-bottom {
-				padding: 10px 14px 14px;
-				border-top: 1px solid rgba(45, 68, 79, 0.7);
-				background: linear-gradient(180deg, rgba(18, 28, 34, 0.4), rgba(10, 17, 20, 0.92));
-			}
-
-			.p-timeline {
-				position: relative;
-				height: 6px;
-				border-radius: 999px;
-				background: rgba(176, 196, 206, 0.16);
-				margin-bottom: 14px;
-			}
-
-			.p-fill {
-				position: absolute;
-				inset: 0 auto 0 0;
-				width: 34%;
-				border-radius: 999px;
-				background: rgba(99, 124, 249, 0.4);
-			}
-
-			.p-marker {
-				position: absolute;
-				top: 0;
-				bottom: 0;
-				border-radius: 3px;
-				opacity: 0.8;
-				z-index: 1;
-			}
-
-			.p-marker.op {
-				background: var(--marker-op);
-			}
-
-			.p-marker.recap {
-				background: var(--marker-recap);
-			}
-
-			.p-marker.ed {
-				background: var(--marker-ed);
-			}
-
-			.p-controls {
-				display: flex;
-				align-items: center;
-				gap: 8px;
-				flex-wrap: wrap;
-			}
-
-			.p-btn {
-				display: inline-flex;
-				align-items: center;
-				gap: 7px;
-				font-size: 0.78rem;
-				font-weight: 600;
-				border-radius: 7px;
-				padding: 6px 11px;
-				border: 1px solid var(--border-strong);
-				background: var(--bg-elev-2);
-				color: var(--text);
-			}
-
-			.p-btn .badge {
-				font-family: var(--mono);
-				font-size: 0.6rem;
-				letter-spacing: 0.08em;
-				padding: 1px 5px;
-				border-radius: 4px;
-				background: linear-gradient(135deg, var(--marker-op), #ff5ce0);
-				color: #14050f;
-			}
-
-			.p-speed {
-				display: inline-flex;
-				align-items: center;
-				border: 1px solid var(--border-strong);
-				border-radius: 7px;
-				background: var(--bg-elev-2);
-				overflow: hidden;
-				font-size: 0.78rem;
-			}
-
-			.p-speed span {
-				padding: 6px 9px;
-				color: var(--text-2);
-				display: inline-flex;
-				align-items: center;
-			}
-
-			.p-speed .val {
-				font-family: var(--mono);
-				color: var(--text);
-				border-left: 1px solid var(--border);
-				border-right: 1px solid var(--border);
-			}
-
-			.p-spacer {
-				flex: 1;
-			}
-
-			.p-next {
-				display: inline-flex;
-				align-items: center;
-				justify-content: center;
-				width: 30px;
-				height: 30px;
-				border-radius: 7px;
-				background: var(--bg-elev-2);
-				border: 1px solid var(--border-strong);
+				gap: 10px;
+				font-size: 0.9rem;
 				color: var(--text-2);
 			}
 
-			.p-next svg {
-				width: 14px;
-				height: 14px;
+			.tabs-intro li {
+				padding-left: 14px;
+				border-left: 2px solid var(--border-strong);
+			}
+
+			.tabs-intro strong {
+				color: var(--text);
+				font-weight: 600;
 			}
 
 			.legend {
 				display: grid;
-				grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+				grid-template-columns: repeat(auto-fit, minmax(235px, 1fr));
 				gap: 10px 20px;
 				list-style: none;
 				margin-top: 18px;
@@ -737,14 +600,26 @@
 			.legend li {
 				display: flex;
 				align-items: center;
-				gap: 9px;
+				gap: 10px;
 			}
 
-			.legend i {
-				width: 10px;
-				height: 10px;
-				border-radius: 3px;
+			.legend .num {
 				flex: none;
+				display: grid;
+				place-items: center;
+				width: 19px;
+				height: 19px;
+				border-radius: 50%;
+				background: #e11d48;
+				color: #fff;
+				font-family: var(--mono);
+				font-size: 0.68rem;
+				font-weight: 700;
+				line-height: 1;
+			}
+
+			.legend code {
+				font-size: 0.78rem;
 			}
 
 			/* ---------- Tables ---------- */
@@ -1044,6 +919,14 @@
 					display: none;
 				}
 
+				.split {
+					grid-template-columns: 1fr;
+				}
+
+				.split .shot {
+					max-width: 260px;
+				}
+
 				table {
 					min-width: 520px;
 					font-size: 0.86rem;
@@ -1080,7 +963,7 @@
 		<header class="topbar">
 			<div class="wrap topbar-inner">
 				<a class="brand" href="#top">
-					<img src="icon.png" alt="AniWorld AP icon" width="26" height="26" />
+					<img src="img/icon.png" alt="AniWorld AP icon" width="26" height="26" />
 					<span class="brand-name">AniWorld AP</span>
 					<span class="brand-tag">fork</span>
 				</a>
@@ -1244,7 +1127,7 @@
 							<span class="tag">added</span>
 							<h3>Speed control</h3>
 							<p>
-								Playback speed from 0.25× to 5× with −/+ buttons next to the skip control. Click the readout to jump
+								Playback speed from 0.25× to 5× with −/+ buttons next to the skip control. Click the 1.0x button to jump
 								back to 1×. Speed can persist across episodes.
 							</p>
 						</article>
@@ -1377,55 +1260,30 @@
 					<div class="section-label">03 · Player overlay</div>
 					<h2>What you see in the player</h2>
 					<p class="lede">
-						Everything is injected into the VOE player container, so the controls survive fullscreen. Colours below use
-						the default markers: opening <code>#FF00FB</code>, ending <code>#22C55E</code>, recap
-						<code>#FFDD00</code> at 50% opacity.
+						Everything is injected into the VOE player container, so the controls survive fullscreen. The numbers below
+						match the screenshot. Marker colours are configurable — the defaults are opening <code>#FF00FB</code>,
+						ending <code>#22C55E</code> and recap <code>#FFDD00</code> at 50% opacity; not every episode has all three
+						segments.
 					</p>
 
-					<div
-						class="player"
-						role="img"
-						aria-label="Schematic of the overlay: info button top right, timeline with opening, recap and ending markers, skip button with segment badge, speed control and next-episode button at the bottom."
-					>
-						<div class="player-stage">
-							<div class="stage-title">
-								<div class="ep">Season 2 · Episode 12</div>
-								<div class="name">Player frame</div>
-							</div>
-							<span class="p-info" aria-hidden="true"></span>
-						</div>
-						<div class="p-bottom">
-							<div class="p-timeline">
-								<span class="p-fill"></span>
-								<span class="p-marker op" style="left: 5%; width: 13%"></span>
-								<span class="p-marker recap" style="left: 21%; width: 4.5%"></span>
-								<span class="p-marker ed" style="left: 86%; width: 9%"></span>
-							</div>
-							<div class="p-controls">
-								<span class="p-btn">Skip <span class="badge">OP</span></span>
-								<span class="p-speed">
-									<span aria-hidden="true">−</span>
-									<span class="val">1.0×</span>
-									<span aria-hidden="true">+</span>
-								</span>
-								<span class="p-spacer"></span>
-								<span class="p-next" aria-hidden="true">
-									<svg viewBox="0 0 240 240" fill="currentColor">
-										<path d="M40 45 L160 120 L40 195 Z" />
-										<rect x="176" y="45" width="28" height="150" />
-									</svg>
-								</span>
-							</div>
-						</div>
-					</div>
+					<figure class="shot">
+						<img
+							src="img/screenshot-voe.png"
+							alt="VOE player with the extension overlay: the progress bar with opening and ending markers, the skip button with an OPENING badge, the speed control, the next-episode button and the info toggle in the top right."
+							width="1190"
+							height="620"
+							loading="lazy"
+						/>
+						<figcaption>The overlay on a VOE player. The numbers 1–6 match the legend below.</figcaption>
+					</figure>
 
 					<ul class="legend">
-						<li><i style="background: #637cf9"></i> Info toggle → AniSkip panel (segments, anime search, submit)</li>
-						<li><i style="background: #b0c4ce"></i> Skip button with segment badge and confirm prompt</li>
-						<li><i style="background: #ff00fb"></i> Opening marker</li>
-						<li><i style="background: #ffdd00"></i> Recap marker</li>
-						<li><i style="background: #22c55e"></i> Ending marker</li>
-						<li><i style="background: #7a9aa8"></i> Speed control · next episode</li>
+						<li><span class="num">1</span> Opening marker on the progress bar</li>
+						<li><span class="num">2</span> Ending marker on the progress bar</li>
+						<li><span class="num">3</span> Next-episode button</li>
+						<li><span class="num">4</span> Skip button with segment badge</li>
+						<li><span class="num">5</span> Speed control: <code>−</code> / 1.0x / <code>+</code></li>
+						<li><span class="num">6</span> Info toggle, opens the AniSkip panel</li>
 					</ul>
 
 					<div class="grid grid-2" style="margin-top: 28px">
@@ -1449,11 +1307,33 @@
 				<section class="doc" id="settings">
 					<div class="section-label">04 · Settings reference</div>
 					<h2>Every option and its default</h2>
-					<p class="lede">
-						Defaults live in <code>src/defaults.js</code> as a single object — the popup, background script and content
-						script all read from it. Keys below match the storage keys. The reset button in the popup's Advanced tab
-						restores every option to these values (it needs a second click to confirm).
-					</p>
+					<div class="split">
+						<div>
+							<p class="lede">
+								Defaults live in <code>src/defaults.js</code> as a single object — the popup, background script and
+								content script all read from it. Keys below match the storage keys. The reset button in the popup's
+								Advanced tab restores every option to these values (it needs a second click to confirm).
+							</p>
+							<ul class="tabs-intro">
+								<li>
+									<strong>General</strong> — auto-skip per segment type, skip button visibility, speed control and
+									next-episode behaviour.
+								</li>
+								<li><strong>Styles</strong> — language, UI theme and the progress-bar marker colours and opacity.</li>
+								<li><strong>Advanced</strong> — skip offset and the reset button.</li>
+							</ul>
+						</div>
+						<figure class="shot">
+							<img
+								src="img/screenshot-popup.png"
+								alt="The settings popup in the AniWorld theme, General tab open: language and theme selectors, auto-skip toggles for opening, ending and recap, and display options."
+								width="350"
+								height="553"
+								loading="lazy"
+							/>
+							<figcaption>The popup in the AniWorld theme, General tab.</figcaption>
+						</figure>
+					</div>
 
 					<div class="table-wrap">
 						<div class="table-scroll">
@@ -1495,7 +1375,7 @@
 									<tr>
 										<th>Show speed control<span class="key">showSpeedControl</span></th>
 										<td class="default"><span class="pill on">on</span></td>
-										<td>Shows the −/+ speed buttons and the speed readout.</td>
+										<td>Shows the −/+ speed buttons and the speed 1.0x.</td>
 									</tr>
 									<tr>
 										<th>Persistent speed<span class="key">persistentSpeed</span></th>

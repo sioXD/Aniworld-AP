@@ -1,6 +1,25 @@
 # AniWorld AP Fork
 
+<p align="center">
+  <img src="docs/img/device-shot.png" alt="Device Shots">
+</p>
+
 A Firefox extension that auto-skips openings (OP) and endings (ED) on [aniworld.to](https://aniworld.to) using the [AniSkip](https://api.aniskip.com) API, plus the extra features listed below.
+
+> [!NOTE]
+> **Works on mobile too** — AniWorld AP runs in Firefox for Android just like on desktop. Install it from
+> [addons.mozilla.org](https://addons.mozilla.org/en-US/firefox/addon/aniworld-autoplay-fork/) on your phone: the overlay scales
+> with the player, the settings popup is the same, and nothing needs to be configured differently.
+
+<p align="center">
+  <img src="docs/img/screenshot-popup.png" alt="The settings popup in the AniWorld theme, General tab" width="340">
+</p>
+
+<p align="center">
+  <img src="docs/img/screenshot-voe.png" alt="The overlay on a VOE player with numbered markers for the opening and ending segments, the skip button, the speed control, the next-episode button and the info toggle" width="760">
+</p>
+
+<p align="center"><em>The numbers mark the overlay controls: 1 opening marker, 2 ending marker, 3 next-episode button, 4 skip button, 5 speed control, 6 info toggle.</em></p>
 
 ## Installation
 

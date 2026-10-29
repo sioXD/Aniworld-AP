@@ -1,9 +1,9 @@
 {
 	"manifest_version": 2,
 	"name": "AniWorld AP [fork]",
-	"version": "1.7.0",
+	"version": "1.7.1",
 	"description": "Skip anime openings and endings on AniWorld using AniSkip - With speed control, next-episode button and auto-play",
-	"author": "AniWorld AP",
+	"author": "Simon",
 	"homepage_url": "https://github.com/sioXD/Aniworld-AP",
 	"icons": {
 		"48": "icons/icon-48.png",
