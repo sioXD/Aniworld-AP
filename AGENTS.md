@@ -23,7 +23,7 @@ Firefox WebExtension (Manifest V2) that auto-skips anime openings/endings on ani
 
 ## Conventions
 
-- i18n: inline translation objects in `content.js` (en/de) and `popup.js` (en/de). `data-i18n` attributes on HTML elements.
+- i18n: inline translation objects in `content.js` (en/de) and `popup.js` (en/de). `data-i18n` attributes on HTML elements. There is no `_locales/` and no `browser.i18n.getMessage()` — the add-on name and description are hardcoded in `manifest.json`, because the UI language follows the popup setting and `browser.i18n` cannot be switched at runtime.
 - Theming: CSS custom properties with `.theme-classic` / `.theme-aniworld` selectors. Both in `styles.css` (injected) and `popup.html` (inline `<style>`).
 - Always use `browser.storage.local.get()` with default values (not bare key access). The defaults live in `src/defaults.js` as `DEFAULT_SETTINGS` — never inline a literal that exists there.
 - Adding a setting = one entry in `DEFAULT_SETTINGS`, one `.setting-row` in the matching tab panel of `popup.html` (id must match the key, no `checked`/`value` attributes), and two i18n entries in `popup.js`. `popup.js` collects controls from the DOM and derives load/save from the element type, so no list needs updating.

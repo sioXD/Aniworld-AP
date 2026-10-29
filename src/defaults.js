@@ -20,7 +20,6 @@ var DEFAULT_SETTINGS = {
   showSpeedControl: true,
   persistentSpeed: true,
   skipOffset: -5,
-  playAfterSkip: false,
   nextEpisode: true,
   showNextEpisodeButton: true,
   persistentVolume: false,

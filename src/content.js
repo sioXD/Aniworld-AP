@@ -1050,7 +1050,7 @@
       wasPlaying = playerState === 'playing' || playerState === 'buffering';
     } catch (e) {}
 
-    const shouldPlay = wasPlaying || state.settings.playAfterSkip;
+    const shouldPlay = wasPlaying;
 
     let target = time;
     try {
