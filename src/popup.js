@@ -55,6 +55,7 @@ const translations = {
 		resetButton: "Reset",
 		resetConfirm: "Click again",
 		footerSaved: "Saved",
+		footerUpdatedOn: "upgraded on",
 		colorPickerTitle: "Choose Color",
 		colorPickerCancel: "Cancel",
 		colorPickerApply: "Apply",
@@ -112,6 +113,7 @@ const translations = {
 		resetButton: "Zurücksetzen",
 		resetConfirm: "Erneut klicken",
 		footerSaved: "Gespeichert",
+		footerUpdatedOn: "aktualisiert am",
 		colorPickerTitle: "Farbe wählen",
 		colorPickerCancel: "Abbrechen",
 		colorPickerApply: "Anwenden",
@@ -526,10 +528,18 @@ function initResetButton() {
 	});
 }
 
+// Show the packaged version, so popup.html cannot drift from manifest.json
+function renderVersion() {
+	const element = document.getElementById("version");
+	if (!element || typeof browser === "undefined" || !browser.runtime?.getManifest) return;
+	element.textContent = "v" + browser.runtime.getManifest().version;
+}
+
 // Add event listeners
 document.addEventListener("DOMContentLoaded", async () => {
 	// Fill the UI from the defaults first, then overwrite with stored settings
 	renderDefaultSettings();
+	renderVersion();
 	initTabs();
 
 	// Load theme immediately to prevent flash

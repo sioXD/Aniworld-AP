@@ -11,12 +11,17 @@ try {
     # Read version from manifest.json
     $manifest = Get-Content manifest.json | ConvertFrom-Json
     $version = $manifest.version
-    $currentDate = Get-Date -Format "dd.MM.yy"
+    $currentDate = Get-Date -Format "dd.MM.yyyy"
 
-    # Update popup.html with version and date
+    # Stamp version and date into popup.html (separate spans, see .footer).
+    # The whole span is rewritten instead of using backreferences: "$1" directly
+    # followed by a date starting with a digit would be read as "$12".
     $popupPath = "src/popup.html"
     $popupContent = Get-Content $popupPath -Raw
-    $popupContent = $popupContent -replace '(<span id="version"[^>]*>).*?(</span>)', "`$1v$version - $currentDate`$2"
+    $versionSpan = '<span id="version" class="version">v' + $version + "</span>"
+    $dateSpan = '<span id="releaseDate">' + $currentDate + "</span>"
+    $popupContent = $popupContent -replace '<span id="version"[^>]*>[^<]*</span>', $versionSpan
+    $popupContent = $popupContent -replace '<span id="releaseDate"[^>]*>[^<]*</span>', $dateSpan
     Set-Content -Path $popupPath -Value $popupContent -NoNewline
 
     # Build the extension with web-ext so Firefox-compatible packaging is handled automatically

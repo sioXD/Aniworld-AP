@@ -252,6 +252,38 @@
 				color: var(--text-muted);
 			}
 
+			/* GitHub link: icon only, pushed to the top right of the header */
+			.header-link {
+				margin-left: auto;
+				flex-shrink: 0;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				width: 32px;
+				height: 32px;
+				border: 1px solid transparent;
+				border-radius: 8px;
+				color: var(--text-secondary);
+				text-decoration: none;
+				transition: all 0.2s ease;
+			}
+
+			.header-link i {
+				font-size: 16px;
+			}
+
+			.header-link:hover {
+				color: var(--accent-primary);
+				background: var(--bg-tertiary);
+				border-color: var(--border-color);
+			}
+
+			body[data-theme="classic"] .header-link {
+				width: 34px;
+				height: 34px;
+				border-radius: 10px;
+			}
+
 			/* ============================================
        CONTENT
        ============================================ */
@@ -1123,22 +1155,14 @@
 				padding: 14px 20px;
 			}
 
-			.footer-link {
-				display: flex;
-				align-items: center;
-				gap: 6px;
+			.footer-updated {
+				font-family: "SF Mono", "Consolas", monospace;
+				font-size: 11px;
 				color: var(--text-secondary);
-				text-decoration: none;
-				font-size: 12px;
-				transition: color 0.2s ease;
 			}
 
-			.footer-link:hover {
-				color: var(--accent-primary);
-			}
-
-			.footer-link i {
-				font-size: 14px;
+			body[data-theme="classic"] .footer-updated {
+				font-family: "JetBrains Mono", monospace;
 			}
 
 			.footer-right {
@@ -1179,7 +1203,7 @@
 			.version {
 				font-family: "SF Mono", "Consolas", monospace;
 				font-size: 11px;
-				color: var(--text-muted);
+				color: var(--text-secondary);
 				padding: 4px 8px;
 				background: var(--bg-tertiary);
 				border-radius: 4px;
@@ -1254,6 +1278,16 @@
 				</h1>
 				<div class="tagline" data-i18n="tagline">Skip Intros & Outros</div>
 			</div>
+			<a
+				class="header-link"
+				href="https://github.com/sioXD/Aniworld-AP"
+				target="_blank"
+				rel="noopener"
+				title="GitHub"
+				aria-label="GitHub repository"
+			>
+				<i class="fab fa-github"></i>
+			</a>
 		</div>
 
 		<div class="tabs" role="tablist">
@@ -1568,16 +1602,15 @@
 		</div>
 
 		<div class="footer">
-			<a href="https://github.com/sioXD/Aniworld-AP" target="_blank" class="footer-link">
-				<i class="fab fa-github"></i>
-				AniWorld AP [fork]
-			</a>
+			<span class="footer-updated">
+				<span data-i18n="footerUpdatedOn">upgraded on</span> <span id="releaseDate">29.10.2026</span>
+			</span>
 			<div class="footer-right">
 				<span class="save-indicator" id="saveIndicator">
 					<i class="fas fa-check"></i>
 					<span data-i18n="footerSaved">Saved</span>
 				</span>
-				<span id="version" class="version">v1.7.0 - 29.10.26</span>
+				<span id="version" class="version">v1.7.0</span>
 			</div>
 		</div>
 

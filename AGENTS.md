@@ -10,7 +10,7 @@ Firefox WebExtension (Manifest V2) that auto-skips anime openings/endings on ani
 - **Firefox-only.** Uses `browser.*` API. Not compatible with Chrome/Chromium.
 - **No dev server.** Load via `about:debugging` → This Firefox → Load Temporary Add-on → `manifest.json`.
 - **Packaging:** `powershell -File pack.ps1` (requires `npm install --global web-ext`). Produces `.zip` via `web-ext build`.
-- **Release:** Change the `version` field in `manifest.json` and push the commit to `main` → GitHub Actions in `.github/workflows/release.yml` detects the version change, creates the matching `v<version>` Git tag and Release with the built artifact. Optionally publishes to AMO if `AMO_ENABLED` variable and `AMO_JWT_ISSUER`/`AMO_JWT_SECRET` secrets are set.
+- **Release:** Change the `version` field in `manifest.json` and push the commit to `main` → GitHub Actions in `.github/workflows/release.yml` detects the version change, creates the matching `v<version>` Git tag and Release with the built artifact. Optionally publishes to AMO if `AMO_ENABLED` variable and `AMO_JWT_ISSUER`/`AMO_JWT_SECRET` secrets are set. The popup footer shows the version from `runtime.getManifest()` and a build date that `pack.*` stamps into `<span id="releaseDate">` — never hardcode those two strings by hand.
 - **Entrypoints:** `src/defaults.js` (shared `DEFAULT_SETTINGS`), `src/background.js` (persistent background), `src/aniworld.js` (aniworld.to content script), `src/content.js` (injected into VOE iframe), `src/popup.js` (settings popup).
 
 ## Architecture
