@@ -61,6 +61,7 @@
 			currentEpisode: null,
 			currentSeason: null,
 			currentVideoId: null,
+			animeInfo: null,
 			settings: { ...DEFAULT_SETTINGS },
 			ui: { container: null, skipButton: null, panel: null, nextEpisodeButton: null, syncWithPlayerControls: null },
 			nextEpisodeAvailable: false,
@@ -295,6 +296,13 @@
 		function generateVideoId(animeInfo) {
 			if (!animeInfo) return null;
 			return `${animeInfo.animeName.toLowerCase().replace(/\s+/g, "_")}_s${animeInfo.season || 1}_e${animeInfo.episode}`;
+		}
+
+		// MAL lookups are cached per season: many series have a separate MAL entry
+		// per season, so a name-only key would let season 2 overwrite season 1.
+		function getMalCacheKey(animeInfo) {
+			const name = (animeInfo?.animeName || "").trim().toLowerCase();
+			return `${name}::s${animeInfo?.season || 1}`;
 		}
 
 		function waitForPlayer(timeout = 2000) {
@@ -848,11 +856,13 @@
 			document.querySelector("#aniskip-search-panel").classList.add("aniskip-hidden");
 			document.querySelector("#aniskip-anime-info").classList.remove("aniskip-hidden");
 
-			const animeInfo = parseAnimeInfo();
+			// Write with the same info object the lookup used, so the cache key
+			// round-trips (and carries the season from the AniWorld page).
+			const animeInfo = state.animeInfo || parseAnimeInfo();
 			if (animeInfo) {
 				await browser.runtime.sendMessage({
 					action: "setAnimeCache",
-					cache: { [animeInfo.animeName.toLowerCase()]: { malId, title } },
+					cache: { [getMalCacheKey(animeInfo)]: { malId, title } },
 				});
 			}
 			await fetchSkipTimes();
@@ -1663,6 +1673,7 @@
 
 				if (animeInfo) {
 					console.log("VOE AniSkip: Parsed anime info:", animeInfo);
+					state.animeInfo = animeInfo;
 					state.currentEpisode = animeInfo.episode;
 					state.currentSeason = animeInfo.season || 1;
 					state.currentVideoId = generateVideoId(animeInfo);
@@ -1672,17 +1683,26 @@
 					document.querySelector("#aniskip-anime-info").classList.remove("aniskip-hidden");
 
 					const cache = await browser.runtime.sendMessage({ action: "getAnimeCache" });
-					const cached = cache[animeInfo.animeName.toLowerCase()];
+					// Legacy entries (name only) are only trusted for season 1 — for
+					// later seasons they may belong to a different MAL entry.
+					const cached =
+						cache[getMalCacheKey(animeInfo)] ||
+						(state.currentSeason === 1 ? cache[animeInfo.animeName.toLowerCase()] : null);
 
 					if (cached) {
-						console.log("VOE AniSkip: Cache hit for", animeInfo.animeName, "->", cached.malId);
+						console.log(
+							"VOE AniSkip: Cache hit for",
+							getMalCacheKey(animeInfo),
+							"->",
+							cached.malId,
+						);
 						state.currentMalId = cached.malId;
 						document.querySelector("#aniskip-anime-name").textContent = cached.title;
 						document.querySelector("#aniskip-mal-id").textContent = cached.malId;
 						updateStatus(getMessage("statusUsingCached"));
 						await fetchSkipTimes();
 					} else {
-						console.log("VOE AniSkip: Cache miss for", animeInfo.animeName);
+						console.log("VOE AniSkip: Cache miss for", getMalCacheKey(animeInfo));
 						document.querySelector("#aniskip-anime-name").textContent = animeInfo.animeName;
 						document.querySelector("#aniskip-search-input").value = animeInfo.animeName;
 						updateStatus(getMessage("statusSearching").replace("$1", animeInfo.animeName));
