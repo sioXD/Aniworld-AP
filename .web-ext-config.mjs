@@ -7,6 +7,7 @@ export default {
 		// Not part of the add-on
 		"docs",
 		"dist",
+		"references",
 		"META-INF",
 		"web-ext-artifacts",
 		".github",
