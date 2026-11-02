@@ -462,29 +462,36 @@
        down into the panel instead of bulging away from it. The box is 1px
        wider than the gap it bridges, so it overlaps the tab and the two
        anti-aliased edges cannot leave a light seam. */
-			.tab.active::before,
-			.tab.active::after {
+			.tab::before,
+			.tab::after {
 				content: "";
 				position: absolute;
 				bottom: 0;
 				width: 13px;
 				height: 12px;
 				pointer-events: none;
+				opacity: 0;
+				transition: opacity 0.2s ease;
 			}
 
-			.tab.active::before {
+			.tab.active::before,
+			.tab.active::after {
+				opacity: 1;
+			}
+
+			.tab::before {
 				left: -12px;
 				background: radial-gradient(circle at 0 0, transparent 11.5px, var(--bg-secondary) 12px);
 			}
 
-			.tab.active::after {
+			.tab::after {
 				right: -12px;
 				background: radial-gradient(circle at 100% 0, transparent 11.5px, var(--bg-secondary) 12px);
 			}
 
 			/* The outer edges sit flush with the panel, so they need no fillet */
-			.tab.active:first-child::before,
-			.tab.active:last-child::after {
+			.tab:first-child::before,
+			.tab:last-child::after {
 				display: none;
 			}
 
@@ -1587,9 +1594,7 @@
 						<div class="setting-row">
 							<i class="setting-icon fas fa-rotate-left"></i>
 							<div class="setting-info">
-								<div class="setting-label setting-label-danger" data-i18n="labelResetSettings">
-									Reset Settings
-								</div>
+								<div class="setting-label setting-label-danger" data-i18n="labelResetSettings">Reset Settings</div>
 								<div class="setting-description" data-i18n="descResetSettings">
 									Restore all settings to their defaults
 								</div>
