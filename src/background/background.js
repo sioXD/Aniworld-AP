@@ -216,15 +216,21 @@ async function injectContentScript(tabId, frameId) {
 			file: "src/player/styles.css",
 		});
 
-		// Shared modules first, in dependency order: content.js reads all four.
-		// executeScript runs them in sequence in the same frame, so a top-level
-		// `var`/`function` from one is visible to the next.
+		// Shared modules first, then the player split in dependency order:
+		// bootstrap.js runs the startup last and expects every other file to be
+		// defined. executeScript runs them in sequence in the same frame, so a
+		// top-level `var`/`function` from one is visible to the next.
 		for (const file of [
 			"src/shared/defaults.js",
 			"src/shared/i18n.js",
 			"src/shared/util.js",
 			"src/shared/protocol.js",
-			"src/player/content.js",
+			"src/player/player.js",
+			"src/player/persistence.js",
+			"src/player/ui.js",
+			"src/player/panel.js",
+			"src/player/skip.js",
+			"src/player/bootstrap.js",
 		]) {
 			await browser.tabs.executeScript(tabId, { frameId: frameId, file });
 		}
@@ -314,6 +320,8 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
 				return settings;
 
 			case MSG.saveSettings:
+				// Writing is enough: every player frame listens to
+				// browser.storage.onChanged and applies the new values itself.
 				await browser.storage.local.set(message.settings);
 				// Update toolbar icon if theme changed
 				if (message.settings.uiTheme) {

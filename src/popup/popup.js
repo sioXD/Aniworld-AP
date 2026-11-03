@@ -344,18 +344,14 @@ async function saveSettings() {
 	applyTranslations(settings.language);
 
 	try {
+		// The background writes to storage.local; player frames pick the change
+		// up through browser.storage.onChanged, so no tab/frame targeting here.
 		await browser.runtime.sendMessage({ action: MSG.saveSettings, settings });
 
 		// Show save indicator
 		const indicator = document.getElementById("saveIndicator");
 		indicator.classList.add("visible");
 		setTimeout(() => indicator.classList.remove("visible"), 1500);
-
-		// Notify content script of settings change
-		const tabs = await browser.tabs.query({ active: true, currentWindow: true });
-		if (tabs[0]) {
-			browser.tabs.sendMessage(tabs[0].id, { action: MSG.settingsUpdated, settings }).catch(() => {});
-		}
 	} catch (error) {
 		console.error("Failed to save settings:", error);
 	}

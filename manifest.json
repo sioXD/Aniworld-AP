@@ -47,7 +47,12 @@
 		"src/shared/i18n.js",
 		"src/shared/util.js",
 		"src/shared/protocol.js",
-		"src/player/content.js",
+		"src/player/player.js",
+		"src/player/persistence.js",
+		"src/player/ui.js",
+		"src/player/panel.js",
+		"src/player/skip.js",
+		"src/player/bootstrap.js",
 		"src/player/styles.css",
 		"icons/icon-classic.png",
 		"icons/icon-aniworld.png"

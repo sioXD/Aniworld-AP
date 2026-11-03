@@ -69,11 +69,13 @@ src/
   shared/      defaults.js, i18n.js, util.js, protocol.js  (plain scripts, load before consumers)
   background/  background.js                               (API proxy + iframe injection)
   aniworld/    aniworld.js                                 (top frame: page parsing, navigation)
-  player/      content.js, styles.css                      (runs inside the VOE iframe)
+  player/      player.js, persistence.js, ui.js,
+               panel.js, skip.js, bootstrap.js,
+               styles.css                                  (runs inside the VOE iframe)
   popup/       popup.html, popup.js                        (settings UI)
 ```
 
-The `shared/` files declare globals with `var`/`function` instead of `const`, because the player script can be injected into the same frame twice and a repeated `const` declaration would abort the injection.
+The `shared/` files and the `player/` modules declare globals with `var`/`function` instead of `const`, because the player scripts can be injected into the same frame twice and a repeated `const` declaration would abort the injection. `bootstrap.js` is loaded last and starts the overlay; the other player files only define functions.
 
 ### Requirements
 

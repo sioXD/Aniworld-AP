@@ -17,8 +17,6 @@ var MSG = {
 	voteSkipTime: "voteSkipTime",
 	getAnimeCache: "getAnimeCache",
 	setAnimeCache: "setAnimeCache",
-	// background -> already-injected player frame, after the popup saved.
-	settingsUpdated: "settingsUpdated",
 };
 
 // Keys in browser.storage.local that are not part of DEFAULT_SETTINGS.
