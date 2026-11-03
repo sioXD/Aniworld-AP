@@ -9,7 +9,6 @@
 
 // browser.runtime.sendMessage({ action }) — player/popup -> background.
 var MSG = {
-	getSettings: "getSettings",
 	saveSettings: "saveSettings",
 	searchAnime: "searchAnime",
 	getSkipTimes: "getSkipTimes",

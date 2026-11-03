@@ -193,7 +193,7 @@ async function init() {
 	checkShouldAutoPlay();
 
 	try {
-		state.settings = await browser.runtime.sendMessage({ action: MSG.getSettings });
+		state.settings = await browser.storage.local.get(DEFAULT_SETTINGS);
 		console.log("VOE AniSkip: Settings loaded", state.settings);
 	} catch (error) {
 		console.error("VOE AniSkip: Failed to load settings:", error);
@@ -353,7 +353,7 @@ function startExtension() {
 		// Update theme class and labels on container
 		const container = document.getElementById("aniskip-container");
 		if (container) {
-			if (state.settings.uiTheme) container.className = `theme-${state.settings.uiTheme}`;
+			if (state.settings.uiTheme) applyContainerTheme(container, state.settings.uiTheme);
 			applyPanelTranslations(container);
 		}
 

@@ -42,6 +42,14 @@ function getSkipTypeLabels() {
 	};
 }
 
+// The theme is one class among potentially others, so never assign
+// className wholesale - a future marker/hidden class must survive a theme
+// switch.
+function applyContainerTheme(container, theme) {
+	container.classList.remove("theme-classic", "theme-aniworld");
+	container.classList.add(`theme-${theme}`);
+}
+
 // Create UI
 function createUI() {
 	const existing = document.getElementById("aniskip-container");
@@ -57,7 +65,7 @@ function createUI() {
 
 	// Apply theme class based on settings
 	const theme = state.settings?.uiTheme || DEFAULT_SETTINGS.uiTheme;
-	container.className = `theme-${theme}`;
+	applyContainerTheme(container, theme);
 
 	container.innerHTML = `
       <div id="aniskip-skip-button" class="aniskip-button aniskip-hidden">

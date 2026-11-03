@@ -305,9 +305,9 @@ function initTabs() {
 // Load settings on popup open
 async function loadSettings() {
 	try {
-		const settings = await browser.runtime.sendMessage({ action: MSG.getSettings });
+		const settings = await browser.storage.local.get(DEFAULT_SETTINGS);
 
-		// Fill every control from the settings object — the background already
+		// Fill every control from the settings object — storage.local.get
 		// applied DEFAULT_SETTINGS, so no per-field fallbacks are needed here.
 		getSettingElements().forEach((element) => {
 			const value = settings[element.id] !== undefined ? settings[element.id] : DEFAULT_SETTINGS[element.id];

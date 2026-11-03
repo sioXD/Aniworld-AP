@@ -315,10 +315,6 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
 			case MSG.voteSkipTime:
 				return await voteSkipTime(message.skipId, message.voteType);
 
-			case MSG.getSettings:
-				const settings = await browser.storage.local.get(DEFAULT_SETTINGS);
-				return settings;
-
 			case MSG.saveSettings:
 				// Writing is enough: every player frame listens to
 				// browser.storage.onChanged and applies the new values itself.
