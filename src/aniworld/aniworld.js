@@ -12,7 +12,7 @@
 	// ============================================================
 	async function saveSelectedLanguage(langKey) {
 		try {
-			await browser.storage.local.set({ preferredLanguage: langKey });
+			await browser.storage.local.set({ [STORAGE.preferredLanguage]: langKey });
 			console.log("VOE AniSkip: Saved preferred language:", langKey);
 		} catch (e) {
 			console.error("VOE AniSkip: Error saving language:", e);
@@ -21,7 +21,7 @@
 
 	async function loadPreferredLanguage() {
 		try {
-			const result = await browser.storage.local.get("preferredLanguage");
+			const result = await browser.storage.local.get(STORAGE.preferredLanguage);
 			return result.preferredLanguage || null;
 		} catch (e) {
 			return null;
@@ -164,7 +164,7 @@
 		try {
 			iframe.contentWindow.postMessage(
 				{
-					type: "ANISKIP_NEXT_EPISODE_AVAILABLE",
+					type: POST_MSG.nextEpisodeAvailable,
 					available: hasNextEpisode(),
 				},
 				"*",
@@ -234,7 +234,7 @@
 
 	// Listen for messages from the VOE iframe
 	window.addEventListener("message", (event) => {
-		if (event.data && event.data.type === "ANISKIP_NEXT_EPISODE") {
+		if (event.data && event.data.type === POST_MSG.nextEpisode) {
 			console.log("VOE AniSkip: Received next episode request from iframe");
 			if (!isNavigating) {
 				isNavigating = true;
@@ -246,9 +246,9 @@
 			}
 		}
 
-		if (event.data && event.data.type === "ANISKIP_REQUEST_NEXT_EPISODE_STATUS") {
+		if (event.data && event.data.type === POST_MSG.requestNextEpisodeStatus) {
 			const status = {
-				type: "ANISKIP_NEXT_EPISODE_AVAILABLE",
+				type: POST_MSG.nextEpisodeAvailable,
 				available: hasNextEpisode(),
 			};
 			if (event.source) {
@@ -256,12 +256,12 @@
 			}
 		}
 
-		if (event.data && event.data.type === "ANISKIP_REQUEST_FULLSCREEN") {
+		if (event.data && event.data.type === POST_MSG.requestFullscreen) {
 			console.log("VOE AniSkip: Received fullscreen request from iframe");
 			enterFullscreen();
 		}
 
-		if (event.data && event.data.type === "ANISKIP_MARK_SEEN") {
+		if (event.data && event.data.type === POST_MSG.markSeen) {
 			console.log("VOE AniSkip: Received mark as seen request from iframe");
 			markCurrentEpisodeAsSeen();
 			if (!isNavigating) {
@@ -293,24 +293,24 @@
 			document.querySelector(".inSiteWebStream iframe") ||
 			document.querySelector("iframe");
 		if (iframe) {
-			iframe.contentWindow.postMessage({ type: "ANISKIP_ENTER_FULLSCREEN" }, "*");
+			iframe.contentWindow.postMessage({ type: POST_MSG.enterFullscreen }, "*");
 		}
 	}
 
 	// Check if we should auto-play (came from previous episode)
 	async function checkAutoPlay() {
 		try {
-			const result = await browser.storage.local.get(["autoPlayNextFlag", "timestamp"]);
-			if (result.autoPlayNextFlag && Date.now() - result.timestamp < 30000) {
+			const result = await browser.storage.local.get([STORAGE.autoPlayNextFlag, STORAGE.flaggedAt]);
+			if (result.autoPlayNextFlag && Date.now() - result.flaggedAt < AUTOPLAY_REQUEST_TTL_MS) {
 				console.log("VOE AniSkip: Auto-play enabled from previous episode");
 
 				// Clear the flags
-				await browser.storage.local.remove(["autoPlayNextFlag", "timestamp"]);
+				await browser.storage.local.remove([STORAGE.autoPlayNextFlag, STORAGE.flaggedAt]);
 
 				// Store flag for the iframe to know it should auto-play
 				await browser.storage.local.set({
-					shouldAutoPlay: true,
-					autoPlayTimestamp: Date.now(),
+					[STORAGE.shouldAutoPlay]: true,
+					[STORAGE.autoPlayRequestedAt]: Date.now(),
 				});
 
 				// Wait for iframe to load and click play
@@ -339,7 +339,7 @@
 
 				// Send message to iframe to auto-play
 				setTimeout(() => {
-					iframe.contentWindow.postMessage({ type: "ANISKIP_AUTO_PLAY" }, "*");
+					iframe.contentWindow.postMessage({ type: POST_MSG.autoPlay }, "*");
 				}, 1500);
 
 				return;
@@ -437,7 +437,7 @@
 		if (info) {
 			try {
 				await browser.storage.local.set({
-					aniWorldInfo: {
+					[STORAGE.aniWorldInfo]: {
 						...info,
 						url: window.location.href,
 						timestamp: Date.now(),
@@ -463,7 +463,7 @@
 				if (info) {
 					iframe.contentWindow.postMessage(
 						{
-							type: "ANISKIP_ANIME_INFO",
+							type: POST_MSG.animeInfo,
 							data: info,
 						},
 						"*",
@@ -490,7 +490,7 @@
 								try {
 									node.contentWindow.postMessage(
 										{
-											type: "ANISKIP_ANIME_INFO",
+											type: POST_MSG.animeInfo,
 											data: info,
 										},
 										"*",

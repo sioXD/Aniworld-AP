@@ -33,12 +33,12 @@ initToolbarIcon();
 
 // Generate a unique user ID for this installation
 async function getUserId() {
-	const result = await browser.storage.local.get("userId");
+	const result = await browser.storage.local.get(STORAGE.userId);
 	if (result.userId) {
 		return result.userId;
 	}
 	const userId = crypto.randomUUID();
-	await browser.storage.local.set({ userId });
+	await browser.storage.local.set({ [STORAGE.userId]: userId });
 	return userId;
 }
 
@@ -213,20 +213,21 @@ async function injectContentScript(tabId, frameId) {
 		// Inject CSS first
 		await browser.tabs.insertCSS(tabId, {
 			frameId: frameId,
-			file: "src/styles.css",
+			file: "src/player/styles.css",
 		});
 
-		// Inject shared defaults first
-		await browser.tabs.executeScript(tabId, {
-			frameId: frameId,
-			file: "src/defaults.js",
-		});
-
-		// Then inject JS
-		await browser.tabs.executeScript(tabId, {
-			frameId: frameId,
-			file: "src/content.js",
-		});
+		// Shared modules first, in dependency order: content.js reads all four.
+		// executeScript runs them in sequence in the same frame, so a top-level
+		// `var`/`function` from one is visible to the next.
+		for (const file of [
+			"src/shared/defaults.js",
+			"src/shared/i18n.js",
+			"src/shared/util.js",
+			"src/shared/protocol.js",
+			"src/player/content.js",
+		]) {
+			await browser.tabs.executeScript(tabId, { frameId: frameId, file });
+		}
 
 		injectedFrames.add(frameKey);
 		console.log("VOE AniSkip: Injected content script into frame", frameId);
@@ -296,23 +297,23 @@ browser.tabs.onUpdated.addListener((tabId, changeInfo) => {
 browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
 	const handleAsync = async () => {
 		switch (message.action) {
-			case "searchAnime":
+			case MSG.searchAnime:
 				return await searchAnime(message.query);
 
-			case "getSkipTimes":
+			case MSG.getSkipTimes:
 				return await getSkipTimes(message.malId, message.episodeNumber, message.episodeLength);
 
-			case "createSkipTime":
+			case MSG.createSkipTime:
 				return await createSkipTime(message.malId, message.episodeNumber, message.data);
 
-			case "voteSkipTime":
+			case MSG.voteSkipTime:
 				return await voteSkipTime(message.skipId, message.voteType);
 
-			case "getSettings":
+			case MSG.getSettings:
 				const settings = await browser.storage.local.get(DEFAULT_SETTINGS);
 				return settings;
 
-			case "saveSettings":
+			case MSG.saveSettings:
 				await browser.storage.local.set(message.settings);
 				// Update toolbar icon if theme changed
 				if (message.settings.uiTheme) {
@@ -320,21 +321,14 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
 				}
 				return { success: true };
 
-			case "getAnimeCache":
-				const cache = await browser.storage.local.get("animeCache");
+			case MSG.getAnimeCache:
+				const cache = await browser.storage.local.get(STORAGE.animeCache);
 				return cache.animeCache || {};
 
-			case "setAnimeCache":
-				const existingCache = await browser.storage.local.get("animeCache");
+			case MSG.setAnimeCache:
+				const existingCache = await browser.storage.local.get(STORAGE.animeCache);
 				const updatedCache = { ...(existingCache.animeCache || {}), ...message.cache };
-				await browser.storage.local.set({ animeCache: updatedCache });
-				return { success: true };
-
-			case "injectIntoFrame":
-				// Request from AniWorld script to inject into a specific frame
-				if (sender.tab) {
-					await injectContentScript(sender.tab.id, message.frameId);
-				}
+				await browser.storage.local.set({ [STORAGE.animeCache]: updatedCache });
 				return { success: true };
 
 			default:

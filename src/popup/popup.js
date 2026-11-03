@@ -1,128 +1,9 @@
 // Popup script for AniWorld AP settings
 
-// Translations object
-const translations = {
-	en: {
-		settingsTitle: "AniWorld AP [fork] Settings",
-		tagline: "Skip Intros & Outros",
-		tabGeneral: "General",
-		tabStyles: "Styles",
-		tabAdvanced: "Advanced",
-		sectionAppearance: "Appearance",
-		labelLanguage: "Language",
-		descLanguage: "Choose your preferred language",
-		langEnglish: "English",
-		langGerman: "German",
-		labelUiTheme: "UI Theme",
-		descUiTheme: "Choose your preferred style",
-		themeAniworld: "AniWorld",
-		themeClassic: "Classic",
-		sectionAutoSkip: "Auto Skip",
-		labelSkipOpening: "Skip Opening",
-		descSkipOpening: "Auto-skip anime intros",
-		labelSkipEnding: "Skip Ending",
-		descSkipEnding: "Auto-skip anime outros",
-		labelSkipRecap: "Skip Recap",
-		descSkipRecap: "Auto-skip recap segments",
-		sectionDisplay: "Display",
-		labelShowButtons: "Show Skip Buttons",
-		descShowButtons: "Display manual skip buttons",
-		labelAlwaysShowButton: "Always Show Skip Button",
-		descAlwaysShowButton: "Skip 90s if no OP/ED is playing",
-		labelShowSpeedControl: "Show Speed Control",
-		descShowSpeedControl: "Show speed adjustment buttons",
-		labelPersistentSpeed: "Persistent Speed",
-		descPersistentSpeed: "Remember speed across episodes",
-		labelSkipOffset: "Skip Offset",
-		descSkipOffset: "Seconds to add after skip",
-		sectionPlayback: "Playback",
-		labelNextEpisode: "Next Episode",
-		descNextEpisode: "Auto navigate to the next episode",
-		labelShowNextEpisodeButton: "Next Episode Button",
-		descShowNextEpisodeButton: "Show a button in the player to jump to the next episode",
-		sectionColors: "Progress Bar Colors",
-		labelOpeningMarker: "Opening Marker",
-		descOpeningMarker: "Intro segment color",
-		labelEndingMarker: "Ending Marker",
-		descEndingMarker: "Outro segment color",
-		labelRecapMarker: "Recap Marker",
-		descRecapMarker: "Recap segment color",
-		labelMarkerOpacity: "Marker Opacity",
-		descMarkerOpacity: "Transparency (0.1 - 1.0)",
-		sectionReset: "Reset",
-		labelResetSettings: "Reset Settings",
-		descResetSettings: "Restore all settings to their defaults",
-		resetButton: "Reset",
-		resetConfirm: "Click again",
-		footerSaved: "Saved",
-		footerUpdatedOn: "upgraded on",
-		colorPickerTitle: "Choose Color",
-		colorPickerCancel: "Cancel",
-		colorPickerApply: "Apply",
-	},
-	de: {
-		settingsTitle: "AniWorld AP [fork] Einstellungen",
-		tagline: "Intros & Outros überspringen",
-		tabGeneral: "Allgemein",
-		tabStyles: "Design",
-		tabAdvanced: "Erweitert",
-		sectionAppearance: "Darstellung",
-		labelLanguage: "Sprache",
-		descLanguage: "Wähle deine bevorzugte Sprache",
-		langEnglish: "Englisch",
-		langGerman: "Deutsch",
-		labelUiTheme: "UI-Design",
-		descUiTheme: "Wähle deinen bevorzugten Stil",
-		themeAniworld: "AniWorld",
-		themeClassic: "Klassisch",
-		sectionAutoSkip: "Auto-Skip",
-		labelSkipOpening: "Intro überspringen",
-		descSkipOpening: "Anime-Intros automatisch überspringen",
-		labelSkipEnding: "Outro überspringen",
-		descSkipEnding: "Anime-Outros automatisch überspringen",
-		labelSkipRecap: "Recap überspringen",
-		descSkipRecap: "Zusammenfassungen automatisch überspringen",
-		sectionDisplay: "Anzeige",
-		labelShowButtons: "Skip-Buttons anzeigen",
-		descShowButtons: "Manuelle Skip-Buttons anzeigen",
-		labelAlwaysShowButton: "Skip-Button immer anzeigen",
-		descAlwaysShowButton: "90s überspringen wenn kein OP/ED läuft",
-		labelShowSpeedControl: "Geschwindigkeit anzeigen",
-		descShowSpeedControl: "Geschwindigkeitsregler anzeigen",
-		labelPersistentSpeed: "Geschwindigkeit merken",
-		descPersistentSpeed: "Geschwindigkeit über Episoden merken",
-		labelSkipOffset: "Skip-Versatz",
-		descSkipOffset: "Sekunden nach dem Skip hinzufügen",
-		sectionPlayback: "Wiedergabe",
-		labelNextEpisode: "Nächste Folge",
-		descNextEpisode: "Automatisch zur nächsten Folge navigieren",
-		labelShowNextEpisodeButton: "Nächste-Folge-Button",
-		descShowNextEpisodeButton: "Button im Player anzeigen, um zur nächsten Folge zu springen",
-		sectionColors: "Fortschrittsbalken-Farben",
-		labelOpeningMarker: "Intro-Markierung",
-		descOpeningMarker: "Intro-Segment Farbe",
-		labelEndingMarker: "Outro-Markierung",
-		descEndingMarker: "Outro-Segment Farbe",
-		labelRecapMarker: "Recap-Markierung",
-		descRecapMarker: "Zusammenfassungs-Segment Farbe",
-		labelMarkerOpacity: "Markierungs-Deckkraft",
-		descMarkerOpacity: "Transparenz (0.1 - 1.0)",
-		sectionReset: "Zurücksetzen",
-		labelResetSettings: "Einstellungen zurücksetzen",
-		descResetSettings: "Alle Einstellungen auf die Standardwerte zurücksetzen",
-		resetButton: "Zurücksetzen",
-		resetConfirm: "Erneut klicken",
-		footerSaved: "Gespeichert",
-		footerUpdatedOn: "aktualisiert am",
-		colorPickerTitle: "Farbe wählen",
-		colorPickerCancel: "Abbrechen",
-		colorPickerApply: "Anwenden",
-	},
-};
 
 // Apply translations based on selected language
 function applyTranslations(lang) {
-	const t = translations[lang] || translations.en;
+	const t = TRANSLATIONS[lang] || TRANSLATIONS.en;
 	document.querySelectorAll("[data-i18n]").forEach((element) => {
 		const key = element.getAttribute("data-i18n");
 		if (t[key]) {
@@ -424,7 +305,7 @@ function initTabs() {
 // Load settings on popup open
 async function loadSettings() {
 	try {
-		const settings = await browser.runtime.sendMessage({ action: "getSettings" });
+		const settings = await browser.runtime.sendMessage({ action: MSG.getSettings });
 
 		// Fill every control from the settings object — the background already
 		// applied DEFAULT_SETTINGS, so no per-field fallbacks are needed here.
@@ -463,7 +344,7 @@ async function saveSettings() {
 	applyTranslations(settings.language);
 
 	try {
-		await browser.runtime.sendMessage({ action: "saveSettings", settings });
+		await browser.runtime.sendMessage({ action: MSG.saveSettings, settings });
 
 		// Show save indicator
 		const indicator = document.getElementById("saveIndicator");
@@ -473,7 +354,7 @@ async function saveSettings() {
 		// Notify content script of settings change
 		const tabs = await browser.tabs.query({ active: true, currentWindow: true });
 		if (tabs[0]) {
-			browser.tabs.sendMessage(tabs[0].id, { action: "settingsUpdated", settings }).catch(() => {});
+			browser.tabs.sendMessage(tabs[0].id, { action: MSG.settingsUpdated, settings }).catch(() => {});
 		}
 	} catch (error) {
 		console.error("Failed to save settings:", error);
@@ -484,8 +365,7 @@ async function saveSettings() {
 function translate(key) {
 	const select = document.getElementById("language");
 	const language = select ? select.value : DEFAULT_SETTINGS.language;
-	const t = translations[language] || translations.en;
-	return t[key] || translations.en[key] || key;
+	return translateMessage(language, key);
 }
 
 // Reset button lives in the Advanced tab. The first click only arms it, so a

@@ -16,7 +16,7 @@ try {
     # Stamp version and date into popup.html (separate spans, see .footer).
     # The whole span is rewritten instead of using backreferences: "$1" directly
     # followed by a date starting with a digit would be read as "$12".
-    $popupPath = "src/popup.html"
+    $popupPath = "src/popup/popup.html"
     $popupContent = Get-Content $popupPath -Raw
     $versionSpan = '<span id="version" class="version">v' + $version + "</span>"
     $dateSpan = '<span id="releaseDate">' + $currentDate + "</span>"

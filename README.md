@@ -62,6 +62,19 @@ This fork adds the following features to enhance the viewing experience on AniWo
 
 ## Development
 
+### Project layout
+
+```
+src/
+  shared/      defaults.js, i18n.js, util.js, protocol.js  (plain scripts, load before consumers)
+  background/  background.js                               (API proxy + iframe injection)
+  aniworld/    aniworld.js                                 (top frame: page parsing, navigation)
+  player/      content.js, styles.css                      (runs inside the VOE iframe)
+  popup/       popup.html, popup.js                        (settings UI)
+```
+
+The `shared/` files declare globals with `var`/`function` instead of `const`, because the player script can be injected into the same frame twice and a repeated `const` declaration would abort the injection.
+
 ### Requirements
 
 - Firefox 142+ for testing
@@ -86,7 +99,7 @@ pack.ps1
 ./pack.sh
 ```
 
-Both scripts stamp the current version and date into `src/popup.html` and build a ZIP into `web-ext-artifacts/` via `web-ext build`. `web-ext` must be installed globally. The files that end up in the archive are defined in `.web-ext-config.mjs` (it also applies to `web-ext lint` and `web-ext sign`).
+Both scripts stamp the current version and date into `src/popup/popup.html` and build a ZIP into `web-ext-artifacts/` via `web-ext build`. `web-ext` must be installed globally. The files that end up in the archive are defined in `.web-ext-config.mjs` (it also applies to `web-ext lint` and `web-ext sign`).
 
 ### Releasing (CI/CD)
 

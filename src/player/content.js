@@ -71,122 +71,6 @@
 			initialized: false,
 		};
 
-		// Translations object for content script
-		const translations = {
-			en: {
-				typeOpening: "Opening",
-				typeEnding: "Ending",
-				typeMixedOpening: "Mixed Opening",
-				typeMixedEnding: "Mixed Ending",
-				typeRecap: "Recap",
-				skipButtonText: "Skip",
-				nextEpisodeButton: "Next episode",
-				panelInitializing: "Initializing...",
-				panelAnime: "Anime:",
-				panelSeason: "Season:",
-				panelEpisode: "Episode:",
-				panelMalId: "MAL ID:",
-				panelChange: "Change",
-				panelSkipSegments: "Skip Segments:",
-				panelSearchPlaceholder: "Search anime...",
-				panelSearchButton: "Search",
-				panelSubmitSkipTime: "Submit Skip Time:",
-				panelType: "Type:",
-				panelStart: "Start:",
-				panelEnd: "End:",
-				panelSet: "Set",
-				panelSubmit: "Submit",
-				panelRefresh: "Refresh",
-				panelCancel: "Cancel",
-				voteUpvote: "Upvote",
-				voteDownvote: "Downvote",
-				skipConfirmSave: "Save as $1 with AniSkip?",
-				skipConfirmSaving: "Saving...",
-				skipConfirmSaved: "Saved!",
-				skipConfirmFailed: "Save failed",
-				skipConfirmYes: "Save segment",
-				skipConfirmNo: "Dismiss",
-				statusWaitingForPlayer: "Waiting for video player...",
-				statusPlayerFound: "Player found, parsing anime info...",
-				statusUsingCached: "Using cached anime info",
-				statusSearching: "Searching for anime: $1",
-				statusNotFound: 'Anime not found. Click "Change" to search manually.',
-				statusCouldNotParse: "Could not parse anime info from title",
-				statusFetching: "Fetching skip times...",
-				statusNoSkipTimes: "No skip times found for this episode",
-				statusFoundSegments: "Found $1 skip segment(s)",
-				statusMissingInfo: "Missing anime info",
-				statusSubmitting: "Submitting skip time...",
-				statusSubmitSuccess: "Skip time submitted successfully!",
-				statusSubmitFailed: "Submit failed: $1",
-				statusCannotSubmit: "Cannot submit: missing anime info",
-				statusInvalidTime: "Invalid time format",
-				statusStartBeforeEnd: "Start time must be before end time",
-				statusFailedToFetch: "Failed to fetch skip times",
-				statusSubmitError: "Failed to submit skip time",
-				statusFailedToFind: "Failed to find video player: $1",
-				searchLoading: "Searching...",
-				searchNoResults: "No results found",
-				searchFailed: "Search failed",
-			},
-			de: {
-				typeOpening: "Intro",
-				typeEnding: "Outro",
-				typeMixedOpening: "Gemischtes Intro",
-				typeMixedEnding: "Gemischtes Outro",
-				typeRecap: "Zusammenfassung",
-				skipButtonText: "Skip",
-				nextEpisodeButton: "Nächste Folge",
-				panelInitializing: "Initialisierung...",
-				panelAnime: "Anime:",
-				panelSeason: "Staffel:",
-				panelEpisode: "Episode:",
-				panelMalId: "MAL ID:",
-				panelChange: "Ändern",
-				panelSkipSegments: "Skip-Segmente:",
-				panelSearchPlaceholder: "Anime suchen...",
-				panelSearchButton: "Suchen",
-				panelSubmitSkipTime: "Skip-Zeit einreichen:",
-				panelType: "Typ:",
-				panelStart: "Start:",
-				panelEnd: "Ende:",
-				panelSet: "Setzen",
-				panelSubmit: "Einreichen",
-				panelRefresh: "Aktualisieren",
-				panelCancel: "Abbrechen",
-				voteUpvote: "Positiv bewerten",
-				voteDownvote: "Negativ bewerten",
-				skipConfirmSave: "$1 bei AniSkip speichern?",
-				skipConfirmSaving: "Speichern...",
-				skipConfirmSaved: "Gespeichert!",
-				skipConfirmFailed: "Speichern fehlgeschlagen",
-				skipConfirmYes: "Segment speichern",
-				skipConfirmNo: "Verwerfen",
-				statusWaitingForPlayer: "Warte auf Video-Player...",
-				statusPlayerFound: "Player gefunden, analysiere Anime-Info...",
-				statusUsingCached: "Verwende zwischengespeicherte Anime-Info",
-				statusSearching: "Suche nach Anime: $1",
-				statusNotFound: 'Anime nicht gefunden. Klicke "Ändern" um manuell zu suchen.',
-				statusCouldNotParse: "Konnte Anime-Info nicht aus Titel ermitteln",
-				statusFetching: "Lade Skip-Zeiten...",
-				statusNoSkipTimes: "Keine Skip-Zeiten für diese Episode gefunden",
-				statusFoundSegments: "$1 Skip-Segment(e) gefunden",
-				statusMissingInfo: "Fehlende Anime-Info",
-				statusSubmitting: "Reiche Skip-Zeit ein...",
-				statusSubmitSuccess: "Skip-Zeit erfolgreich eingereicht!",
-				statusSubmitFailed: "Einreichen fehlgeschlagen: $1",
-				statusCannotSubmit: "Kann nicht einreichen: Fehlende Anime-Info",
-				statusInvalidTime: "Ungültiges Zeitformat",
-				statusStartBeforeEnd: "Startzeit muss vor Endzeit liegen",
-				statusFailedToFetch: "Skip-Zeiten konnten nicht abgerufen werden",
-				statusSubmitError: "Einreichen der Skip-Zeit fehlgeschlagen",
-				statusFailedToFind: "Video-Player nicht gefunden: $1",
-				searchLoading: "Suche...",
-				searchNoResults: "Keine Ergebnisse gefunden",
-				searchFailed: "Suche fehlgeschlagen",
-			},
-		};
-
 		// Get current language from settings
 		function getCurrentLanguage() {
 			return state.settings?.language || DEFAULT_SETTINGS.language;
@@ -194,8 +78,7 @@
 
 		// i18n helper function - uses stored language setting
 		function getMessage(key, fallback) {
-			const t = translations[getCurrentLanguage()] || translations.en;
-			return t[key] || translations.en[key] || fallback || key;
+			return translateMessage(getCurrentLanguage(), key, fallback);
 		}
 
 		// Translate the injected UI. `data-i18n` sets the text, `data-i18n-title`
@@ -243,7 +126,7 @@
 
 		async function getAniWorldInfo() {
 			try {
-				const result = await browser.storage.local.get("aniWorldInfo");
+				const result = await browser.storage.local.get(STORAGE.aniWorldInfo);
 				if (result.aniWorldInfo && Date.now() - result.aniWorldInfo.timestamp < 5 * 60 * 1000) {
 					return result.aniWorldInfo;
 				}
@@ -413,7 +296,7 @@
 		async function loadPersistentSpeed() {
 			if (!state.settings.persistentSpeed) return;
 			try {
-				const result = await browser.storage.local.get("preferredSpeed");
+				const result = await browser.storage.local.get(STORAGE.preferredSpeed);
 				if (result.preferredSpeed) {
 					const video = document.querySelector("video");
 					if (video) {
@@ -427,7 +310,7 @@
 		async function savePersistentSpeed(speed) {
 			if (!state.settings.persistentSpeed) return;
 			try {
-				await browser.storage.local.set({ preferredSpeed: speed });
+				await browser.storage.local.set({ [STORAGE.preferredSpeed]: speed });
 			} catch (e) {}
 		}
 
@@ -790,7 +673,7 @@
 			resultsEl.appendChild(loadingDiv);
 
 			try {
-				const results = await browser.runtime.sendMessage({ action: "searchAnime", query });
+				const results = await browser.runtime.sendMessage({ action: MSG.searchAnime, query });
 				if (!results || results.length === 0) {
 					resultsEl.textContent = "";
 					const noResultsDiv = document.createElement("div");
@@ -843,12 +726,6 @@
 			}
 		}
 
-		function escapeHtml(text) {
-			const div = document.createElement("div");
-			div.textContent = text;
-			return div.innerHTML;
-		}
-
 		async function selectAnime(malId, title) {
 			state.currentMalId = malId;
 			document.querySelector("#aniskip-anime-name").textContent = title;
@@ -861,7 +738,7 @@
 			const animeInfo = state.animeInfo || parseAnimeInfo();
 			if (animeInfo) {
 				await browser.runtime.sendMessage({
-					action: "setAnimeCache",
+					action: MSG.setAnimeCache,
 					cache: { [getMalCacheKey(animeInfo)]: { malId, title } },
 				});
 			}
@@ -878,7 +755,7 @@
 
 			try {
 				const response = await browser.runtime.sendMessage({
-					action: "getSkipTimes",
+					action: MSG.getSkipTimes,
 					malId: state.currentMalId,
 					episodeNumber: state.currentEpisode,
 					episodeLength: state.player?.getDuration() || 0,
@@ -962,7 +839,7 @@
 					const segment = e.target.closest(".aniskip-segment");
 					try {
 						await browser.runtime.sendMessage({
-							action: "voteSkipTime",
+							action: MSG.voteSkipTime,
 							skipId: segment.dataset.skipId,
 							voteType: e.target.dataset.vote,
 						});
@@ -972,17 +849,7 @@
 			});
 		}
 
-		// Helper function to convert hex color to rgba
-		function hexToRgba(hex, opacity) {
-			const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-			if (result) {
-				const r = parseInt(result[1], 16);
-				const g = parseInt(result[2], 16);
-				const b = parseInt(result[3], 16);
-				return `rgba(${r}, ${g}, ${b}, ${opacity})`;
-			}
-			return `rgba(255, 0, 251, ${opacity})`; // Default fallback
-		}
+		// Helper function to convert hex color to rgba is in shared/util.js
 
 		// Add CUSTOMIZABLE markers to progress bar
 		function addProgressBarMarkers() {
@@ -1396,7 +1263,7 @@
 
 			try {
 				const response = await browser.runtime.sendMessage({
-					action: "createSkipTime",
+					action: MSG.createSkipTime,
 					malId: state.currentMalId,
 					episodeNumber: state.currentEpisode,
 					data: {
@@ -1430,26 +1297,26 @@
 			markedAsSeen = true;
 
 			if (window.self !== window.top) {
-				window.parent.postMessage({ type: "ANISKIP_MARK_SEEN" }, "*");
+				window.parent.postMessage({ type: POST_MSG.markSeen }, "*");
 				console.log("VOE AniSkip: Sent mark as seen request to parent");
 			}
 		}
 
 		function requestNextEpisode(force = false) {
 			if (window.self !== window.top) {
-				window.parent.postMessage({ type: "ANISKIP_NEXT_EPISODE", force }, "*");
+				window.parent.postMessage({ type: POST_MSG.nextEpisode, force }, "*");
 			}
 		}
 
 		function requestNextEpisodeStatus() {
 			if (window.self !== window.top) {
-				window.parent.postMessage({ type: "ANISKIP_REQUEST_NEXT_EPISODE_STATUS" }, "*");
+				window.parent.postMessage({ type: POST_MSG.requestNextEpisodeStatus }, "*");
 			}
 		}
 
 		function requestFullscreen() {
 			if (window.self !== window.top) {
-				window.parent.postMessage({ type: "ANISKIP_REQUEST_FULLSCREEN" }, "*");
+				window.parent.postMessage({ type: POST_MSG.requestFullscreen }, "*");
 			}
 		}
 
@@ -1513,9 +1380,9 @@
 		}
 
 		window.addEventListener("message", (event) => {
-			if (event.data?.type === "ANISKIP_AUTO_PLAY") handleAutoPlay();
-			if (event.data?.type === "ANISKIP_ENTER_FULLSCREEN") enterFullscreenFromPlayer();
-			if (event.data?.type === "ANISKIP_NEXT_EPISODE_AVAILABLE") {
+			if (event.data?.type === POST_MSG.autoPlay) handleAutoPlay();
+			if (event.data?.type === POST_MSG.enterFullscreen) enterFullscreenFromPlayer();
+			if (event.data?.type === POST_MSG.nextEpisodeAvailable) {
 				setNextEpisodeAvailability(event.data.available);
 			}
 		});
@@ -1552,11 +1419,11 @@
 
 		async function checkShouldAutoPlay() {
 			try {
-				const result = await browser.storage.local.get(["shouldAutoPlay", "autoPlayTimestamp"]);
+				const result = await browser.storage.local.get([STORAGE.shouldAutoPlay, STORAGE.autoPlayRequestedAt]);
 				console.log("VOE AniSkip: Checking auto-play flag:", result);
-				if (result.shouldAutoPlay && Date.now() - result.autoPlayTimestamp < 30000) {
+				if (result.shouldAutoPlay && Date.now() - result.autoPlayTimestamp < AUTOPLAY_REQUEST_TTL_MS) {
 					console.log("VOE AniSkip: Auto-play flag found, will auto-play");
-					await browser.storage.local.remove(["shouldAutoPlay", "autoPlayTimestamp"]);
+					await browser.storage.local.remove([STORAGE.shouldAutoPlay, STORAGE.autoPlayRequestedAt]);
 					// Wait longer for the player to be ready
 					setTimeout(handleAutoPlay, 2000);
 				}
@@ -1594,7 +1461,7 @@
 
 			try {
 				const response = await browser.runtime.sendMessage({
-					action: "createSkipTime",
+					action: MSG.createSkipTime,
 					malId: state.currentMalId,
 					episodeNumber: state.currentEpisode,
 					data: {
@@ -1621,24 +1488,7 @@
 			await fetchSkipTimes();
 		}
 
-		function formatTime(seconds) {
-			const hrs = Math.floor(seconds / 3600);
-			const mins = Math.floor((seconds % 3600) / 60);
-			const secs = Math.floor(seconds % 60);
-			return hrs > 0
-				? `${hrs}:${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`
-				: `${mins}:${secs.toString().padStart(2, "0")}`;
-		}
-
-		function parseTime(timeStr) {
-			if (!timeStr) return null;
-			const parts = timeStr.split(":").map((p) => parseFloat(p.trim()));
-			if (parts.some(isNaN)) return null;
-			if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
-			if (parts.length === 2) return parts[0] * 60 + parts[1];
-			if (parts.length === 1) return parts[0];
-			return null;
-		}
+		// formatTime() and parseTime() live in shared/util.js
 
 		// Initialize
 		async function init() {
@@ -1651,7 +1501,7 @@
 			checkShouldAutoPlay();
 
 			try {
-				state.settings = await browser.runtime.sendMessage({ action: "getSettings" });
+				state.settings = await browser.runtime.sendMessage({ action: MSG.getSettings });
 				console.log("VOE AniSkip: Settings loaded", state.settings);
 			} catch (error) {
 				console.error("VOE AniSkip: Failed to load settings:", error);
@@ -1682,7 +1532,7 @@
 					document.querySelector("#aniskip-season-num").textContent = animeInfo.season || 1;
 					document.querySelector("#aniskip-anime-info").classList.remove("aniskip-hidden");
 
-					const cache = await browser.runtime.sendMessage({ action: "getAnimeCache" });
+					const cache = await browser.runtime.sendMessage({ action: MSG.getAnimeCache });
 					// Legacy entries (name only) are only trusted for season 1 — for
 					// later seasons they may belong to a different MAL entry.
 					const cached =
@@ -1711,7 +1561,7 @@
 						if (animeInfo.season && animeInfo.season > 1) searchQuery += " season " + animeInfo.season;
 
 						console.log("VOE AniSkip: MAL search query:", searchQuery);
-						const results = await browser.runtime.sendMessage({ action: "searchAnime", query: searchQuery });
+						const results = await browser.runtime.sendMessage({ action: MSG.searchAnime, query: searchQuery });
 						console.log("VOE AniSkip: MAL search results:", results && results.length, "hits");
 						if (results && results.length > 0) {
 							console.log("VOE AniSkip: Selecting first result:", results[0].mal_id, "-", results[0].title);
@@ -1768,7 +1618,7 @@
 		}
 
 		browser.runtime.onMessage.addListener((message) => {
-			if (message.action === "settingsUpdated") {
+			if (message.action === MSG.settingsUpdated) {
 				state.settings = message.settings;
 				console.log("VOE AniSkip: Settings updated", state.settings);
 				updateNextEpisodeButtonLabel();
@@ -1806,8 +1656,8 @@
 		});
 
 		window.addEventListener("message", (event) => {
-			if (event.data?.type === "ANISKIP_ANIME_INFO") {
-				browser.storage.local.set({ aniWorldInfo: { ...event.data.data, timestamp: Date.now() } });
+			if (event.data?.type === POST_MSG.animeInfo) {
+				browser.storage.local.set({ [STORAGE.aniWorldInfo]: { ...event.data.data, timestamp: Date.now() } });
 			}
 		});
 

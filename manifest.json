@@ -16,18 +16,18 @@
 			"96": "icons/icon-96.png"
 		},
 		"default_title": "AniWorld AP [fork]",
-		"default_popup": "src/popup.html"
+		"default_popup": "src/popup/popup.html"
 	},
 	"content_scripts": [
 		{
 			"matches": ["*://*.aniworld.to/*", "*://aniworld.to/*"],
-			"js": ["src/defaults.js", "src/aniworld.js"],
+			"js": ["src/shared/defaults.js", "src/shared/protocol.js", "src/aniworld/aniworld.js"],
 			"run_at": "document_idle",
 			"all_frames": false
 		}
 	],
 	"background": {
-		"scripts": ["src/defaults.js", "src/background.js"],
+		"scripts": ["src/shared/defaults.js", "src/shared/protocol.js", "src/background/background.js"],
 		"persistent": true
 	},
 	"browser_specific_settings": {
@@ -43,9 +43,12 @@
 		}
 	},
 	"web_accessible_resources": [
-		"src/defaults.js",
-		"src/content.js",
-		"src/styles.css",
+		"src/shared/defaults.js",
+		"src/shared/i18n.js",
+		"src/shared/util.js",
+		"src/shared/protocol.js",
+		"src/player/content.js",
+		"src/player/styles.css",
 		"icons/icon-classic.png",
 		"icons/icon-aniworld.png"
 	]
