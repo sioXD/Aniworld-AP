@@ -380,6 +380,55 @@
 }
 
 /* ===================== */
+/* Autoplay Notice       */
+/* ===================== */
+#aniskip-autoplay-notice {
+	position: fixed;
+	left: 50%;
+	top: 50%;
+	transform: translate(-50%, -50%);
+	width: min(360px, calc(100vw - 32px));
+	padding: 18px;
+	background: var(--aniskip-bg-glass);
+	backdrop-filter: blur(20px);
+	-webkit-backdrop-filter: blur(20px);
+	border-radius: 16px;
+	border: 1px solid var(--aniskip-border-subtle);
+	box-shadow:
+		0 8px 40px rgba(0, 0, 0, 0.5),
+		0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+	z-index: 103;
+	text-align: center;
+	animation: panelSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.aniskip-autoplay-title {
+	color: var(--aniskip-accent-primary);
+	font-size: 15px;
+	font-weight: 700;
+	margin-bottom: 6px;
+}
+
+.aniskip-autoplay-text {
+	color: var(--aniskip-text-secondary);
+	font-size: 12px;
+	line-height: 1.5;
+	margin-bottom: 14px;
+}
+
+.aniskip-autoplay-actions {
+	display: flex;
+	gap: 8px;
+	justify-content: center;
+	flex-wrap: wrap;
+}
+
+.aniskip-autoplay-actions .aniskip-btn {
+	padding: 8px 14px;
+	font-size: 12px;
+}
+
+/* ===================== */
 /* Main Panel            */
 /* ===================== */
 #aniskip-panel {

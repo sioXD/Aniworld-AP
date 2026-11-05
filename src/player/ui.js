@@ -127,6 +127,14 @@ function createUI() {
         <button id="aniskip-speed-display" class="aniskip-speed-display">1.0x</button>
         <button id="aniskip-speed-plus" class="aniskip-speed-btn">+</button>
       </div>
+      <div id="aniskip-autoplay-notice" class="aniskip-autoplay-notice aniskip-hidden" role="alert">
+        <div class="aniskip-autoplay-title" data-i18n="autoplayNoticeTitle">Autoplay blocked</div>
+        <div class="aniskip-autoplay-text" data-i18n="autoplayNoticeText">Firefox blocks autoplay with sound. Click Retry to start now, or allow autoplay for AniWorld in the Firefox settings to make it automatic.</div>
+        <div class="aniskip-autoplay-actions">
+          <button id="aniskip-autoplay-retry" class="aniskip-btn" data-i18n="autoplayRetry">Retry</button>
+          <button id="aniskip-autoplay-help" class="aniskip-small-btn" data-i18n="autoplayOpenHelp">Autoplay help</button>
+        </div>
+      </div>
     `;
 
 	applyPanelTranslations(container);
@@ -321,12 +329,35 @@ function createUI() {
 	container.querySelector("#aniskip-speed-minus").addEventListener("click", () => changeSpeed(-0.25));
 	container.querySelector("#aniskip-speed-plus").addEventListener("click", () => changeSpeed(0.25));
 	container.querySelector("#aniskip-speed-display").addEventListener("click", resetSpeed);
+	container.querySelector("#aniskip-autoplay-help").addEventListener("click", () => {
+		browser.runtime
+			.sendMessage({ action: MSG.openAutoplayHelp, language: getCurrentLanguage() })
+			.catch((error) => {
+				console.log("VOE AniSkip: Could not open autoplay help:", error);
+			});
+	});
+	container.querySelector("#aniskip-autoplay-retry").addEventListener("click", () => {
+		hideAutoplayNotice();
+		handleAutoPlay({ retry: true, userGesture: true });
+	});
 
 	if (state.settings.showSpeedControl) {
 		container.querySelector("#aniskip-speed-control").classList.remove("aniskip-hidden");
 	}
 
 	return container;
+}
+
+function showAutoplayNotice() {
+	const notice = document.getElementById("aniskip-autoplay-notice");
+	if (!notice) return;
+	notice.classList.remove("aniskip-hidden");
+}
+
+function hideAutoplayNotice() {
+	const notice = document.getElementById("aniskip-autoplay-notice");
+	if (!notice) return;
+	notice.classList.add("aniskip-hidden");
 }
 
 function updateStatus(message, isError = false) {

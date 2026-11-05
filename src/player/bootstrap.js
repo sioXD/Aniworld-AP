@@ -84,11 +84,6 @@ function parseAnimeInfo() {
 	return null;
 }
 
-function generateVideoId(animeInfo) {
-	if (!animeInfo) return null;
-	return `${animeInfo.animeName.toLowerCase().replace(/\s+/g, "_")}_s${animeInfo.season || 1}_e${animeInfo.episode}`;
-}
-
 // MAL lookups are cached per season: many series have a separate MAL entry
 // per season, so a name-only key would let season 2 overwrite season 1.
 function getMalCacheKey(animeInfo) {
@@ -189,9 +184,6 @@ async function init() {
 
 	console.log("VOE AniSkip: Initializing...");
 
-	// Check for auto-play flag early
-	checkShouldAutoPlay();
-
 	try {
 		state.settings = await browser.storage.local.get(DEFAULT_SETTINGS);
 		console.log("VOE AniSkip: Settings loaded", state.settings);
@@ -200,6 +192,9 @@ async function init() {
 	}
 
 	createUI();
+	// Start the autoplay wait only after the overlay exists: a blocked attempt
+	// must be able to show its notice.
+	checkShouldAutoPlay();
 	requestNextEpisodeStatus();
 	setTimeout(requestNextEpisodeStatus, 1000);
 	updateStatus(getMessage("statusWaitingForPlayer"));
@@ -207,6 +202,9 @@ async function init() {
 	try {
 		state.player = await waitForPlayer();
 		console.log("VOE AniSkip: Player ready");
+		// The first attempt may have timed out while VOE was still loading; now
+		// that the player exists, consume a still-pending request.
+		checkShouldAutoPlay();
 		updateStatus(getMessage("statusPlayerFound"));
 
 		let animeInfo = null;
@@ -219,6 +217,9 @@ async function init() {
 			state.currentEpisode = animeInfo.episode;
 			state.currentSeason = animeInfo.season || 1;
 			state.currentVideoId = generateVideoId(animeInfo);
+			// A targeted autoplay request (in-place episode switch) can only be
+			// matched once the episode id is known.
+			checkShouldAutoPlay();
 
 			document.querySelector("#aniskip-episode-num").textContent = animeInfo.episode;
 			document.querySelector("#aniskip-season-num").textContent = animeInfo.season || 1;
@@ -323,7 +324,6 @@ function startExtension() {
 	console.log("VOE AniSkip: Content script running on", window.location.href);
 
 	window.addEventListener("message", (event) => {
-		if (event.data?.type === POST_MSG.autoPlay) handleAutoPlay();
 		if (event.data?.type === POST_MSG.enterFullscreen) enterFullscreenFromPlayer();
 		if (event.data?.type === POST_MSG.nextEpisodeAvailable) {
 			setNextEpisodeAvailability(event.data.available);
@@ -335,6 +335,14 @@ function startExtension() {
 	// open player frame without targeting a tab or a frame.
 	browser.storage.onChanged.addListener((changes, areaName) => {
 		if (areaName !== "local") return;
+
+		// The top frame may write the autoplay request before or after this
+		// frame finishes initializing. onChanged covers the late case, the
+		// check in init() covers the early one. Wait for createUI(), otherwise
+		// a blocked attempt has no notice to show.
+		if (changes[STORAGE.shouldAutoPlay]?.newValue && state.ui.container) {
+			checkShouldAutoPlay();
+		}
 
 		let settingsChanged = false;
 		for (const [key, change] of Object.entries(changes)) {
@@ -385,6 +393,29 @@ function startExtension() {
 			browser.storage.local.set({ [STORAGE.aniWorldInfo]: { ...event.data.data, timestamp: Date.now() } });
 		}
 	});
+
+	// If the user left the tab to grant the autoplay permission, retry as soon
+	// as the player is visible again. Clicking Retry in the notice does the
+	// same thing explicitly.
+	document.addEventListener("visibilitychange", () => {
+		if (document.visibilityState === "visible" && autoplayBlockedByPolicy && state.ui.container) {
+			handleAutoPlay({ retry: true });
+		}
+	});
+
+	// Any manual start (user clicked VOE's play button) makes the notice
+	// obsolete.
+	document.addEventListener(
+		"play",
+		(event) => {
+			if (event.target?.tagName === "VIDEO") {
+				autoplayBlockedByPolicy = false;
+				hideAutoplayNotice();
+				clearAutoplayRequest();
+			}
+		},
+		true,
+	);
 
 	if (document.readyState === "loading") {
 		document.addEventListener("DOMContentLoaded", () => setTimeout(init, 300));

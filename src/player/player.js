@@ -265,75 +265,121 @@ function enterFullscreenFromPlayer() {
 	}
 }
 
-function handleAutoPlay() {
-	console.log("VOE AniSkip: Received auto-play request");
-	let attempts = 0;
-	const maxAttempts = 40;
+// Autoplay is a one-shot request per episode change. Firefox blocks audible
+// playback on a freshly loaded page unless the site is allowlisted, so a
+// failed play() is reported with an actionable notice instead of retrying
+// forever or silently starting muted.
+var autoplayAttemptInProgress = false;
+var autoplayBlockedByPolicy = false;
 
-	// browser policies always block autoplay :(
-	const findAndClickPlay = () => {
-		attempts++;
-		console.log("VOE AniSkip: Auto-play attempt", attempts);
+async function clearAutoplayRequest() {
+	try {
+		await browser.storage.local.remove([
+			STORAGE.shouldAutoPlay,
+			STORAGE.autoPlayRequestedAt,
+			STORAGE.autoPlayTarget,
+		]);
+	} catch (e) {}
+}
 
-		// Try clicking the VOE spin/play button overlay
-		const spinButton = document.querySelector("div.spin");
-		if (spinButton) {
-			console.log("VOE AniSkip: Found spin button, clicking");
-			spinButton.click();
-			return;
+async function handleAutoPlay(options = {}) {
+	if (autoplayAttemptInProgress) return false;
+	if (autoplayBlockedByPolicy && !options.retry) return false;
+
+	autoplayAttemptInProgress = true;
+	if (options.retry) autoplayBlockedByPolicy = false;
+
+	try {
+		const startedAt = Date.now();
+		const deadline = startedAt + 15000;
+		let overlayClicked = false;
+		// A click on the notice's Retry button is a real user gesture. Use it
+		// for the first play() call even if VOE has not reported metadata yet,
+		// so a slow player still starts with sound.
+		let gestureAvailable = options.userGesture === true;
+
+		while (Date.now() < deadline) {
+			const video = document.querySelector("video");
+
+			if (video && !video.paused) {
+				await clearAutoplayRequest();
+				hideAutoplayNotice();
+				return true;
+			}
+
+			if (video && (gestureAvailable || video.readyState >= 1)) {
+				gestureAvailable = false;
+				try {
+					const playResult = video.play();
+					if (playResult && typeof playResult.then === "function") await playResult;
+					if (!video.paused) {
+						console.log("VOE AniSkip: Auto-play started");
+						await clearAutoplayRequest();
+						hideAutoplayNotice();
+						return true;
+					}
+				} catch (error) {
+					if (error?.name === "NotAllowedError") {
+						console.log("VOE AniSkip: Auto-play blocked by Firefox's autoplay policy");
+						autoplayBlockedByPolicy = true;
+						await clearAutoplayRequest();
+						showAutoplayNotice();
+						return false;
+					}
+					console.log("VOE AniSkip: Auto-play attempt failed:", error?.name || error);
+				}
+			}
+
+			// Some VOE builds only attach the stream after the site's own
+			// overlay is clicked. Click it once, then keep checking the video
+			// element so a policy rejection is still caught by play().
+			if (!overlayClicked && Date.now() - startedAt > 1500) {
+				const overlay =
+					document.querySelector("div.spin:not(.spin-hidden)") ||
+					document.querySelector(".jw-display-icon-display .jw-icon-display") ||
+					document.querySelector(".jw-icon-playback");
+				if (overlay) {
+					console.log("VOE AniSkip: Clicking the player overlay");
+					overlayClicked = true;
+					overlay.click();
+				}
+			}
+
+			await new Promise((resolve) => setTimeout(resolve, 400));
 		}
 
-		// Try clicking VOE logo/icon overlay
-		const voeIcon = document.querySelector('img.icon[src*="voe"]') || document.querySelector("img.icon");
-		if (voeIcon) {
-			console.log("VOE AniSkip: Found VOE icon, clicking");
-			(voeIcon.parentElement || voeIcon).click();
-			return;
-		}
-
-		// Try clicking JWPlayer play button
-		const jwPlayButton =
-			document.querySelector(".jw-display-icon-display .jw-icon-display") ||
-			document.querySelector(".jw-display-icon-container") ||
-			document.querySelector(".jw-icon-playback");
-		if (jwPlayButton) {
-			console.log("VOE AniSkip: Found JW play button, clicking");
-			jwPlayButton.click();
-			return;
-		}
-
-		// Try clicking any large centered play button
-		const playOverlay = document.querySelector('[class*="play"]') || document.querySelector('[class*="Play"]');
-		if (playOverlay && playOverlay.offsetWidth > 50) {
-			console.log("VOE AniSkip: Found play overlay, clicking");
-			playOverlay.click();
-			return;
-		}
-
-		// Try directly playing the video element
-		const video = document.querySelector("video");
-		if (video) {
-			console.log("VOE AniSkip: Found video element, playing directly");
-			video.play().catch((e) => console.log("VOE AniSkip: Direct play failed", e));
-			return;
-		}
-
-		if (attempts < maxAttempts) setTimeout(findAndClickPlay, 300);
-	};
-
-	findAndClickPlay();
+		console.log("VOE AniSkip: Auto-play timed out waiting for the player");
+		showAutoplayNotice();
+		return false;
+	} finally {
+		autoplayAttemptInProgress = false;
+	}
 }
 
 async function checkShouldAutoPlay() {
 	try {
-		const result = await browser.storage.local.get([STORAGE.shouldAutoPlay, STORAGE.autoPlayRequestedAt]);
-		console.log("VOE AniSkip: Checking auto-play flag:", result);
-		if (result.shouldAutoPlay && Date.now() - result.autoPlayTimestamp < AUTOPLAY_REQUEST_TTL_MS) {
-			console.log("VOE AniSkip: Auto-play flag found, will auto-play");
-			await browser.storage.local.remove([STORAGE.shouldAutoPlay, STORAGE.autoPlayRequestedAt]);
-			// Wait longer for the player to be ready
-			setTimeout(handleAutoPlay, 2000);
+		const result = await browser.storage.local.get([
+			STORAGE.shouldAutoPlay,
+			STORAGE.autoPlayRequestedAt,
+			STORAGE.autoPlayTarget,
+		]);
+		if (!result[STORAGE.shouldAutoPlay]) return;
+
+		// An in-place episode switch names the episode the request belongs to.
+		// The outgoing player must not consume it, and the incoming one only
+		// once it knows which episode it is showing.
+		const target = result[STORAGE.autoPlayTarget];
+		if (target && target !== state.currentVideoId) return;
+
+		const requestedAt = result[STORAGE.autoPlayRequestedAt] || 0;
+		if (Date.now() - requestedAt >= AUTOPLAY_REQUEST_TTL_MS) {
+			console.log("VOE AniSkip: Auto-play request expired");
+			await clearAutoplayRequest();
+			return;
 		}
+
+		console.log("VOE AniSkip: Auto-play flag found");
+		await handleAutoPlay();
 	} catch (e) {
 		console.log("VOE AniSkip: Error checking auto-play:", e);
 	}

@@ -174,6 +174,128 @@
 		}
 	}
 
+	// ============================================================
+	// In-place episode switch
+	// ============================================================
+	// Firefox only allows audible playback while the top-level document still has
+	// its sticky user activation, and a full page load always throws that away.
+	// Switching only the player iframe keeps the top document alive, so the next
+	// episode starts with sound without changing any Firefox setting. Everything
+	// the page and the extension read afterwards (URL, breadcrumbs, episode list,
+	// episode title) is patched from the fetched page.
+
+	function getPlayerIframe() {
+		return document.querySelector(".inSiteWebStream iframe") || document.querySelector('iframe[src*="voe"]');
+	}
+
+	// The site shows the streams of exactly one language, and its inline player
+	// is the first entry of that language. Mirror that choice instead of keeping
+	// a hoster order of our own.
+	function pickStreamTarget(doc) {
+		const items = Array.from(doc.querySelectorAll(".hosterSiteVideo ul li[data-link-target]")).filter(
+			(item) => item.querySelector(".generateInlinePlayer") && item.dataset.externalEmbed !== "true",
+		);
+
+		const order = [];
+		const preferred = document.querySelector(".changeLanguageBox img.selectedLanguage")?.dataset.langKey;
+		if (preferred) order.push(preferred);
+		for (const lang of ["1", "3", "2"]) {
+			if (!order.includes(lang)) order.push(lang);
+		}
+
+		for (const lang of order) {
+			const item = items.find((entry) => entry.dataset.langKey === lang);
+			if (item) return item.dataset.linkTarget;
+		}
+		return null;
+	}
+
+	// Keep the parts of the page that the extension reads in sync with the
+	// episode that is now playing.
+	function applyEpisodePage(doc, nextUrl, previousEpisodeId, previousWasSeen) {
+		const nextNav = doc.querySelector(".hosterSiteDirectNav");
+		const liveNav = document.querySelector(".hosterSiteDirectNav");
+		if (nextNav && liveNav) {
+			liveNav.innerHTML = nextNav.innerHTML;
+			if (previousEpisodeId && previousWasSeen) {
+				const previous = liveNav.querySelector(`a[data-episode-id="${previousEpisodeId}"]`);
+				if (previous) previous.classList.add("seen");
+			}
+		}
+
+		const nextTitle = doc.querySelector(".hosterSiteTitle");
+		const liveTitle = document.querySelector(".hosterSiteTitle");
+		if (nextTitle && liveTitle) {
+			for (const attribute of ["data-season", "data-episode", "data-episode-id"]) {
+				if (nextTitle.hasAttribute(attribute)) {
+					liveTitle.setAttribute(attribute, nextTitle.getAttribute(attribute));
+				}
+			}
+			liveTitle.innerHTML = nextTitle.innerHTML;
+		}
+
+		const nextCrumbs = doc.querySelector(".breadCrumbMenu");
+		const liveCrumbs = document.querySelector(".breadCrumbMenu");
+		if (nextCrumbs && liveCrumbs) liveCrumbs.innerHTML = nextCrumbs.innerHTML;
+
+		if (doc.title) document.title = doc.title;
+
+		// The address bar has to point at the episode that is actually playing,
+		// otherwise a reload or a bookmark returns to the previous one.
+		try {
+			history.pushState(null, "", nextUrl);
+		} catch (error) {
+			console.log("VOE AniSkip: Could not update the URL:", error);
+		}
+	}
+
+	async function switchEpisodeInPlace(nextUrl) {
+		const iframe = getPlayerIframe();
+		if (!iframe) return false;
+
+		let doc;
+		try {
+			const response = await fetch(nextUrl, { credentials: "same-origin" });
+			if (!response.ok) return false;
+			doc = new DOMParser().parseFromString(await response.text(), "text/html");
+		} catch (error) {
+			console.log("VOE AniSkip: Could not load the next episode in place:", error);
+			return false;
+		}
+
+		const streamTarget = pickStreamTarget(doc);
+		const info = parseAniWorldInfo(doc);
+		if (!streamTarget || !info) {
+			console.log("VOE AniSkip: Next episode has no inline player, falling back to a reload");
+			return false;
+		}
+
+		const activeLink = document.querySelector("a.active[data-episode-id]");
+
+		// The incoming player reads the request while initializing. The target
+		// keeps the outgoing frame from consuming it.
+		await browser.storage.local.set({
+			[STORAGE.aniWorldInfo]: { ...info, url: nextUrl, timestamp: Date.now() },
+			[STORAGE.shouldAutoPlay]: true,
+			[STORAGE.autoPlayRequestedAt]: Date.now(),
+			[STORAGE.autoPlayTarget]: generateVideoId(info),
+		});
+
+		applyEpisodePage(
+			doc,
+			nextUrl,
+			activeLink?.dataset.episodeId || null,
+			activeLink?.classList.contains("seen") || false,
+		);
+
+		// Resolve like the site does (its iframe gets the same relative
+		// data-link-target), so a missing leading slash cannot break the swap.
+		const src = new URL(streamTarget, window.location.href).href;
+		console.log("VOE AniSkip: Switching to the next episode in place:", src);
+		iframe.src = src;
+		return true;
+	}
+
 	// Navigate to next episode
 	async function goToNextEpisode(force = false) {
 		// Manual navigation is independent of automatic next-episode navigation.
@@ -218,14 +340,18 @@
 			}
 		}
 
+		// Preferred: swap the player without reloading the page.
+		if (await switchEpisodeInPlace(nextUrl)) return;
+
 		console.log("VOE AniSkip: Navigating to next episode:", nextUrl);
 
 		await browser.storage.local.set({
-			autoPlayNextFlag: true,
-			timestamp: Date.now(),
+			[STORAGE.autoPlayNextFlag]: true,
+			[STORAGE.flaggedAt]: Date.now(),
 		});
 
-		// Navigate to next episode (full page reload)
+		// Fallback: full page reload. The player shows an actionable notice when
+		// Firefox blocks the audible autoplay.
 		window.location.href = nextUrl;
 	}
 
@@ -300,64 +426,51 @@
 	// Check if we should auto-play (came from previous episode)
 	async function checkAutoPlay() {
 		try {
-			const result = await browser.storage.local.get([STORAGE.autoPlayNextFlag, STORAGE.flaggedAt]);
-			if (result.autoPlayNextFlag && Date.now() - result.flaggedAt < AUTOPLAY_REQUEST_TTL_MS) {
-				console.log("VOE AniSkip: Auto-play enabled from previous episode");
-
-				// Clear the flags
+			const next = await browser.storage.local.get([STORAGE.autoPlayNextFlag, STORAGE.flaggedAt]);
+			if (next[STORAGE.autoPlayNextFlag]) {
+				const flaggedAt = next[STORAGE.flaggedAt] || 0;
 				await browser.storage.local.remove([STORAGE.autoPlayNextFlag, STORAGE.flaggedAt]);
 
-				// Store flag for the iframe to know it should auto-play
-				await browser.storage.local.set({
-					[STORAGE.shouldAutoPlay]: true,
-					[STORAGE.autoPlayRequestedAt]: Date.now(),
-				});
+				if (Date.now() - flaggedAt < AUTOPLAY_REQUEST_TTL_MS) {
+					console.log("VOE AniSkip: Auto-play enabled from previous episode");
 
-				// Wait for iframe to load and click play
-				waitForPlayerAndPlay();
+					// The player frame watches this key and starts playback as
+					// soon as it is ready. Leaving the request in storage covers
+					// the case where the frame is injected after this write.
+					await browser.storage.local.set({
+						[STORAGE.shouldAutoPlay]: true,
+						[STORAGE.autoPlayRequestedAt]: Date.now(),
+					});
+					return;
+				}
+			}
+
+			// A request that was never consumed (closed tab, failed player)
+			// must not start playback on a later, unrelated episode.
+			const pending = await browser.storage.local.get([
+				STORAGE.shouldAutoPlay,
+				STORAGE.autoPlayRequestedAt,
+			]);
+			const requestedAt = pending[STORAGE.autoPlayRequestedAt] || 0;
+			if (pending[STORAGE.shouldAutoPlay] && Date.now() - requestedAt >= AUTOPLAY_REQUEST_TTL_MS) {
+				await browser.storage.local.remove([
+					STORAGE.shouldAutoPlay,
+					STORAGE.autoPlayRequestedAt,
+					STORAGE.autoPlayTarget,
+				]);
 			}
 		} catch (e) {
 			console.error("VOE AniSkip: Error checking auto-play:", e);
 		}
 	}
 
-	// Wait for the VOE player iframe to load and trigger play
-	function waitForPlayerAndPlay() {
-		let attempts = 0;
-		const maxAttempts = 30;
-
-		const check = () => {
-			attempts++;
-
-			// Find the iframe
-			const iframe =
-				document.querySelector('iframe[src*="voe"]') ||
-				document.querySelector(".inSiteWebStream iframe") ||
-				document.querySelector("iframe");
-			if (iframe) {
-				console.log("VOE AniSkip: Found player iframe, sending auto-play message");
-
-				// Send message to iframe to auto-play
-				setTimeout(() => {
-					iframe.contentWindow.postMessage({ type: POST_MSG.autoPlay }, "*");
-				}, 1500);
-
-				return;
-			}
-
-			if (attempts < maxAttempts) {
-				setTimeout(check, 500);
-			}
-		};
-
-		check();
-	}
-
-	// Parse anime info from AniWorld page
-	function parseAniWorldInfo() {
+	// Parse anime info from AniWorld page. `doc` is the live page by default; an
+	// in-place episode switch passes the fetched next-episode document so the
+	// player gets the new episode number before the iframe navigates.
+	function parseAniWorldInfo(doc = document) {
 		// Try to get info from breadcrumb
 		// Format: Home > Animes > Anime Name > Staffel X > Episode Y
-		const breadcrumbs = document.querySelectorAll(".breadCrumbMenu li");
+		const breadcrumbs = doc.querySelectorAll(".breadCrumbMenu li");
 
 		let animeName = null;
 		let season = 1;
@@ -392,7 +505,7 @@
 		// Fallback: try to parse from page title
 		// Format: "Episode 11 Staffel 1 von A Gatherer's Adventure in Isekai | AniWorld.to"
 		if (!animeName || !episode) {
-			const title = document.title;
+			const title = doc.title || "";
 			const titleMatch = title.match(/Episode\s*(\d+)\s*Staffel\s*(\d+)\s*von\s*(.+?)\s*\|/i);
 			if (titleMatch) {
 				episode = episode || parseInt(titleMatch[1], 10);
@@ -403,7 +516,7 @@
 
 		// Fallback: try meta tags
 		if (!animeName) {
-			const ogTitle = document.querySelector('meta[property="og:title"]')?.content;
+			const ogTitle = doc.querySelector('meta[property="og:title"]')?.content;
 			if (ogTitle) {
 				const match = ogTitle.match(/Episode\s*(\d+)\s*Staffel\s*(\d+)\s*von\s*(.+)/i);
 				if (match) {
@@ -416,7 +529,7 @@
 
 		// Try getting anime name from series title element
 		if (!animeName) {
-			const seriesTitle = document.querySelector(".series-title h1 span");
+			const seriesTitle = doc.querySelector(".series-title h1 span");
 			if (seriesTitle) {
 				animeName = seriesTitle.textContent.trim();
 			}
@@ -530,4 +643,9 @@
 			setTimeout(storeAnimeInfo, 500);
 		}
 	}, 1000);
+
+	// The DOM of an in-place switch never matches an older history entry, so a
+	// step back has to be served by a real navigation instead of showing the
+	// wrong episode under the wrong URL.
+	window.addEventListener("popstate", () => window.location.reload());
 })();

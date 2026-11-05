@@ -21,7 +21,18 @@
 	"content_scripts": [
 		{
 			"matches": ["*://*.aniworld.to/*", "*://aniworld.to/*"],
-			"js": ["src/shared/defaults.js", "src/shared/protocol.js", "src/aniworld/aniworld.js"],
+			"js": ["src/aniworld/autoplay-frame.js"],
+			"run_at": "document_start",
+			"all_frames": false
+		},
+		{
+			"matches": ["*://*.aniworld.to/*", "*://aniworld.to/*"],
+			"js": [
+				"src/shared/defaults.js",
+				"src/shared/util.js",
+				"src/shared/protocol.js",
+				"src/aniworld/aniworld.js"
+			],
 			"run_at": "document_idle",
 			"all_frames": false
 		}

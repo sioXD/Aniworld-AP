@@ -4,11 +4,12 @@
 // splitting the strings across two files only invited drift. The key spaces are
 // disjoint — the popup uses `labelX`/`descX`, the overlay uses `typeX`/`statusX`.
 //
-// `var` instead of `const`: content.js can be injected into the same frame
-// twice, and a repeated `const` would throw (same reason as DEFAULT_SETTINGS).
+// `var` instead of `const`: the player scripts can be injected into the same
+// frame twice, and a repeated `const` would throw (same reason as
+// DEFAULT_SETTINGS).
 var TRANSLATIONS = {
 	en: {
-		// player overlay (content.js)
+		// player overlay
 		typeOpening: "Opening",
 		typeEnding: "Ending",
 		typeMixedOpening: "Mixed Opening",
@@ -16,6 +17,11 @@ var TRANSLATIONS = {
 		typeRecap: "Recap",
 		skipButtonText: "Skip",
 		nextEpisodeButton: "Next episode",
+		autoplayNoticeTitle: "Autoplay blocked",
+		autoplayNoticeText:
+			"Firefox blocks autoplay with sound. Click Retry to start now, or allow autoplay for AniWorld in the Firefox settings to make it automatic.",
+		autoplayOpenHelp: "Autoplay help",
+		autoplayRetry: "Retry",
 		panelInitializing: "Initializing...",
 		panelAnime: "Anime:",
 		panelSeason: "Season:",
@@ -123,7 +129,7 @@ var TRANSLATIONS = {
 		colorPickerApply: "Apply",
 	},
 	de: {
-		// player overlay (content.js)
+		// player overlay
 		typeOpening: "Intro",
 		typeEnding: "Outro",
 		typeMixedOpening: "Gemischtes Intro",
@@ -131,6 +137,11 @@ var TRANSLATIONS = {
 		typeRecap: "Zusammenfassung",
 		skipButtonText: "Skip",
 		nextEpisodeButton: "Nächste Folge",
+		autoplayNoticeTitle: "Autoplay blockiert",
+		autoplayNoticeText:
+			"Firefox blockiert Autoplay mit Ton. Klicke auf „Erneut versuchen“, um jetzt mit Ton zu starten, oder erlaube Autoplay für AniWorld in den Firefox-Einstellungen, damit es automatisch startet.",
+		autoplayOpenHelp: "Autoplay-Hilfe",
+		autoplayRetry: "Erneut versuchen",
 		panelInitializing: "Initialisierung...",
 		panelAnime: "Anime:",
 		panelSeason: "Staffel:",

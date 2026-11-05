@@ -1,11 +1,12 @@
-// Formatting helpers used by the player overlay (and available to the other
-// surfaces once content.js is split up).
+// Formatting helpers used by the player overlay (and available to every other
+// surface).
 //
 // Everything here is a pure function with no dependency on the state of a
 // specific surface, which is why it can live in one place.
 //
-// `var`/`function` instead of `const`: content.js can be injected into the same
-// frame twice, and a repeated `const` would throw (same reason as DEFAULT_SETTINGS).
+// `var`/`function` instead of `const`: the player scripts can be injected into
+// the same frame twice, and a repeated `const` would throw (same reason as
+// DEFAULT_SETTINGS).
 
 // "#22C55E" + 0.5 -> "rgba(34, 197, 94, 0.5)". Falls back to a magenta that is
 // impossible to miss, so a malformed colour never makes a marker invisible.
@@ -28,6 +29,14 @@ function formatTime(seconds) {
 	return hrs > 0
 		? `${hrs}:${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`
 		: `${mins}:${secs.toString().padStart(2, "0")}`;
+}
+
+// Stable per-episode key. The top frame and the player frame both build it and
+// compare the results, so the formula must live in exactly one place: the
+// autoplay request of an in-place episode switch is matched by this id.
+function generateVideoId(animeInfo) {
+	if (!animeInfo) return null;
+	return `${animeInfo.animeName.toLowerCase().replace(/\s+/g, "_")}_s${animeInfo.season || 1}_e${animeInfo.episode}`;
 }
 
 // "1:01:01" -> 3661, "1:01" -> 61, "61" -> 61. Returns null for empty or

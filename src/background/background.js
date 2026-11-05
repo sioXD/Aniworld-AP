@@ -202,9 +202,12 @@ async function voteSkipTime(skipId, voteType) {
 	}
 }
 
-// Inject content script into a frame
-async function injectContentScript(tabId, frameId) {
-	const frameKey = `${tabId}-${frameId}`;
+// Inject content script into a frame. `documentId` distinguishes the documents
+// an iframe goes through: without it, an in-place episode switch (same tab,
+// same frame, new document) would be treated as "already injected" and the next
+// episode would run without an overlay.
+async function injectContentScript(tabId, frameId, documentId) {
+	const frameKey = documentId ? `${tabId}-${frameId}-${documentId}` : `${tabId}-${frameId}`;
 	if (injectedFrames.has(frameKey)) {
 		return;
 	}
@@ -272,7 +275,7 @@ browser.webNavigation.onCompleted.addListener(async (details) => {
 
 		// Inject content script into the iframe
 		// The content script will check if it's actually a VOE player
-		await injectContentScript(details.tabId, details.frameId);
+		await injectContentScript(details.tabId, details.frameId, details.documentId);
 	} catch (error) {
 		// Tab might have been closed
 	}
@@ -314,6 +317,17 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
 			case MSG.voteSkipTime:
 				return await voteSkipTime(message.skipId, message.voteType);
+
+			case MSG.openAutoplayHelp:
+				// Firefox does not let extensions open privileged about: pages, so
+				// link to the official autoplay help article instead.
+				await browser.tabs.create({
+					url:
+						message.language === "de"
+							? "https://support.mozilla.org/de/kb/automatische-tonwiedergabe-erlauben-bzw-blockieren"
+							: "https://support.mozilla.org/kb/block-autoplay",
+				});
+				return { success: true };
 
 			case MSG.saveSettings:
 				// Writing is enough: every player frame listens to

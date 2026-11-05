@@ -1488,14 +1488,17 @@
 						</li>
 						<li>
 							<span
-								><strong>Inject the overlay.</strong> When the VOE frame loads, <code>content.js</code> and
-								<code>styles.css</code> are injected into it and the controls, markers and panel are built.</span
+								><strong>Inject the overlay.</strong> When the VOE frame loads, the six player scripts in
+								<code>src/player/</code> and <code>styles.css</code> are injected into it and the controls,
+								markers and panel are built.</span
 							>
 						</li>
 						<li>
 							<span
 								><strong>Skip and continue.</strong> Segments are skipped on time or on click; at the end of an episode
-								a <code>postMessage</code> asks the page script for the next one.</span
+								a <code>postMessage</code> asks the page script for the next one. The page is not reloaded — only the
+								player iframe is switched — so Firefox keeps the page activation and the next episode starts with
+								sound without an autoplay permission.</span
 							>
 						</li>
 					</ol>
@@ -1504,11 +1507,12 @@
 						<div class="card">
 							<h3>Files</h3>
 							<ul class="plain-list" style="margin-top: 10px">
-								<li><code>src/defaults.js</code> — the single source of truth for settings</li>
-								<li><code>src/background.js</code> — API proxy and iframe injection</li>
-								<li><code>src/aniworld.js</code> — page parsing, navigation, language</li>
-								<li><code>src/content.js</code> — player overlay and skip logic</li>
-								<li><code>src/popup.*</code> — settings UI and translations</li>
+								<li><code>src/shared/</code> — defaults, i18n, helpers and protocol</li>
+								<li><code>src/background/background.js</code> — API proxy and iframe injection</li>
+								<li><code>src/aniworld/aniworld.js</code> — page parsing, navigation, language</li>
+								<li><code>src/aniworld/autoplay-frame.js</code> — delegates autoplay to the player iframe</li>
+								<li><code>src/player/*.js</code> — player overlay, panel and skip logic</li>
+								<li><code>src/popup/</code> — settings UI and translations</li>
 							</ul>
 						</div>
 						<div class="card">

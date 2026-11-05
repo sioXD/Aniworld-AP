@@ -51,6 +51,7 @@ This fork adds the following features to enhance the viewing experience on AniWo
 - **Speed Control** - Adjust playback speed (0.25× to 5×) via -/+ buttons, click center to reset to 1×
 - **Speed Control Settings** - Toggle speed buttons on/off (+ Remember speed across episodes)
 - **Next Episode** - Navigate automatically at the end of an episode or manually with the next-episode button in the player
+- **Full Autoplay** - The next episode starts automatically with sound. The page is not reloaded, so it needs no Firefox autoplay permission (see below)
 - **Always Show Skip Button** - Skip 90s if no OP/ED is playing
 - **Version** and the **update date** are now shown
 
@@ -60,6 +61,15 @@ This fork adds the following features to enhance the viewing experience on AniWo
 - **Layout** - Controls rearranged: info toggle at top-right, skip/speed/panel at bottom
 - **Info Toggle** - Info icon (top-right) replaces double-arrow, opens the AniSkip panel
 
+> [!IMPORTANT]
+> **Autoplay works without a Firefox permission — because the page is not reloaded.** Firefox only allows audible
+> playback while the top-level page still has user activation, and a reload throws that away. The extension therefore
+> keeps the AniWorld page open and switches only the player iframe to the next episode.
+>
+> Only the fallback (an episode whose hoster allows no inline player) reloads the page and can hit Firefox's autoplay
+> block. For those, allow `aniworld.to` under **Settings → Privacy & Security → Permissions → Autoplay → Settings…**,
+> or use the **Autoplay blocked** notice's retry button. An extension cannot override the browser policy itself.
+
 ## Development
 
 ### Project layout
@@ -68,7 +78,7 @@ This fork adds the following features to enhance the viewing experience on AniWo
 src/
   shared/      defaults.js, i18n.js, util.js, protocol.js  (plain scripts, load before consumers)
   background/  background.js                               (API proxy + iframe injection)
-  aniworld/    aniworld.js                                 (top frame: page parsing, navigation)
+  aniworld/    aniworld.js, autoplay-frame.js              (top frame: page parsing, navigation, iframe permission)
   player/      player.js, persistence.js, ui.js,
                panel.js, skip.js, bootstrap.js,
                styles.css                                  (runs inside the VOE iframe)

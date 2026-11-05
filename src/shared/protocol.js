@@ -4,12 +4,14 @@
 // over four files. A typo in any of them fails silently - the listener simply
 // never matches - which is exactly the class of bug that is expensive to find.
 //
-// `var` instead of `const`: content.js can be injected into the same frame
-// twice, and a repeated `const` would throw (same reason as DEFAULT_SETTINGS).
+// `var` instead of `const`: the player scripts can be injected into the same
+// frame twice, and a repeated `const` would throw (same reason as
+// DEFAULT_SETTINGS).
 
 // browser.runtime.sendMessage({ action }) — player/popup -> background.
 var MSG = {
 	saveSettings: "saveSettings",
+	openAutoplayHelp: "openAutoplayHelp",
 	searchAnime: "searchAnime",
 	getSkipTimes: "getSkipTimes",
 	createSkipTime: "createSkipTime",
@@ -29,19 +31,23 @@ var STORAGE = {
 	animeCache: "animeCache",
 	// Stable anonymous id, used for AniSkip votes.
 	userId: "userId",
-	// Autoplay handshake across the postMessage boundary:
-	// top frame writes shouldAutoPlay/autoPlayRequestedAt, the player frame
-	// consumes them within AUTOPLAY_REQUEST_TTL_MS and clears both.
+	// Autoplay handshake across episode changes: the top frame writes
+	// shouldAutoPlay/autoPlayRequestedAt, the player frame consumes them within
+	// AUTOPLAY_REQUEST_TTL_MS and clears them again.
 	shouldAutoPlay: "shouldAutoPlay",
 	autoPlayRequestedAt: "autoPlayTimestamp",
-	// Same handshake for the full-page navigation: the top frame flags the
-	// reload before it happens, the next page picks it up and starts playback.
+	// Episode the request is for. A frame that shows a different episode (the
+	// outgoing player during an in-place switch) must leave it alone.
+	autoPlayTarget: "autoPlayTarget",
+	// Same handshake for a full-page navigation: the top frame flags the reload
+	// before it happens, the next page picks it up and starts playback.
 	autoPlayNextFlag: "autoPlayNextFlag",
 	flaggedAt: "timestamp",
 };
 
 // postMessage types between the top frame (aniworld.js) and the player frame
-// (content.js). The player frame never trusts these beyond their type tag.
+// (the scripts in src/player). The player frame never trusts these beyond their
+// type tag.
 var POST_MSG = {
 	nextEpisodeAvailable: "ANISKIP_NEXT_EPISODE_AVAILABLE",
 	nextEpisode: "ANISKIP_NEXT_EPISODE",
@@ -49,7 +55,6 @@ var POST_MSG = {
 	requestFullscreen: "ANISKIP_REQUEST_FULLSCREEN",
 	enterFullscreen: "ANISKIP_ENTER_FULLSCREEN",
 	markSeen: "ANISKIP_MARK_SEEN",
-	autoPlay: "ANISKIP_AUTO_PLAY",
 	animeInfo: "ANISKIP_ANIME_INFO",
 };
 
