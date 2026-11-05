@@ -1,4 +1,4 @@
 *.zip
 *.xpi
 META-INF/**
-references/**
+# references/**
