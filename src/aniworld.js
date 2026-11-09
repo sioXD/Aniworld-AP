@@ -174,6 +174,329 @@
 		}
 	}
 
+	// Resolve the absolute URL of the next episode. For a next-season jump this
+	// fetches the season page to find its first episode.
+	async function resolveNextEpisodeUrl(nextInfo) {
+		let nextUrl = nextInfo.url;
+
+		if (nextInfo.isNextSeason) {
+			try {
+				console.log("VOE AniSkip: Fetching next season page:", nextUrl);
+				const seasonResponse = await fetch(nextUrl, { credentials: "same-origin" });
+				const seasonHtml = await seasonResponse.text();
+				const seasonDom = new DOMParser().parseFromString(seasonHtml, "text/html");
+
+				const firstEpisodeLink = seasonDom.querySelector("a[data-episode-id]");
+				if (firstEpisodeLink) {
+					nextUrl = firstEpisodeLink.getAttribute("href");
+					if (!nextUrl.startsWith("http")) {
+						nextUrl = window.location.origin + nextUrl;
+					}
+					console.log("VOE AniSkip: Found first episode of next season:", nextUrl);
+				} else {
+					console.log("VOE AniSkip: Could not find first episode in next season");
+					return null;
+				}
+			} catch (error) {
+				console.error("VOE AniSkip: Error fetching next season:", error);
+				return null;
+			}
+		}
+
+		return nextUrl;
+	}
+
+	// ============================================================
+	// Autoplay intent + in-page episode switch
+	// ============================================================
+	const AUTOPLAY_INTENT_KEY = "aniskipAutoplayIntent";
+	const AUTOPLAY_INTENT_TTL_MS = 90 * 1000;
+	const AUTOPLAY_DELIVERY_TIMEOUT_MS = 20 * 1000;
+	const AUTOPLAY_DELIVERY_INTERVAL_MS = 500;
+
+	function makeAutoplayId() {
+		try {
+			return crypto.randomUUID();
+		} catch {
+			return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+		}
+	}
+
+	function normalizePageUrl(url) {
+		try {
+			const parsed = new URL(url, window.location.origin);
+			const path = parsed.pathname.replace(/\/+$/, "") || "/";
+			return `${parsed.origin}${path}${parsed.search}`;
+		} catch {
+			return null;
+		}
+	}
+
+	function createAutoplayIntent(targetUrl, force) {
+		return {
+			id: makeAutoplayId(),
+			createdAt: Date.now(),
+			targetUrl: normalizePageUrl(targetUrl),
+			force: force === true,
+		};
+	}
+
+	// Persist the intent only for the reload fallback (see hardReloadToEpisode).
+	function saveAutoplayIntent(targetUrl, intent) {
+		const stored = { ...intent, targetUrl: normalizePageUrl(targetUrl) };
+		try {
+			sessionStorage.setItem(AUTOPLAY_INTENT_KEY, JSON.stringify(stored));
+		} catch (error) {
+			console.warn("VOE AniSkip: Could not store autoplay intent", error);
+		}
+	}
+
+	function takeAutoplayIntent() {
+		try {
+			const raw = sessionStorage.getItem(AUTOPLAY_INTENT_KEY);
+			if (!raw) return null;
+			sessionStorage.removeItem(AUTOPLAY_INTENT_KEY);
+
+			const intent = JSON.parse(raw);
+			if (!intent?.id || !intent?.targetUrl) return null;
+			if (Date.now() - intent.createdAt > AUTOPLAY_INTENT_TTL_MS) return null;
+			if (intent.targetUrl !== normalizePageUrl(window.location.href)) return null;
+
+			return intent;
+		} catch (error) {
+			console.warn("VOE AniSkip: Could not read autoplay intent", error);
+			return null;
+		}
+	}
+
+	// Page regions the extension reads from. They must reflect the new episode
+	// after an in-page switch. The player container (div.hosterSiteVideo) is left
+	// alone so the live iframe reference stays valid.
+	const EPISODE_DOM_SELECTORS = [
+		".breadCrumbMenu",
+		"div#stream.hosterSiteDirectNav",
+		".changeLanguageBox",
+		"div.hostSeriesTitle",
+		"div.hosterSiteTitle",
+		"div.hosterSiteVideo > ul",
+	];
+
+	let observersInitialized = false;
+
+	async function navigateToEpisodeInPage(targetUrl) {
+		const response = await fetch(targetUrl, { credentials: "same-origin" });
+		if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+		const html = await response.text();
+		const nextDom = new DOMParser().parseFromString(html, "text/html");
+
+		for (const selector of EPISODE_DOM_SELECTORS) {
+			const current = document.querySelector(selector);
+			const next = nextDom.querySelector(selector);
+			if (current && next) current.outerHTML = next.outerHTML;
+		}
+
+		document.title = nextDom.title;
+		history.pushState({}, "", targetUrl);
+
+		await storeAnimeInfo();
+		applyPreferredLanguage();
+		if (!observersInitialized) {
+			observersInitialized = true;
+			watchForIframes();
+		}
+
+		return nextDom;
+	}
+
+	// Find the VOE player link inside a parsed episode document.
+	function resolvePlayerUrl(nextDom, preferredLanguage) {
+		const providers = [...nextDom.querySelectorAll("div.hosterSiteVideo > ul li[data-lang-key]")];
+		const languageFiltered = preferredLanguage
+			? providers.filter((li) => li.dataset.langKey === preferredLanguage)
+			: [];
+		const candidates = languageFiltered.length ? languageFiltered : providers;
+
+		for (const li of candidates) {
+			for (const btn of li.querySelectorAll("div.generateInlinePlayer")) {
+				const link = btn.querySelector("a[href]");
+				const name = link?.querySelector("h4")?.textContent?.trim() || "";
+				if (/voe/i.test(name) || /voe/i.test(link?.href || "")) {
+					return link.href;
+				}
+			}
+		}
+
+		return null;
+	}
+
+	// Aniworld player links are /redirect/... URLs. Resolve them to the real VOE
+	// URL via the background script so the frame can navigate same-origin (which
+	// is what keeps the user activation and allows unmuted playback).
+	async function resolveRedirectUrl(url) {
+		if (!url) return url;
+		if (!/\/redirect\/|\/r\?/.test(url)) return url;
+
+		try {
+			const result = await browser.runtime.sendMessage({ action: "resolveRedirectUrl", url });
+			return result?.url || url;
+		} catch (error) {
+			console.warn("VOE AniSkip: Could not resolve provider redirect", error);
+			return url;
+		}
+	}
+
+	function findPlayerIframe() {
+		return (
+			document.querySelector('iframe[src*="voe"]') ||
+			document.querySelector(".inSiteWebStream iframe") ||
+			document.querySelector("#player-iframe") ||
+			document.querySelector("iframe")
+		);
+	}
+
+	function navigatePlayerFrame(url) {
+		const iframe = findPlayerIframe();
+		if (!iframe) return false;
+
+		// Delegate autoplay permission to the player frame; without this Firefox
+		// refuses unmuted playback on an automatic episode switch.
+		iframe.setAttribute("allow", "autoplay; fullscreen");
+
+		try {
+			iframe.contentWindow.postMessage({ type: "ANISKIP_NAVIGATE_TO", url }, "*");
+			return true;
+		} catch (error) {
+			console.warn("VOE AniSkip: Frame self-navigation failed, swapping src", error);
+		}
+
+		try {
+			iframe.src = url;
+			return true;
+		} catch (error) {
+			return false;
+		}
+	}
+
+	// Fallback: a full page reload. This loses fullscreen, so it is a last resort.
+	async function hardReloadToEpisode(targetUrl, intent) {
+		saveAutoplayIntent(targetUrl, intent);
+
+		if (document.fullscreenElement) {
+			try {
+				await document.exitFullscreen();
+			} catch (error) {
+				console.warn("VOE AniSkip: exitFullscreen failed", error);
+			}
+		}
+
+		window.location.href = targetUrl;
+	}
+
+	// Collect every plausible player iframe for autoplay delivery.
+	function findPlayerIframes() {
+		const candidates = new Set();
+		const selectors = [
+			'iframe[src*="voe"]',
+			".inSiteWebStream iframe",
+			"#player-iframe",
+			".hosterSiteDirectNav iframe",
+		];
+		selectors.forEach((selector) => {
+			document.querySelectorAll(selector).forEach((iframe) => candidates.add(iframe));
+		});
+		if (candidates.size === 0) {
+			const first = findPlayerIframe();
+			if (first) candidates.add(first);
+		}
+		return [...candidates];
+	}
+
+	// Repeatedly ask the player frame to start playback until it acknowledges.
+	function startAutoplayDelivery(intent) {
+		let finished = false;
+		let intervalId = null;
+		let timeoutId = null;
+		let observer = null;
+		let observerTimer = null;
+		const deliveryDeadline = Date.now() + AUTOPLAY_DELIVERY_TIMEOUT_MS;
+
+		const cleanup = () => {
+			if (finished) return;
+			finished = true;
+			clearInterval(intervalId);
+			clearTimeout(timeoutId);
+			clearTimeout(observerTimer);
+			observer?.disconnect();
+			window.removeEventListener("message", onMessage);
+		};
+
+		const deliver = () => {
+			if (finished || Date.now() > deliveryDeadline) {
+				cleanup();
+				return;
+			}
+			findPlayerIframes().forEach((iframe) => {
+				try {
+					iframe.contentWindow?.postMessage(
+						{ type: "ANISKIP_AUTO_PLAY", id: intent.id, force: intent.force },
+						"*",
+					);
+				} catch (error) {
+					// iframe may be mid-navigation
+				}
+			});
+		};
+
+		const onMessage = (event) => {
+			const data = event.data;
+			if (data?.type === "ANISKIP_PLAYER_READY") {
+				deliver();
+				return;
+			}
+			if (!data || data.id !== intent.id) return;
+			if (data.type === "ANISKIP_AUTOPLAY_ACK") {
+				console.log("VOE AniSkip: Autoplay ACK", data.started, data.muted);
+				cleanup();
+			}
+		};
+
+		window.addEventListener("message", onMessage);
+
+		observer = new MutationObserver(() => {
+			clearTimeout(observerTimer);
+			observerTimer = setTimeout(deliver, 100);
+		});
+		observer.observe(document.body, { childList: true, subtree: true });
+
+		deliver();
+		intervalId = setInterval(deliver, AUTOPLAY_DELIVERY_INTERVAL_MS);
+		timeoutId = setTimeout(cleanup, AUTOPLAY_DELIVERY_TIMEOUT_MS);
+	}
+
+	// After an in-page switch the OLD player document is still briefly alive, so
+	// wait for the new document's ANISKIP_PLAYER_READY before delivering.
+	let pendingAutoplay = null;
+
+	function armAutoplayAfterReady(intent) {
+		pendingAutoplay = { intent, started: false };
+
+		setTimeout(() => {
+			if (pendingAutoplay?.intent.id !== intent.id || pendingAutoplay.started) return;
+			pendingAutoplay = null;
+			console.warn("VOE AniSkip: Player never became ready, reloading");
+			hardReloadToEpisode(intent.targetUrl, intent);
+		}, 6000);
+	}
+
+	function handlePlayerReady() {
+		if (!pendingAutoplay || pendingAutoplay.started) return;
+		const { intent } = pendingAutoplay;
+		pendingAutoplay.started = true;
+		pendingAutoplay = null;
+		startAutoplayDelivery(intent);
+	}
+
 	// Navigate to next episode
 	async function goToNextEpisode(force = false) {
 		// Manual navigation is independent of automatic next-episode navigation.
@@ -189,44 +512,36 @@
 			return;
 		}
 
-		let nextUrl = nextInfo.url;
+		const targetUrl = await resolveNextEpisodeUrl(nextInfo);
+		if (!targetUrl) return;
 
-		// If it's a next season, we need to fetch the season page first to get episode 1
-		if (nextInfo.isNextSeason) {
-			try {
-				console.log("VOE AniSkip: Fetching next season page:", nextUrl);
-				const seasonResponse = await fetch(nextUrl);
-				const seasonHtml = await seasonResponse.text();
-				const seasonDom = new DOMParser().parseFromString(seasonHtml, "text/html");
+		const intent = createAutoplayIntent(targetUrl, force);
 
-				// Find the first episode link in the next season
-				const firstEpisodeLink = seasonDom.querySelector("a[data-episode-id]");
-				if (firstEpisodeLink) {
-					nextUrl = firstEpisodeLink.href;
-					// Make sure it's an absolute URL
-					if (!nextUrl.startsWith("http")) {
-						nextUrl = window.location.origin + nextUrl;
-					}
-					console.log("VOE AniSkip: Found first episode of next season:", nextUrl);
-				} else {
-					console.log("VOE AniSkip: Could not find first episode in next season");
-					return;
-				}
-			} catch (error) {
-				console.error("VOE AniSkip: Error fetching next season:", error);
-				return;
-			}
+		console.log("VOE AniSkip: Going to next episode:", targetUrl);
+
+		// Try the in-page navigation first: it keeps fullscreen and the tab's user
+		// activation alive, which is what lets the next episode start (with sound).
+		let nextDom;
+		try {
+			nextDom = await navigateToEpisodeInPage(targetUrl);
+		} catch (error) {
+			console.error("VOE AniSkip: In-page navigation failed, reloading", error);
+			await hardReloadToEpisode(targetUrl, intent);
+			return;
 		}
 
-		console.log("VOE AniSkip: Navigating to next episode:", nextUrl);
+		const preferredLanguage = await loadPreferredLanguage();
+		const rawPlayerUrl = resolvePlayerUrl(nextDom, preferredLanguage);
+		const playerUrl = await resolveRedirectUrl(rawPlayerUrl);
 
-		await browser.storage.local.set({
-			autoPlayNextFlag: true,
-			timestamp: Date.now(),
-		});
+		if (!playerUrl || !navigatePlayerFrame(playerUrl)) {
+			console.warn("VOE AniSkip: Could not resolve/navigate player, reloading");
+			await hardReloadToEpisode(targetUrl, intent);
+			return;
+		}
 
-		// Navigate to next episode (full page reload)
-		window.location.href = nextUrl;
+		// Wait for the fresh player document to announce readiness before delivering.
+		armAutoplayAfterReady(intent);
 	}
 
 	// Track if we're already navigating to prevent duplicates
@@ -261,6 +576,12 @@
 			enterFullscreen();
 		}
 
+		if (event.data?.type === "ANISKIP_PLAYER_READY") handlePlayerReady();
+
+		if (event.data?.type === "ANISKIP_AUTOPLAY_ACK") {
+			console.log("VOE AniSkip: Autoplay ACK", event.data.started, event.data.muted);
+		}
+
 		if (event.data && event.data.type === "ANISKIP_MARK_SEEN") {
 			console.log("VOE AniSkip: Received mark as seen request from iframe");
 			markCurrentEpisodeAsSeen();
@@ -285,72 +606,55 @@
 		}
 	}
 
-	// Enter fullscreen on the video container
+	// Enter/exit fullscreen on the top document. Keeping the fullscreen element in
+	// the top frame (instead of inside the VOE iframe) means a player src swap on
+	// an episode switch no longer drops fullscreen.
 	function enterFullscreen() {
-		// Send message to iframe to enter fullscreen using JWPlayer
-		const iframe =
-			document.querySelector('iframe[src*="voe"]') ||
-			document.querySelector(".inSiteWebStream iframe") ||
-			document.querySelector("iframe");
-		if (iframe) {
-			iframe.contentWindow.postMessage({ type: "ANISKIP_ENTER_FULLSCREEN" }, "*");
+		const doc = document.documentElement;
+
+		if (document.fullscreenElement) {
+			document.exitFullscreen?.().catch(() => {});
+			return;
+		}
+
+		const request = doc.requestFullscreen || doc.webkitRequestFullscreen;
+		if (request) {
+			request.call(doc).catch((error) => {
+				console.warn("VOE AniSkip: Top-frame fullscreen failed", error);
+			});
 		}
 	}
 
-	// Check if we should auto-play (came from previous episode)
-	async function checkAutoPlay() {
-		try {
-			const result = await browser.storage.local.get(["autoPlayNextFlag", "timestamp"]);
-			if (result.autoPlayNextFlag && Date.now() - result.timestamp < 30000) {
-				console.log("VOE AniSkip: Auto-play enabled from previous episode");
+	// Stretch the player to fill the screen while the top document is fullscreen.
+	function adaptPlayerLayout() {
+		const container = document.querySelector(".inSiteWebStream") || findPlayerIframe()?.parentElement;
+		const iframe = findPlayerIframe();
 
-				// Clear the flags
-				await browser.storage.local.remove(["autoPlayNextFlag", "timestamp"]);
-
-				// Store flag for the iframe to know it should auto-play
-				await browser.storage.local.set({
-					shouldAutoPlay: true,
-					autoPlayTimestamp: Date.now(),
-				});
-
-				// Wait for iframe to load and click play
-				waitForPlayerAndPlay();
+		if (document.fullscreenElement) {
+			document.body.style.overflow = "hidden";
+			if (container) {
+				container.style.cssText =
+					"position:fixed;inset:0;z-index:2147483647;width:100vw;height:100vh;" +
+					"padding:0;margin:0;overflow:hidden;background:#000;";
 			}
-		} catch (e) {
-			console.error("VOE AniSkip: Error checking auto-play:", e);
-		}
-	}
-
-	// Wait for the VOE player iframe to load and trigger play
-	function waitForPlayerAndPlay() {
-		let attempts = 0;
-		const maxAttempts = 30;
-
-		const check = () => {
-			attempts++;
-
-			// Find the iframe
-			const iframe =
-				document.querySelector('iframe[src*="voe"]') ||
-				document.querySelector(".inSiteWebStream iframe") ||
-				document.querySelector("iframe");
 			if (iframe) {
-				console.log("VOE AniSkip: Found player iframe, sending auto-play message");
-
-				// Send message to iframe to auto-play
-				setTimeout(() => {
-					iframe.contentWindow.postMessage({ type: "ANISKIP_AUTO_PLAY" }, "*");
-				}, 1500);
-
-				return;
+				iframe.style.cssText = "display:block;position:absolute;inset:0;width:100vw;height:100vh;border:0;";
 			}
+		} else {
+			document.body.style.overflow = "";
+			if (container) container.style.cssText = "";
+			if (iframe) iframe.style.cssText = "";
+		}
+	}
 
-			if (attempts < maxAttempts) {
-				setTimeout(check, 500);
-			}
-		};
+	document.addEventListener("fullscreenchange", adaptPlayerLayout);
 
-		check();
+	// Check if we should auto-play after a fallback reload.
+	function checkAutoPlay() {
+		const intent = takeAutoplayIntent();
+		if (!intent) return;
+		console.log("VOE AniSkip: Resuming autoplay after reload");
+		startAutoplayDelivery(intent);
 	}
 
 	// Parse anime info from AniWorld page
@@ -530,4 +834,8 @@
 			setTimeout(storeAnimeInfo, 500);
 		}
 	}, 1000);
+
+	// Back/forward after an in-page switch: the simplest correct behaviour is a
+	// full reload so the parsed state matches the restored URL.
+	window.addEventListener("popstate", () => window.location.reload());
 })();

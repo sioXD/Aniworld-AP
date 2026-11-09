@@ -968,7 +968,7 @@
 					<span class="brand-tag">fork</span>
 				</a>
 				<nav class="topnav">
-					<span class="chip version">v1.7.1</span>
+					<span class="chip version">v1.8.0</span>
 					<a class="btn btn-ghost btn-sm" href="https://github.com/sioXD/Aniworld-AP">
 						<svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
 							<path
@@ -1021,7 +1021,7 @@
 					</a>
 				</div>
 				<div class="facts">
-					<span class="fact green"><span class="dot"></span>v1.7.1 · current</span>
+					<span class="fact green"><span class="dot"></span>v1.8.0 · current</span>
 					<span class="fact"><span class="dot"></span>Firefox 142+ · desktop &amp; Android</span>
 					<span class="fact"><span class="dot"></span>Runs inside the VOE player</span>
 					<span class="fact"><span class="dot"></span>MIT licensed</span>
@@ -1064,7 +1064,7 @@
 									<tr>
 										<th>Version</th>
 										<td>
-											<code>1.7.1</code> — see <a href="https://github.com/sioXD/Aniworld-AP/releases">releases</a>
+											<code>1.8.0</code> — see <a href="https://github.com/sioXD/Aniworld-AP/releases">releases</a>
 										</td>
 									</tr>
 									<tr>
@@ -1150,8 +1150,10 @@
 							<span class="tag">added</span>
 							<h3>Next episode</h3>
 							<p>
-								A next-episode button inside the player bar, plus automatic navigation when an episode ends. Both are on
-								by default; auto-navigation can be switched off on its own.
+								A next-episode button inside the player bar, plus automatic in-page navigation and autoplay when an
+								episode ends. The switch happens without a full page reload, so fullscreen stays active and playback
+								starts on its own (muted fallback until the first interaction if the browser blocks sound). Both are on
+								by default; auto-navigation and autoplay can be switched off together via the one setting.
 							</p>
 						</article>
 
@@ -1413,7 +1415,11 @@
 									<tr>
 										<th>Next episode<span class="key">nextEpisode</span></th>
 										<td class="default"><span class="pill on">on</span></td>
-										<td>Navigates to the next episode at the end of the current one.</td>
+										<td>
+											Switches to the next episode in place (no page reload) and starts playback automatically, keeping
+											fullscreen active. Falls back to muted autoplay until the first interaction if the browser blocks
+											sound.
+										</td>
 									</tr>
 									<tr>
 										<th>Next episode button<span class="key">showNextEpisodeButton</span></th>

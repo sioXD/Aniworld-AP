@@ -292,12 +292,39 @@ browser.tabs.onUpdated.addListener((tabId, changeInfo) => {
 	}
 });
 
+// An in-page episode switch gives the VOE frame a fresh document in the SAME
+// frameId. injectedFrames is only cleared on a full tab reload, so allow a
+// re-injection whenever a subframe commits a new document.
+browser.webNavigation.onCommitted.addListener(async (details) => {
+	if (details.frameId === 0) return;
+
+	try {
+		const tab = await browser.tabs.get(details.tabId);
+		if (!tab.url || !tab.url.includes("aniworld.to")) return;
+	} catch (error) {
+		return;
+	}
+
+	injectedFrames.delete(`${details.tabId}-${details.frameId}`);
+});
+
+// Remove autoplay flags left behind by older versions of the extension.
+browser.storage.local.remove(["autoPlayNextFlag", "shouldAutoPlay", "autoPlayTimestamp", "timestamp"]);
+
 // Message handler
 browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
 	const handleAsync = async () => {
 		switch (message.action) {
 			case "searchAnime":
 				return await searchAnime(message.query);
+
+			case "resolveRedirectUrl":
+				try {
+					const response = await fetch(message.url, { redirect: "follow" });
+					return { url: response.url };
+				} catch (error) {
+					return { error: error.message };
+				}
 
 			case "getSkipTimes":
 				return await getSkipTimes(message.malId, message.episodeNumber, message.episodeLength);

@@ -16,6 +16,16 @@
 		return;
 	}
 
+	// Self-navigation: the parent asks this frame to load the next episode itself.
+	// A same-origin navigation initiated from inside the frame carries the user
+	// activation over, so the next episode can start unmuted. Registered here,
+	// before the player is initialized, so it works on a not-yet-ready frame.
+	window.addEventListener("message", (event) => {
+		if (event.data?.type === "ANISKIP_NAVIGATE_TO" && typeof event.data.url === "string") {
+			window.location.href = event.data.url;
+		}
+	});
+
 	// Check if this is a VOE player page (has JWPlayer)
 	function isVOEPage() {
 		if (
@@ -128,6 +138,8 @@
 				searchLoading: "Searching...",
 				searchNoResults: "No results found",
 				searchFailed: "Search failed",
+				autoplayMutedHint: "Autoplay started muted — click or press any key for sound",
+				autoplayBlockedHint: "Autoplay was blocked — press play to start",
 			},
 			de: {
 				typeOpening: "Intro",
@@ -184,6 +196,8 @@
 				searchLoading: "Suche...",
 				searchNoResults: "Keine Ergebnisse gefunden",
 				searchFailed: "Suche fehlgeschlagen",
+				autoplayMutedHint: "Autoplay stumm gestartet — klicken oder Taste drücken für Ton",
+				autoplayBlockedHint: "Autoplay wurde blockiert — Play drücken zum Starten",
 			},
 		};
 
@@ -566,6 +580,7 @@
         <button id="aniskip-speed-display" class="aniskip-speed-display">1.0x</button>
         <button id="aniskip-speed-plus" class="aniskip-speed-btn">+</button>
       </div>
+      <div id="aniskip-autoplay-hint" class="aniskip-autoplay-hint aniskip-hidden" role="status"></div>
     `;
 
 			applyPanelTranslations(container);
@@ -1453,117 +1468,269 @@
 			}
 		}
 
-		function handleAutoPlay() {
-			console.log("VOE AniSkip: Received auto-play request");
-			let attempts = 0;
-			const maxAttempts = 40;
+		// Redirect the JWPlayer fullscreen button to the parent document. If the
+		// frame is still in its own fullscreen (legacy state), exit that first.
+		function setupFullscreenButton() {
+			const jwFullscreenBtn = document.querySelector(".jw-icon-fullscreen");
+			if (!jwFullscreenBtn || jwFullscreenBtn.dataset.aniskipBound) return;
+			jwFullscreenBtn.dataset.aniskipBound = "1";
 
-			// browser policies always block autoplay :(
-			const findAndClickPlay = () => {
-				attempts++;
-				console.log("VOE AniSkip: Auto-play attempt", attempts);
+			jwFullscreenBtn.addEventListener(
+				"click",
+				async (event) => {
+					event.preventDefault();
+					event.stopImmediatePropagation();
+					if (document.fullscreenElement) {
+						try {
+							await document.exitFullscreen();
+						} catch (e) {}
+					}
+					requestFullscreen();
+				},
+				true,
+			);
+		}
 
-				// Try clicking the VOE spin/play button overlay
-				const spinButton = document.querySelector("div.spin");
-				if (spinButton) {
-					console.log("VOE AniSkip: Found spin button, clicking");
-					spinButton.click();
+		// ============================================================
+		// Autoplay controller
+		// ============================================================
+		const autoplay = {
+			activeId: null,
+			running: false,
+			started: false,
+			mutedByAutoplay: false,
+			mutedBlocked: false,
+			playButtonClicked: false,
+			unmuteArmed: false,
+		};
+
+		const AUTOPLAY_BUDGET_MS = 10 * 1000;
+		const AUTOPLAY_RETRY_MS = 200;
+		const AUTOPLAY_PLAY_TIMEOUT_MS = 150;
+
+		function delay(ms) {
+			return new Promise((resolve) => setTimeout(resolve, ms));
+		}
+
+		function getVideoEl() {
+			return state.player?._video || document.querySelector("video") || null;
+		}
+
+		function isPlaybackActive() {
+			try {
+				const playerState = state.player?.getState?.();
+				if (playerState === "playing" || playerState === "buffering") return true;
+			} catch (e) {}
+			const video = getVideoEl();
+			return !!video && !video.paused && !video.ended;
+		}
+
+		function isMuted() {
+			const video = getVideoEl();
+			if (video) return video.muted;
+			try {
+				return state.player?.getMute?.() === true;
+			} catch {
+				return false;
+			}
+		}
+
+		function setPlayerMuted(muted) {
+			const video = getVideoEl();
+			try {
+				if (state.player?.setMute) state.player.setMute(muted);
+			} catch (e) {}
+			if (video) video.muted = muted;
+		}
+
+		function clickPlayButtonOnce() {
+			if (autoplay.playButtonClicked) return false;
+			autoplay.playButtonClicked = true;
+
+			const selectors = [
+				"div.jw-icon-display",
+				".jw-display-icon-display .jw-icon-display",
+				".jw-icon-playback",
+				"div.spin",
+				'img.icon[src*="voe"]',
+				"img.icon",
+			];
+			for (const selector of selectors) {
+				const element = document.querySelector(selector);
+				if (element) {
+					element.click();
+					return true;
+				}
+			}
+			return false;
+		}
+
+		function resetAutoplayState(id) {
+			if (autoplay.activeId === id) return;
+			autoplay.activeId = id;
+			autoplay.started = false;
+			autoplay.mutedByAutoplay = false;
+			autoplay.mutedBlocked = false;
+			autoplay.playButtonClicked = false;
+		}
+
+		// Attempt play() once; VOE's play() either rejects fast or never resolves
+		// until a play-button click, so race it against a short timeout.
+		async function playOrFix() {
+			if (!state.player) throw new Error("player-not-ready");
+
+			let playPromise;
+			try {
+				playPromise = state.player.play();
+			} catch (error) {
+				playPromise = Promise.reject(error);
+			}
+
+			let timedOut = false;
+			const timeoutPromise = new Promise((_, reject) => {
+				setTimeout(() => {
+					timedOut = true;
+					reject(new Error("play-timeout"));
+				}, AUTOPLAY_PLAY_TIMEOUT_MS);
+			});
+
+			try {
+				await Promise.race([Promise.resolve(playPromise), timeoutPromise]);
+			} catch (error) {
+				if (timedOut) {
+					clickPlayButtonOnce();
+					throw error;
+				}
+				if (error?.name === "NotAllowedError") {
+					if (autoplay.mutedByAutoplay) {
+						autoplay.mutedBlocked = true;
+						throw error;
+					}
+					setPlayerMuted(true);
+					autoplay.mutedByAutoplay = true;
+					showAutoplayHint("muted");
+					throw error;
+				}
+				throw error;
+			}
+
+			// Some players resolve play() without actually starting.
+			await delay(300);
+			if (!isPlaybackActive()) {
+				clickPlayButtonOnce();
+				throw new Error("playback-did-not-start");
+			}
+		}
+
+		async function runAutoplay(id, force) {
+			if (autoplay.running) return;
+			resetAutoplayState(id);
+			if (autoplay.started) return;
+
+			if (!force && state.settings?.nextEpisode === false) {
+				sendAutoplayAck(id, false, false);
+				return;
+			}
+
+			autoplay.running = true;
+			autoplay.activeId = id;
+			const deadline = Date.now() + AUTOPLAY_BUDGET_MS;
+
+			try {
+				while (!state.player && Date.now() < deadline) {
+					await delay(200);
+				}
+
+				while (Date.now() < deadline && !autoplay.started) {
+					if (isPlaybackActive()) {
+						onAutoplayStarted(id);
+						return;
+					}
+					if (autoplay.mutedBlocked) break;
+
+					try {
+						await playOrFix();
+					} catch (error) {
+						// the loop decides whether to retry
+					}
+					await delay(AUTOPLAY_RETRY_MS);
+				}
+
+				if (isPlaybackActive()) {
+					onAutoplayStarted(id);
 					return;
 				}
 
-				// Try clicking VOE logo/icon overlay
-				const voeIcon = document.querySelector('img.icon[src*="voe"]') || document.querySelector("img.icon");
-				if (voeIcon) {
-					console.log("VOE AniSkip: Found VOE icon, clicking");
-					(voeIcon.parentElement || voeIcon).click();
-					return;
-				}
+				sendAutoplayAck(id, false, autoplay.mutedByAutoplay);
+				showAutoplayHint("blocked");
+			} finally {
+				autoplay.running = false;
+			}
+		}
 
-				// Try clicking JWPlayer play button
-				const jwPlayButton =
-					document.querySelector(".jw-display-icon-display .jw-icon-display") ||
-					document.querySelector(".jw-display-icon-container") ||
-					document.querySelector(".jw-icon-playback");
-				if (jwPlayButton) {
-					console.log("VOE AniSkip: Found JW play button, clicking");
-					jwPlayButton.click();
-					return;
-				}
+		function onAutoplayStarted(id) {
+			if (autoplay.started) return;
+			autoplay.started = true;
+			sendAutoplayAck(id, true, autoplay.mutedByAutoplay);
 
-				// Try clicking any large centered play button
-				const playOverlay = document.querySelector('[class*="play"]') || document.querySelector('[class*="Play"]');
-				if (playOverlay && playOverlay.offsetWidth > 50) {
-					console.log("VOE AniSkip: Found play overlay, clicking");
-					playOverlay.click();
-					return;
-				}
+			if (autoplay.mutedByAutoplay) {
+				showAutoplayHint("muted");
+				armUnmute();
+			}
+		}
 
-				// Try directly playing the video element
-				const video = document.querySelector("video");
-				if (video) {
-					console.log("VOE AniSkip: Found video element, playing directly");
-					video.play().catch((e) => console.log("VOE AniSkip: Direct play failed", e));
-					return;
-				}
+		function sendAutoplayAck(id, started, muted) {
+			try {
+				window.top.postMessage({ type: "ANISKIP_AUTOPLAY_ACK", id, started, muted }, "*");
+			} catch (e) {}
+		}
 
-				if (attempts < maxAttempts) setTimeout(findAndClickPlay, 300);
+		function armUnmute() {
+			if (autoplay.unmuteArmed) return;
+			autoplay.unmuteArmed = true;
+
+			const unmute = async () => {
+				document.removeEventListener("pointerup", unmute, true);
+				document.removeEventListener("keydown", unmute, true);
+				await delay(100);
+				if (autoplay.mutedByAutoplay && isMuted()) {
+					setPlayerMuted(false);
+					autoplay.mutedByAutoplay = false;
+					hideAutoplayHint();
+				}
+				autoplay.unmuteArmed = false;
 			};
 
-			findAndClickPlay();
+			document.addEventListener("pointerup", unmute, true);
+			document.addEventListener("keydown", unmute, true);
+		}
+
+		function showAutoplayHint(kind) {
+			const hint = document.getElementById("aniskip-autoplay-hint");
+			if (!hint) return;
+
+			hint.textContent = kind === "muted" ? getMessage("autoplayMutedHint") : getMessage("autoplayBlockedHint");
+			hint.classList.toggle("aniskip-autoplay-hint--error", kind === "blocked");
+			hint.classList.remove("aniskip-hidden");
+
+			if (kind === "blocked") {
+				setTimeout(hideAutoplayHint, 10000);
+			}
+		}
+
+		function hideAutoplayHint() {
+			const hint = document.getElementById("aniskip-autoplay-hint");
+			if (hint) hint.classList.add("aniskip-hidden");
 		}
 
 		window.addEventListener("message", (event) => {
-			if (event.data?.type === "ANISKIP_AUTO_PLAY") handleAutoPlay();
-			if (event.data?.type === "ANISKIP_ENTER_FULLSCREEN") enterFullscreenFromPlayer();
+			if (event.data?.type === "ANISKIP_AUTO_PLAY") {
+				runAutoplay(String(event.data.id || ""), event.data.force === true);
+			}
 			if (event.data?.type === "ANISKIP_NEXT_EPISODE_AVAILABLE") {
 				setNextEpisodeAvailability(event.data.available);
 			}
 		});
-
-		// Enter fullscreen using JWPlayer or native video
-		function enterFullscreenFromPlayer() {
-			console.log("VOE AniSkip: Entering fullscreen from player");
-
-			// Try JWPlayer fullscreen
-			if (state.player && state.player.setFullscreen) {
-				state.player.setFullscreen(true);
-				return;
-			}
-
-			// Try clicking JWPlayer fullscreen button
-			const jwFullscreenBtn = document.querySelector(".jw-icon-fullscreen");
-			if (jwFullscreenBtn) {
-				jwFullscreenBtn.click();
-				return;
-			}
-
-			// Try native fullscreen on video container
-			const container =
-				document.querySelector(".jw-wrapper") ||
-				document.querySelector(".jwplayer") ||
-				document.querySelector("video")?.parentElement;
-			if (container) {
-				const requestFS = container.requestFullscreen || container.webkitRequestFullscreen;
-				if (requestFS) {
-					requestFS.call(container).catch((e) => console.log("VOE AniSkip: Fullscreen failed", e));
-				}
-			}
-		}
-
-		async function checkShouldAutoPlay() {
-			try {
-				const result = await browser.storage.local.get(["shouldAutoPlay", "autoPlayTimestamp"]);
-				console.log("VOE AniSkip: Checking auto-play flag:", result);
-				if (result.shouldAutoPlay && Date.now() - result.autoPlayTimestamp < 30000) {
-					console.log("VOE AniSkip: Auto-play flag found, will auto-play");
-					await browser.storage.local.remove(["shouldAutoPlay", "autoPlayTimestamp"]);
-					// Wait longer for the player to be ready
-					setTimeout(handleAutoPlay, 2000);
-				}
-			} catch (e) {
-				console.log("VOE AniSkip: Error checking auto-play:", e);
-			}
-		}
 
 		function setTimeFromPlayer(field) {
 			if (!state.player) return;
@@ -1647,9 +1814,6 @@
 
 			console.log("VOE AniSkip: Initializing...");
 
-			// Check for auto-play flag early
-			checkShouldAutoPlay();
-
 			try {
 				state.settings = await browser.runtime.sendMessage({ action: "getSettings" });
 				console.log("VOE AniSkip: Settings loaded", state.settings);
@@ -1666,6 +1830,22 @@
 				state.player = await waitForPlayer();
 				console.log("VOE AniSkip: Player ready");
 				updateStatus(getMessage("statusPlayerFound"));
+
+				// Tell the parent the (possibly fresh) player document is ready so it
+				// can (re)deliver a pending autoplay intent.
+				try {
+					window.top.postMessage({ type: "ANISKIP_PLAYER_READY" }, "*");
+				} catch (e) {}
+
+				// Hide the "press play" hint once the user (or autoplay) starts.
+				try {
+					state.player.on("play", hideAutoplayHint);
+				} catch (e) {}
+				getVideoEl()?.addEventListener("play", hideAutoplayHint);
+
+				// Route the player's fullscreen button to the parent so fullscreen is
+				// anchored in the top document and survives a player src swap.
+				setupFullscreenButton();
 
 				let animeInfo = null;
 				if (isInIframe()) animeInfo = await getAniWorldInfo();
@@ -1760,7 +1940,6 @@
 
 				// Restore persisted speed and play state
 				loadPersistentSpeed();
-				checkShouldAutoPlay();
 			} catch (error) {
 				console.error("VOE AniSkip: Failed to initialize:", error);
 				updateStatus(getMessage("statusFailedToFind").replace("$1", error.message), true);

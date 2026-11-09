@@ -141,6 +141,33 @@
 }
 
 /* ===================== */
+/* Autoplay hint         */
+/* ===================== */
+.aniskip-autoplay-hint {
+	position: fixed;
+	bottom: 170px;
+	left: 50%;
+	transform: translateX(-50%);
+	z-index: 120;
+	max-width: min(420px, 80vw);
+	padding: 8px 14px;
+	border: 1px solid var(--aniskip-border-subtle);
+	border-radius: 999px;
+	background: var(--aniskip-bg-glass);
+	color: var(--aniskip-text-primary);
+	font-size: 12px;
+	text-align: center;
+	cursor: pointer;
+	pointer-events: auto;
+	backdrop-filter: blur(8px);
+}
+
+.aniskip-autoplay-hint--error {
+	border-color: var(--aniskip-error);
+	color: var(--aniskip-error);
+}
+
+/* ===================== */
 /* Info Toggle           */
 /* ===================== */
 .aniskip-toggle-btn {

@@ -1,4 +1,43 @@
+# Build artifacts
 *.zip
 *.xpi
 META-INF/**
+web-ext-artifacts/
 # references/**
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+.directory
+.Trash-*
+
+# Editors / IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*.sublime-workspace
+*.sublime-project
+
+# Logs & temp
+*.log
+npm-debug.log*
+*.tmp
+*.bak
+
+# Dependencies (web-ext installed globally, but just in case)
+node_modules/
